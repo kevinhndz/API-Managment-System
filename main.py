@@ -1,6 +1,8 @@
-"""Punto de entrada corto para ejecutar: uvicorn main:app --reload."""
-
-from app.main import app
+from fastapi import FastAPI
 
 
-__all__ = ["app"]
+app = FastAPI()
+
+@app.get("/")
+def hello ():
+    return {"json": "file"}
