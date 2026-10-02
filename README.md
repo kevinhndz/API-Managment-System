@@ -1,7 +1,7 @@
 # Diagrama UML - Sistema de Gestión de Matrículas
 
 ## ¿Qué es este diagrama?
-
+-
 Este es un **diagrama UML (Unified Modeling Language)** que muestra cómo funciona la estructura del sistema de gestión académica. Es básicamente el "plano" de cómo están organizadas las tablas en la base de datos y qué operaciones puede hacer cada una.
 
 ---
