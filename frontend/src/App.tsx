@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { AppLayout } from './components/layout/AppLayout'
+import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 
@@ -11,7 +12,7 @@ export function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route index element={<PlaceholderPage title="Resumen académico" description="Indicadores y actividad reciente del campus." />} />
+          <Route index element={<DashboardPage />} />
           <Route path="aulas" element={<PlaceholderPage title="Aulas" description="Gestiona espacios, capacidad y disponibilidad." />} />
           <Route path="docentes" element={<PlaceholderPage title="Docentes" description="Administra el directorio y estado del personal docente." />} />
           <Route path="carreras" element={<PlaceholderPage title="Carreras" description="Organiza la oferta académica y duración de programas." />} />
