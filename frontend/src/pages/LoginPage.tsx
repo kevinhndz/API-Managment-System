@@ -47,51 +47,49 @@ export function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#f4f0e8] px-4 py-8 dark:bg-stone-950 sm:px-8">
-      <div className="pointer-events-none absolute -left-28 top-[-9rem] h-96 w-96 rounded-full bg-sage-400/15 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 right-[-8rem] h-[30rem] w-[30rem] rounded-full bg-navy-600/15 blur-3xl" />
-
-      <section className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl overflow-hidden rounded-[2rem] border border-[#e9dfcf] bg-[#fffdf8] shadow-[0_28px_90px_-35px_rgba(91,70,44,0.28)] dark:border-stone-800 dark:bg-stone-900 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="relative hidden overflow-hidden bg-navy-800 p-12 text-white lg:flex lg:flex-col lg:justify-between">
-          <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(135deg,transparent_0%,transparent_47%,rgba(255,255,255,.13)_48%,transparent_49%),linear-gradient(rgba(255,255,255,.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.05)_1px,transparent_1px)] [background-size:180px_180px,42px_42px,42px_42px]" />
+    <main className="relative min-h-screen overflow-hidden bg-[#151112] px-4 py-5 sm:px-8 sm:py-8">
+      <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(rgba(255,255,255,.12)_1px,transparent_1px)] [background-size:24px_24px]" />
+      <section className="relative mx-auto grid min-h-[calc(100vh-2.5rem)] max-w-6xl overflow-hidden rounded-[1.5rem] border border-[#3a292b] bg-[#211719] shadow-[0_30px_100px_-35px_rgb(0_0_0_/_0.8)] lg:grid-cols-[1.05fr_.95fr]">
+        <div className="relative hidden overflow-hidden bg-[#451116] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-12">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgb(255_210_151_/_0.17),transparent_22rem),linear-gradient(145deg,#5b0309,#2a1216_72%)]" />
           <div className="relative flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 ring-1 ring-white/20">
+            <span className="grid h-11 w-11 place-items-center rounded-lg bg-white/90 text-[#5b0309] ring-1 ring-white/30">
               <BookOpen className="h-5 w-5" />
             </span>
             <span className="text-lg font-semibold tracking-tight">CampusFlow</span>
           </div>
 
           <div className="relative max-w-md">
-            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.24em] text-sage-100">Gestión académica</p>
-            <h1 className="text-4xl font-semibold leading-tight tracking-[-0.03em]">Tu campus, organizado en un solo lugar.</h1>
-            <p className="mt-5 max-w-sm text-sm leading-7 text-slate-300">
+            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-[#ffcf8d]">Gestión académica</p>
+            <h1 className="max-w-md text-5xl font-semibold leading-[1.02] tracking-[-0.06em]">Tu campus, organizado en un solo lugar.</h1>
+            <p className="mt-5 max-w-sm text-sm leading-7 text-rose-100/75">
               Administra aulas, docentes y carreras con información clara y decisiones respaldadas por datos.
             </p>
           </div>
 
-          <p className="relative text-xs text-slate-400">© {new Date().getFullYear()} CampusFlow</p>
+          <p className="relative text-xs text-rose-100/55">© {new Date().getFullYear()} CampusFlow · Universidad Politécnica de Honduras</p>
         </div>
 
-        <div className="flex items-center justify-center px-6 py-12 sm:px-12 lg:px-20">
+        <div className="flex items-center justify-center bg-[#171112] px-6 py-12 text-white sm:px-12 lg:px-12 xl:px-16">
           <div className="w-full max-w-md">
             <div className="mb-10 flex items-center gap-3 lg:hidden">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-navy-900 text-white">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-[#f7e8e6] text-[#5b0309]">
                 <BookOpen className="h-5 w-5" />
               </span>
-              <span className="font-semibold text-navy-900 dark:text-white">CampusFlow</span>
+              <span className="font-semibold text-white">CampusFlow</span>
             </div>
 
-            <p className="text-sm font-semibold text-sage-600 dark:text-sage-400">Bienvenido de nuevo</p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-navy-950 dark:text-white">Inicia sesión</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">Ingresa tus credenciales para acceder al panel académico.</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#f05b52]">Bienvenido de nuevo</p>
+            <h2 className="mt-2 text-4xl font-semibold tracking-[-0.05em] text-white">Inicia sesión</h2>
+            <p className="mt-3 text-sm leading-6 text-[#b9a9a8]">Ingresa tus credenciales para acceder al panel académico.</p>
 
             <form className="mt-8 space-y-5" onSubmit={onSubmit} noValidate>
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Correo electrónico</span>
+                <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.12em] text-[#d8c9c8]">Correo electrónico</span>
                 <span className="relative block">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7e6d6d]" />
                   <input
-                    className="focus-ring h-12 w-full rounded-xl border bg-[#faf7f0] pl-11 pr-4 text-sm placeholder:text-slate-400 dark:bg-stone-950"
+                    className="focus-ring h-12 w-full rounded-xl border border-[#3d2b2d] bg-[#211719] pl-11 pr-4 text-sm text-white placeholder:text-[#7e6d6d]"
                     type="email"
                     autoComplete="email"
                     placeholder="nombre@campus.edu"
@@ -102,18 +100,18 @@ export function LoginPage() {
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Contraseña</span>
+                <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.12em] text-[#d8c9c8]">Contraseña</span>
                 <span className="relative block">
-                  <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7e6d6d]" />
                   <input
-                    className="focus-ring h-12 w-full rounded-xl border bg-[#faf7f0] pl-11 pr-12 text-sm placeholder:text-slate-400 dark:bg-stone-950"
+                    className="focus-ring h-12 w-full rounded-xl border border-[#3d2b2d] bg-[#211719] pl-11 pr-12 text-sm text-white placeholder:text-[#7e6d6d]"
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
                     placeholder="••••••••"
                     {...register('password')}
                   />
                   <button
-                    className="focus-ring absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                    className="focus-ring absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-[#7e6d6d] hover:text-white"
                     type="button"
                     onClick={() => setShowPassword((current) => !current)}
                     aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
@@ -124,10 +122,10 @@ export function LoginPage() {
                 {errors.password && <span className="mt-1.5 block text-xs text-red-600">{errors.password.message}</span>}
               </label>
 
-              {serverError && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{serverError}</p>}
+              {serverError && <p className="rounded-xl border border-red-900/50 bg-red-950/40 px-4 py-3 text-sm text-red-300">{serverError}</p>}
 
               <button
-                className="focus-ring flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-navy-900 px-5 text-sm font-semibold text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sage-500 dark:hover:bg-sage-600"
+                className="focus-ring flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#991b1b] px-5 text-sm font-semibold text-white transition hover:bg-[#b42323] disabled:cursor-not-allowed disabled:opacity-60"
                 type="submit"
                 disabled={isSubmitting}
               >
@@ -136,13 +134,13 @@ export function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-7 rounded-2xl border bg-[#faf7f0] p-4 text-sm dark:bg-stone-950">
+            <div className="mt-7 rounded-xl border border-[#302224] bg-[#1e1618] p-4 text-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="font-medium text-slate-700 dark:text-slate-200">Acceso de demostración</p>
-                  <p className="mt-1 text-xs text-slate-500">Credenciales disponibles para revisión local.</p>
+                  <p className="font-medium text-[#e6d8d6]">Acceso de demostración</p>
+                  <p className="mt-1 text-xs text-[#988685]">Credenciales disponibles para revisión local.</p>
                 </div>
-                <button className="focus-ring shrink-0 rounded-lg px-3 py-2 text-xs font-semibold text-sage-600 hover:bg-sage-50 dark:text-sage-400 dark:hover:bg-sage-950" type="button" onClick={useDemoAccount}>
+                <button className="focus-ring shrink-0 rounded-lg border border-[#493033] px-3 py-2 text-xs font-semibold text-[#f05b52] hover:bg-[#2b1b1e]" type="button" onClick={useDemoAccount}>
                   Completar
                 </button>
               </div>

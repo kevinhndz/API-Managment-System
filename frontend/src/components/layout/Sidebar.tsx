@@ -1,4 +1,4 @@
-import { LogOut, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, LogOut, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 import { brandIcon as BrandIcon, navigationItems } from '../../config/navigation'
@@ -6,10 +6,12 @@ import { useAuth } from '../../contexts/AuthContext'
 
 interface SidebarProps {
   open: boolean
+  collapsed: boolean
   onClose: () => void
+  onToggle: () => void
 }
 
-export function Sidebar({ open, onClose }: SidebarProps) {
+export function Sidebar({ open, collapsed, onClose, onToggle }: SidebarProps) {
   const { logout } = useAuth()
 
   return (
@@ -21,14 +23,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         onClick={onClose}
       />
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-[#e3e2df] bg-[#f4f3f0] px-4 py-6 shadow-xl transition-transform duration-300 ease-[var(--ease-drawer)] dark:border-stone-800 dark:bg-[#211f1d] lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${open ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[#e3e2df] bg-[#f4f3f0] px-4 py-6 shadow-xl transition-[width,transform] duration-300 ease-[var(--ease-drawer)] dark:border-stone-800 dark:bg-[#211f1d] lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${collapsed ? 'lg:w-[88px]' : 'lg:w-64'} w-64 ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div className="flex items-center justify-between px-2">
-          <div className="flex items-center gap-3">
+        <div className={`flex items-center px-2 ${collapsed ? 'lg:justify-center' : 'justify-between'}`}>
+          <div className="flex min-w-0 items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-navy-900 text-white dark:bg-sage-500">
               <BrandIcon className="h-5 w-5" />
             </span>
-            <div>
+            <div className={collapsed ? 'lg:hidden' : ''}>
               <p className="font-semibold tracking-[-0.03em] text-[#5b0309] dark:text-rose-200">CampusFlow</p>
               <p className="text-[11px] text-slate-400">Gestión académica</p>
             </div>
@@ -38,8 +40,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </button>
         </div>
 
-        <nav className="mt-12 flex-1 space-y-1.5" aria-label="Navegación principal">
-          <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a716f]">Administración</p>
+        <button className="focus-ring absolute -right-3 top-24 z-10 hidden h-7 w-7 place-items-center rounded-full border border-[#dedbd6] bg-[#faf9f6] text-[#5b0309] shadow-sm transition hover:scale-105 lg:grid dark:border-stone-700 dark:bg-stone-800 dark:text-rose-200" type="button" onClick={onToggle} aria-label={collapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'} title={collapsed ? 'Expandir menú' : 'Colapsar menú'}>
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </button>
+
+        <nav className={`mt-12 flex-1 space-y-1.5 ${collapsed ? 'lg:px-1' : ''}`} aria-label="Navegación principal">
+          <p className={`mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a716f] ${collapsed ? 'lg:hidden' : ''}`}>Administración</p>
           {navigationItems.map(({ label, path, icon: Icon }) => (
             <NavLink
               key={path}
@@ -47,7 +53,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               end={path === '/'}
               onClick={onClose}
               className={({ isActive }) =>
-                `focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                `focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${collapsed ? 'lg:justify-center lg:px-2' : ''} ${
                   isActive
                     ? 'bg-[#5b0309] text-white shadow-sm dark:bg-[#7a1c1c]'
                     : 'text-[#574240] hover:bg-[#e9e8e5] hover:text-[#5b0309] dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-white'
@@ -55,18 +61,18 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               }
             >
               <Icon className="h-[18px] w-[18px]" />
-              {label}
+              <span className={collapsed ? 'lg:hidden' : ''}>{label}</span>
             </NavLink>
           ))}
         </nav>
 
         <button
-          className="focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-300"
+          className={`focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-300 ${collapsed ? 'lg:justify-center lg:px-2' : ''}`}
           type="button"
           onClick={logout}
         >
           <LogOut className="h-[18px] w-[18px]" />
-          Cerrar sesión
+          <span className={collapsed ? 'lg:hidden' : ''}>Cerrar sesión</span>
         </button>
       </aside>
     </>
