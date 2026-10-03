@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import type { CrudService } from '../services/api'
 
-export function useCrudResource<T, TPayload>(service: CrudService<T, TPayload>, limit = 10) {
+export function useCrudResource<T, TPayload>(service: CrudService<T, TPayload>, limit = 10, busqueda = '') {
   const [items, setItems] = useState<T[]>([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
@@ -15,7 +15,7 @@ export function useCrudResource<T, TPayload>(service: CrudService<T, TPayload>, 
     setLoading(true)
     setError('')
     try {
-      const response = await service.list({ pagina_actual: page, limite: limit })
+      const response = await service.list({ pagina_actual: page, limite: limit, busqueda })
       setItems(response.data)
       setTotal(response.total)
       setTotalPages(response.total_paginas)
@@ -24,7 +24,7 @@ export function useCrudResource<T, TPayload>(service: CrudService<T, TPayload>, 
     } finally {
       setLoading(false)
     }
-  }, [limit, page, service])
+  }, [busqueda, limit, page, service])
 
   useEffect(() => {
     void load()

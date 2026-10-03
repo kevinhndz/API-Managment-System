@@ -60,6 +60,7 @@ function createCrudService<T, TPayload>(path: string): CrudService<T, TPayload> 
         pagina_actual: String(params.pagina_actual ?? 1),
         limite: String(params.limite ?? 100),
       })
+      if (params.busqueda?.trim()) query.set('busqueda', params.busqueda.trim())
       return request<PaginatedResponse<T>>(`${path}/?${query}`)
     },
     get(id: number) {

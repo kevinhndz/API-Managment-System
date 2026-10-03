@@ -25,9 +25,10 @@ def crear_docente(
 def listar_docentes(
     pagina_actual: int = Query(default=1, ge=1),
     limite: int = Query(default=10, ge=1, le=100),
+    busqueda: str | None = Query(default=None),
     db: Session = Depends(abrir_puerta_bd),
 ):
-    return s.listar_service(db, pagina_actual, limite)
+    return s.listar_service(db, pagina_actual, limite, busqueda)
 
 
 @router.get("/{id}", response_model=DocenteResponse)

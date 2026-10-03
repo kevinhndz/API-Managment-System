@@ -16,8 +16,19 @@ class DocenteRepository:
         )
 
     @staticmethod
-    def listar_repository(db: Session, pagina_actual: int, limite: int):
+    def listar_repository(
+        db: Session, pagina_actual: int, limite: int, busqueda: str | None = None
+    ):
         query = db.query(Docentes)
+        if busqueda:
+            texto = f"%{busqueda}%"
+            query = query.filter(
+                (Docentes.numero_empleado.ilike(texto))
+                | (Docentes.nombres.ilike(texto))
+                | (Docentes.apellidos.ilike(texto))
+                | (Docentes.correo.ilike(texto))
+                | (Docentes.especialidad.ilike(texto))
+            )
         total = query.count()
         data = query.offset((pagina_actual - 1) * limite).limit(limite).all()
         return total, data

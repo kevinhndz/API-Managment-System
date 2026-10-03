@@ -12,6 +12,7 @@ from modulos.docentes.schema import (
     Revisar_Json_Editar_Docente,
 )
 from modulos.docentes.tabla import Docentes
+from modulos.secciones.tabla import Secciones
 
 
 class DocentesService:
@@ -32,8 +33,10 @@ class DocentesService:
         return repo.guardar_docente_repository(db, nueva_docente)
 
     @staticmethod
-    def listar_service(db: Session, pagina_actual: int, limite: int):
-        total, data = repo.listar_repository(db, pagina_actual, limite)
+    def listar_service(
+        db: Session, pagina_actual: int, limite: int, busqueda: str | None = None
+    ):
+        total, data = repo.listar_repository(db, pagina_actual, limite, busqueda)
         return RespuestaPaginada[DocenteResponse](
             total=total,
             pagina_actual=pagina_actual,
@@ -91,4 +94,11 @@ class DocentesService:
         check = repo.buscar_repository(db, id)
         if check is None:
             raise RecursoNoEncontradoError("No existe este docente")
+
+        tiene_secciones = db.query(Secciones).filter(Secciones.docente_id == id).first()
+        if tiene_secciones is not None:
+            check.estado = False
+            repo.guardar_docente_repository(db, check)
+            return
+
         repo.eliminar_docente_repository(db, check)

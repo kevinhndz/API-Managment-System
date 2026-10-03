@@ -63,8 +63,8 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   toPayload,
   searchableText,
 }: EntityPageProps<T, TPayload>) {
-  const resource = useCrudResource(service)
   const [query, setQuery] = useState('')
+  const resource = useCrudResource(service, 10, query)
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<T | null>(null)
   const [pendingDelete, setPendingDelete] = useState<T | null>(null)
@@ -123,7 +123,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
         <div className="flex flex-col justify-between gap-3 border-b p-4 sm:flex-row sm:items-center">
           <label className="relative block w-full sm:max-w-xs">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input className="focus-ring h-10 w-full rounded-xl border bg-[#faf7f0] pl-10 pr-4 text-sm placeholder:text-slate-400 dark:bg-stone-950" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Buscar ${title.toLocaleLowerCase('es')}…`} />
+            <input className="focus-ring h-10 w-full rounded-xl border bg-[#faf7f0] pl-10 pr-4 text-sm placeholder:text-slate-400 dark:bg-stone-950" value={query} onChange={(event) => { setQuery(event.target.value); resource.setPage(1) }} placeholder={`Buscar ${title.toLocaleLowerCase('es')}…`} />
           </label>
           <p className="text-xs text-slate-400">{resource.total} registros</p>
         </div>
