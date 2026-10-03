@@ -21,7 +21,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         onClick={onClose}
       />
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r bg-[#fffdf8] px-4 py-5 shadow-xl transition-transform duration-300 dark:bg-stone-950 lg:static lg:z-auto lg:w-64 lg:translate-x-0 lg:shadow-none ${open ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200/80 bg-white px-4 py-6 shadow-xl transition-transform duration-300 ease-[var(--ease-drawer)] dark:border-slate-800 dark:bg-[#131a1b] lg:static lg:z-auto lg:w-64 lg:translate-x-0 lg:shadow-none ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-3">
@@ -29,7 +29,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               <BrandIcon className="h-5 w-5" />
             </span>
             <div>
-              <p className="font-semibold tracking-tight text-navy-950 dark:text-white">CampusFlow</p>
+              <p className="font-semibold tracking-[-0.03em] text-navy-950 dark:text-white">CampusFlow</p>
               <p className="text-[11px] text-slate-400">Gestión académica</p>
             </div>
           </div>
@@ -38,7 +38,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </button>
         </div>
 
-        <nav className="mt-10 flex-1 space-y-1.5" aria-label="Navegación principal">
+        <nav className="mt-12 flex-1 space-y-1.5" aria-label="Navegación principal">
           <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Administración</p>
           {navigationItems.map(({ label, path, icon: Icon }) => (
             <NavLink

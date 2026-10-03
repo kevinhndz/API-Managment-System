@@ -23,10 +23,10 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
+        sans: ['Avenir Next', 'Segoe UI', 'ui-sans-serif', 'system-ui', 'sans-serif']
       },
       boxShadow: {
-        panel: '0 14px 40px -24px rgb(15 23 42 / 0.35)'
+        panel: '0 18px 44px -30px rgb(15 23 42 / 0.35)'
       }
     }
   },

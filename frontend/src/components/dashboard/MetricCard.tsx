@@ -18,11 +18,11 @@ const tones = {
 
 export function MetricCard({ label, value, helper, icon: Icon, tone, loading }: MetricCardProps) {
   return (
-    <article className="rounded-2xl border bg-[#fffdf8] p-5 shadow-panel dark:bg-stone-900">
+    <article className="surface-lift rounded-2xl border border-slate-200/80 bg-white p-5 shadow-panel dark:border-slate-800 dark:bg-[#151d1e]">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
-          {loading ? <div className="mt-3 h-9 w-16 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" /> : <p className="mt-2 text-3xl font-semibold tracking-tight text-navy-950 dark:text-white">{value.toLocaleString('es-HN')}</p>}
+          {loading ? <div className="mt-3 h-9 w-16 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" /> : <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-navy-950 dark:text-white">{value.toLocaleString('es-HN')}</p>}
         </div>
         <span className={`grid h-11 w-11 place-items-center rounded-xl ${tones[tone]}`}>
           <Icon className="h-5 w-5" />
