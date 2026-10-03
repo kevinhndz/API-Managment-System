@@ -1,8 +1,12 @@
+from math import ceil
+
 from sqlalchemy.orm import Session
 
 from core.excepciones import RecursoDuplicadoError, RecursoNoEncontradoError
+from core.schema import RespuestaPaginada
 from modulos.carreras.repository import CarreraRepository as repo
 from modulos.carreras.schema import (
+    CarreraResponse,
     Editar_Parcialmente_Carrera,
     Revisar_Json_Crear_Carrera,
     Revisar_Json_Editar_Carrera,
@@ -26,8 +30,15 @@ class CarrerasService:
         return repo.guardar_carrera_repository(db, nueva_carrera)
 
     @staticmethod
-    def listar_service(db: Session):
-        return repo.listar_repository(db)
+    def listar_service(db: Session, pagina_actual: int, limite: int):
+        total, data = repo.listar_repository(db, pagina_actual, limite)
+        return RespuestaPaginada[CarreraResponse](
+            total=total,
+            pagina_actual=pagina_actual,
+            limite=limite,
+            total_paginas=ceil(total / limite) if total else 0,
+            data=data,
+        )
 
     @staticmethod
     def buscar_service(db: Session, id: int):
