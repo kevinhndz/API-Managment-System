@@ -18,6 +18,7 @@ from database.almacen import miClaseBase
 from modulos.aulas.tabla import Aulas
 from modulos.docentes.tabla import Docentes
 from modulos.carreras.tabla import Carreras
+from modulos.estudiantes.tabla import Estudiantes
 
 # Configuracion de Alembic
 config = context.config

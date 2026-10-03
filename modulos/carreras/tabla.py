@@ -1,5 +1,5 @@
 from sqlalchemy import Boolean, Column, Integer, String
-
+from sqlalchemy.orm import relationship
 from database.almacen import miClaseBase
 from database.base import PoderAuditor
 
@@ -12,3 +12,6 @@ class Carreras(miClaseBase, PoderAuditor):
     nombre = Column(String(150), unique=True, nullable=False)
     duracion_anios = Column(Integer, nullable=False)
     activo = Column(Boolean, default=True, nullable=False)
+
+    # relacion 1:n
+    estudiantes = relationship("Estudiantes", back_populates="carrera")
