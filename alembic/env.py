@@ -16,6 +16,8 @@ load_dotenv()
 
 from database.almacen import miClaseBase
 from modulos.aulas.tabla import Aulas
+from modulos.docentes.tabla import Docentes
+from modulos.carreras.tabla import Carreras
 
 # Configuracion de Alembic
 config = context.config
