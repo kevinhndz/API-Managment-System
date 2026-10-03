@@ -4,9 +4,9 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { AppLayout } from './components/layout/AppLayout'
 import { DashboardPage } from './pages/DashboardPage'
 import { AulasPage } from './pages/AulasPage'
+import { CarrerasPage } from './pages/CarrerasPage'
 import { DocentesPage } from './pages/DocentesPage'
 import { LoginPage } from './pages/LoginPage'
-import { PlaceholderPage } from './pages/PlaceholderPage'
 
 export function App() {
   return (
@@ -17,7 +17,7 @@ export function App() {
           <Route index element={<DashboardPage />} />
           <Route path="aulas" element={<AulasPage />} />
           <Route path="docentes" element={<DocentesPage />} />
-          <Route path="carreras" element={<PlaceholderPage title="Carreras" description="Organiza la oferta académica y duración de programas." />} />
+          <Route path="carreras" element={<CarrerasPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
