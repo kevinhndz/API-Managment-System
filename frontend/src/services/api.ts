@@ -44,7 +44,16 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return response.json() as Promise<T>
 }
 
-function createCrudService<T, TPayload>(path: string) {
+export interface CrudService<T, TPayload> {
+  list: (params?: PaginationParams) => Promise<PaginatedResponse<T>>
+  get: (id: number) => Promise<T>
+  create: (payload: TPayload) => Promise<T>
+  update: (id: number, payload: TPayload) => Promise<T>
+  patch: (id: number, payload: Partial<TPayload>) => Promise<T>
+  remove: (id: number) => Promise<void>
+}
+
+function createCrudService<T, TPayload>(path: string): CrudService<T, TPayload> {
   return {
     list(params: PaginationParams = {}) {
       const query = new URLSearchParams({
