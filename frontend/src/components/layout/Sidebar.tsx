@@ -21,7 +21,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         onClick={onClose}
       />
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r bg-white px-4 py-5 shadow-xl transition-transform duration-300 dark:bg-slate-950 lg:static lg:z-auto lg:w-64 lg:translate-x-0 lg:shadow-none ${open ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r bg-[#fffdf8] px-4 py-5 shadow-xl transition-transform duration-300 dark:bg-stone-950 lg:static lg:z-auto lg:w-64 lg:translate-x-0 lg:shadow-none ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-3">

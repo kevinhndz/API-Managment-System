@@ -47,12 +47,12 @@ export function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#eef3f8] px-4 py-8 dark:bg-slate-950 sm:px-8">
+    <main className="relative min-h-screen overflow-hidden bg-[#f4f0e8] px-4 py-8 dark:bg-stone-950 sm:px-8">
       <div className="pointer-events-none absolute -left-28 top-[-9rem] h-96 w-96 rounded-full bg-sage-400/15 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-40 right-[-8rem] h-[30rem] w-[30rem] rounded-full bg-navy-600/15 blur-3xl" />
 
-      <section className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl overflow-hidden rounded-[2rem] border border-white/70 bg-white shadow-[0_28px_90px_-35px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="relative hidden overflow-hidden bg-navy-900 p-12 text-white lg:flex lg:flex-col lg:justify-between">
+      <section className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl overflow-hidden rounded-[2rem] border border-[#e9dfcf] bg-[#fffdf8] shadow-[0_28px_90px_-35px_rgba(91,70,44,0.28)] dark:border-stone-800 dark:bg-stone-900 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="relative hidden overflow-hidden bg-navy-800 p-12 text-white lg:flex lg:flex-col lg:justify-between">
           <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(135deg,transparent_0%,transparent_47%,rgba(255,255,255,.13)_48%,transparent_49%),linear-gradient(rgba(255,255,255,.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.05)_1px,transparent_1px)] [background-size:180px_180px,42px_42px,42px_42px]" />
           <div className="relative flex items-center gap-3">
             <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 ring-1 ring-white/20">
@@ -91,7 +91,7 @@ export function LoginPage() {
                 <span className="relative block">
                   <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
-                    className="focus-ring h-12 w-full rounded-xl border bg-slate-50 pl-11 pr-4 text-sm placeholder:text-slate-400 dark:bg-slate-950"
+                    className="focus-ring h-12 w-full rounded-xl border bg-[#faf7f0] pl-11 pr-4 text-sm placeholder:text-slate-400 dark:bg-stone-950"
                     type="email"
                     autoComplete="email"
                     placeholder="nombre@campus.edu"
@@ -106,7 +106,7 @@ export function LoginPage() {
                 <span className="relative block">
                   <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
-                    className="focus-ring h-12 w-full rounded-xl border bg-slate-50 pl-11 pr-12 text-sm placeholder:text-slate-400 dark:bg-slate-950"
+                    className="focus-ring h-12 w-full rounded-xl border bg-[#faf7f0] pl-11 pr-12 text-sm placeholder:text-slate-400 dark:bg-stone-950"
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
                     placeholder="••••••••"
@@ -136,7 +136,7 @@ export function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-7 rounded-2xl border bg-slate-50 p-4 text-sm dark:bg-slate-950">
+            <div className="mt-7 rounded-2xl border bg-[#faf7f0] p-4 text-sm dark:bg-stone-950">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="font-medium text-slate-700 dark:text-slate-200">Acceso de demostración</p>

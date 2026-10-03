@@ -14,7 +14,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-900 via-navy-800 to-sage-600 px-6 py-8 text-white shadow-panel sm:px-8">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-800 via-navy-700 to-sage-600 px-6 py-8 text-white shadow-panel sm:px-8">
         <div className="absolute -right-10 -top-24 h-64 w-64 rounded-full border-[28px] border-white/5" />
         <div className="absolute bottom-[-7rem] right-32 h-56 w-56 rounded-full border-[22px] border-white/5" />
         <div className="relative flex flex-col justify-between gap-6 sm:flex-row sm:items-end">

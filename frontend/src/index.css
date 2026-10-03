@@ -19,7 +19,7 @@
   }
 
   body {
-    @apply m-0 min-w-80 bg-slate-100 font-sans text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+    @apply m-0 min-w-80 bg-[#f4f0e8] font-sans text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100;
   }
 
   button,

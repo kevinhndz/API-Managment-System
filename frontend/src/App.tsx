@@ -11,7 +11,7 @@ const DocentesPage = lazy(() => import('./pages/DocentesPage').then((module) => 
 const CarrerasPage = lazy(() => import('./pages/CarrerasPage').then((module) => ({ default: module.CarrerasPage })))
 
 function PageLoader() {
-  return <div className="h-72 animate-pulse rounded-2xl border bg-white dark:bg-slate-900" aria-label="Cargando página" />
+  return <div className="h-72 animate-pulse rounded-2xl border bg-[#fffdf8] dark:bg-stone-900" aria-label="Cargando página" />
 }
 
 export function App() {

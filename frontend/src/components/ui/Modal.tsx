@@ -22,7 +22,7 @@ export function Modal({ open, title, description, onClose, children }: ModalProp
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-slate-950/55 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div className="my-8 w-full max-w-xl rounded-3xl border bg-white shadow-2xl dark:bg-slate-900">
+      <div className="my-8 w-full max-w-xl rounded-3xl border bg-[#fffdf8] shadow-2xl dark:bg-stone-900">
         <div className="flex items-start justify-between gap-4 border-b px-6 py-5">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-navy-950 dark:text-white" id="modal-title">{title}</h2>

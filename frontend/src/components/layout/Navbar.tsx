@@ -22,7 +22,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   const current = navigationItems.find((item) => item.path === pathname) ?? navigationItems[0]
 
   return (
-    <header className="sticky top-0 z-20 flex min-h-20 items-center justify-between gap-4 border-b bg-slate-100/90 px-4 backdrop-blur-xl dark:bg-slate-950/90 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-20 flex min-h-20 items-center justify-between gap-4 border-b bg-[#f4f0e8]/90 px-4 backdrop-blur-xl dark:bg-stone-950/90 sm:px-6 lg:px-8">
       <div className="flex min-w-0 items-center gap-3">
         <button className="focus-ring grid h-10 w-10 shrink-0 place-items-center rounded-xl border bg-white text-slate-600 shadow-sm lg:hidden dark:bg-slate-900 dark:text-slate-300" type="button" onClick={onMenuClick} aria-label="Abrir menú">
           <Menu className="h-5 w-5" />

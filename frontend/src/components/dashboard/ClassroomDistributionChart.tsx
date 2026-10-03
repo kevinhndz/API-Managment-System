@@ -17,7 +17,7 @@ export function ClassroomDistributionChart({ aulas }: ClassroomDistributionChart
   ).map(([name, value]) => ({ name: name.replace('Edificio ', ''), value }))
 
   return (
-    <article className="rounded-2xl border bg-white p-5 shadow-panel dark:bg-slate-900 sm:p-6">
+    <article className="rounded-2xl border bg-[#fffdf8] p-5 shadow-panel dark:bg-stone-900 sm:p-6">
       <div>
         <h3 className="font-semibold tracking-tight text-navy-950 dark:text-white">Distribución de aulas</h3>
         <p className="mt-1 text-xs text-slate-500">Registros agrupados por edificio</p>

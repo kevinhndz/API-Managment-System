@@ -18,7 +18,7 @@ const tones = {
 
 export function MetricCard({ label, value, helper, icon: Icon, tone, loading }: MetricCardProps) {
   return (
-    <article className="rounded-2xl border bg-white p-5 shadow-panel dark:bg-slate-900">
+    <article className="rounded-2xl border bg-[#fffdf8] p-5 shadow-panel dark:bg-stone-900">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>

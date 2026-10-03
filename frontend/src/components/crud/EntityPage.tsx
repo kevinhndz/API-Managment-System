@@ -119,11 +119,11 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
         </button>
       </header>
 
-      <section className="overflow-hidden rounded-2xl border bg-white shadow-panel dark:bg-slate-900">
+      <section className="overflow-hidden rounded-2xl border bg-[#fffdf8] shadow-panel dark:bg-stone-900">
         <div className="flex flex-col justify-between gap-3 border-b p-4 sm:flex-row sm:items-center">
           <label className="relative block w-full sm:max-w-xs">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input className="focus-ring h-10 w-full rounded-xl border bg-slate-50 pl-10 pr-4 text-sm placeholder:text-slate-400 dark:bg-slate-950" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Buscar ${title.toLocaleLowerCase('es')}…`} />
+            <input className="focus-ring h-10 w-full rounded-xl border bg-[#faf7f0] pl-10 pr-4 text-sm placeholder:text-slate-400 dark:bg-stone-950" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Buscar ${title.toLocaleLowerCase('es')}…`} />
           </label>
           <p className="text-xs text-slate-400">{resource.total} registros</p>
         </div>
@@ -133,7 +133,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse text-left">
             <thead>
-              <tr className="border-b bg-slate-50/80 dark:bg-slate-950/50">
+              <tr className="border-b bg-[#faf7f0]/80 dark:bg-stone-950/50">
                 {columns.map((column) => <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400" key={column.label}>{column.label}</th>)}
                 <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">Acciones</th>
               </tr>
@@ -172,10 +172,10 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
             {fields.map((field) => {
               const value = form[field.key]
               if (field.type === 'checkbox') {
-                return <label className="flex items-center gap-3 self-end rounded-xl border bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 dark:bg-slate-950 dark:text-slate-200" key={String(field.key)}><input className="h-4 w-4 accent-sage-600" type="checkbox" checked={Boolean(value)} onChange={(event) => updateField(field, event.target.checked)} />{field.label}</label>
+                return <label className="flex items-center gap-3 self-end rounded-xl border bg-[#faf7f0] px-4 py-3 text-sm font-medium text-slate-700 dark:bg-stone-950 dark:text-slate-200" key={String(field.key)}><input className="h-4 w-4 accent-sage-600" type="checkbox" checked={Boolean(value)} onChange={(event) => updateField(field, event.target.checked)} />{field.label}</label>
               }
 
-              const sharedClass = 'focus-ring mt-2 h-11 w-full rounded-xl border bg-slate-50 px-3.5 text-sm dark:bg-slate-950'
+              const sharedClass = 'focus-ring mt-2 h-11 w-full rounded-xl border bg-[#faf7f0] px-3.5 text-sm dark:bg-stone-950'
               return (
                 <label className="block" key={String(field.key)}>
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{field.label}</span>
