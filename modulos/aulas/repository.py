@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from database.almacen import abrir_puerta_bd
 from modulos.aulas.tabla import Aulas
 
 
@@ -16,3 +15,19 @@ class AulaRepository():
         db.commit()
         db.refresh(nueva_aula)
         return nueva_aula
+
+    @staticmethod
+    def listar_repository(db: Session, pagina_actual: int, limite: int):
+        query = db.query(Aulas)
+        total = query.count()
+        data = query.offset((pagina_actual - 1) * limite).limit(limite).all()
+        return total, data
+
+    @staticmethod
+    def buscar_repository(db: Session, id):
+        return db.query(Aulas).filter(Aulas.id == id).first()
+
+    @staticmethod
+    def eliminar_aula_repository(db: Session, aula):
+        db.delete(aula)
+        db.commit()
