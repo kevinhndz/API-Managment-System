@@ -1,13 +1,35 @@
-import { ArrowUpRight, BookOpenCheck, Building2, GraduationCap, RefreshCw, UsersRound } from 'lucide-react'
+import { ArrowUpRight, RefreshCw } from 'lucide-react'
 
 import { ClassroomCapacityChart } from '../components/dashboard/ClassroomCapacityChart'
 import { ClassroomDistributionChart } from '../components/dashboard/ClassroomDistributionChart'
-import { MetricCard } from '../components/dashboard/MetricCard'
 import { useAuth } from '../contexts/AuthContext'
 import { useDashboardData } from '../hooks/useDashboardData'
 
 const classroomImage = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=85'
 const teachingImage = 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=85'
+
+const metricImages = {
+  classrooms: classroomImage,
+  capacity: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=85',
+  teachers: teachingImage,
+  programs: 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1200&q=85',
+}
+
+function ImageMetricCard({ label, value, helper, image }: { label: string; value: number; helper: string; image: string }) {
+  return (
+    <article className="group relative h-44 overflow-hidden rounded-[1.15rem] shadow-[0_18px_40px_-24px_rgb(39_25_24_/_0.65)]">
+      <img className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" src={image} alt="" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#171312]/95 via-[#171312]/35 to-black/5" />
+      <div className="relative flex h-full flex-col justify-end p-5 text-white">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/75">{label}</p>
+        <div className="mt-1 flex items-end gap-2">
+          <span className="text-3xl font-semibold tracking-[-0.06em]">{value}</span>
+          <span className="mb-1 text-[11px] text-white/75">{helper}</span>
+        </div>
+      </div>
+    </article>
+  )
+}
 
 export function DashboardPage() {
   const { data, loading, error, refresh } = useDashboardData()
@@ -51,10 +73,10 @@ export function DashboardPage() {
       {error && <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{error}</p>}
 
       <section className="dashboard-reveal grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Métricas académicas">
-        <MetricCard label="Aulas registradas" value={data.aulas.length} helper={`${data.aulas.filter((aula) => aula.activo).length} disponibles`} icon={Building2} tone="navy" loading={loading} />
-        <MetricCard label="Capacidad total" value={totalCapacity} helper="Cupos entre todas las aulas" icon={BookOpenCheck} tone="amber" loading={loading} />
-        <MetricCard label="Docentes activos" value={activeTeachers} helper={`${data.docentes.length} docentes registrados`} icon={UsersRound} tone="sage" loading={loading} />
-        <MetricCard label="Carreras activas" value={activePrograms} helper={`${data.carreras.length} programas registrados`} icon={GraduationCap} tone="violet" loading={loading} />
+        <ImageMetricCard label="Aulas registradas" value={data.aulas.length} helper={`${data.aulas.filter((aula) => aula.activo).length} disponibles`} image={metricImages.classrooms} />
+        <ImageMetricCard label="Capacidad total" value={totalCapacity} helper="cupos" image={metricImages.capacity} />
+        <ImageMetricCard label="Docentes activos" value={activeTeachers} helper={`${data.docentes.length} registrados`} image={metricImages.teachers} />
+        <ImageMetricCard label="Carreras activas" value={activePrograms} helper="programas" image={metricImages.programs} />
       </section>
 
       <section className="dashboard-reveal grid gap-5 xl:grid-cols-[1.25fr_.75fr]" aria-label="Gráficos académicos">
