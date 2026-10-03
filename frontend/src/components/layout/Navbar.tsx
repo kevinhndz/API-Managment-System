@@ -9,27 +9,20 @@ interface NavbarProps {
   onMenuClick: () => void
 }
 
-const dateFormatter = new Intl.DateTimeFormat('es-HN', {
-  weekday: 'long',
-  day: '2-digit',
-  month: 'long',
-  year: 'numeric',
-})
-
 export function Navbar({ onMenuClick }: NavbarProps) {
   const { pathname } = useLocation()
   const { user } = useAuth()
   const current = navigationItems.find((item) => item.path === pathname) ?? navigationItems[0]
 
   return (
-    <header className="sticky top-0 z-20 flex min-h-20 items-center justify-between gap-4 border-b bg-[#f4f0e8]/90 px-4 backdrop-blur-xl dark:bg-stone-950/90 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-20 flex min-h-[76px] items-center justify-between gap-4 border-b border-slate-200/80 bg-[#f5f7f8]/90 px-4 backdrop-blur-xl dark:border-slate-800/80 dark:bg-[#101516]/90 sm:px-6 lg:px-10">
       <div className="flex min-w-0 items-center gap-3">
-        <button className="focus-ring grid h-10 w-10 shrink-0 place-items-center rounded-xl border bg-white text-slate-600 shadow-sm lg:hidden dark:bg-slate-900 dark:text-slate-300" type="button" onClick={onMenuClick} aria-label="Abrir menú">
+        <button className="pressable focus-ring grid h-10 w-10 shrink-0 place-items-center rounded-xl border bg-white text-slate-600 shadow-sm lg:hidden dark:bg-slate-900 dark:text-slate-300" type="button" onClick={onMenuClick} aria-label="Abrir menú">
           <Menu className="h-5 w-5" />
         </button>
         <div className="min-w-0">
-          <h1 className="truncate text-lg font-semibold tracking-tight text-navy-950 dark:text-white">{current.label}</h1>
-          <p className="mt-0.5 hidden text-xs capitalize text-slate-500 sm:block">{dateFormatter.format(new Date())}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">CampusFlow / espacio de trabajo</p>
+          <h1 className="mt-1 truncate text-xl font-semibold tracking-[-0.03em] text-navy-950 dark:text-white">{current.label}</h1>
         </div>
       </div>
 
