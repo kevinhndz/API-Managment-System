@@ -19,6 +19,12 @@ from modulos.aulas.tabla import Aulas
 from modulos.docentes.tabla import Docentes
 from modulos.carreras.tabla import Carreras
 from modulos.estudiantes.tabla import Estudiantes
+from modulos.asignaturas.tabla import Asignaturas
+from modulos.periodos.tabla import Periodos
+from modulos.secciones.tabla import Secciones
+from modulos.matriculas.tabla import Matriculas
+from modulos.calificaciones.tabla import Calificaciones
+from modulos.login.tabla import Usuarios
 
 # Configuracion de Alembic
 config = context.config
