@@ -49,3 +49,4 @@ class ExcepcionesGlobales:
         y pregunta ¿Tengo registrado 'AccesoProhibidoError'? ──► 
         si La función es 'cls.acceso_prohibido , y esa función le envía la respuesta de error limpia
         (JSONResponse) al cliente.'"""
+        
