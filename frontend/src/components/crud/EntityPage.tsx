@@ -1,0 +1,206 @@
+import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
+
+import type { CrudService } from '../../services/api'
+import { useCrudResource } from '../../hooks/useCrudResource'
+import { Modal } from '../ui/Modal'
+
+interface EntityWithId {
+  id: number
+}
+
+interface Column<T> {
+  label: string
+  render: (item: T) => ReactNode
+}
+
+interface FieldOption {
+  label: string
+  value: string
+}
+
+interface Field<TPayload> {
+  key: keyof TPayload
+  label: string
+  type?: 'text' | 'email' | 'number' | 'select' | 'checkbox'
+  placeholder?: string
+  min?: number
+  max?: number
+  options?: FieldOption[]
+}
+
+interface EntityPageProps<T extends EntityWithId, TPayload extends object> {
+  title: string
+  description: string
+  singular: string
+  newLabel: string
+  service: CrudService<T, TPayload>
+  columns: Column<T>[]
+  fields: Field<TPayload>[]
+  emptyPayload: TPayload
+  toPayload: (item: T) => TPayload
+  searchableText: (item: T) => string
+}
+
+export function StatusBadge({ active }: { active: boolean }) {
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${active ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+      {active ? 'Activo' : 'Inactivo'}
+    </span>
+  )
+}
+
+export function EntityPage<T extends EntityWithId, TPayload extends object>({
+  title,
+  description,
+  singular,
+  newLabel,
+  service,
+  columns,
+  fields,
+  emptyPayload,
+  toPayload,
+  searchableText,
+}: EntityPageProps<T, TPayload>) {
+  const resource = useCrudResource(service)
+  const [query, setQuery] = useState('')
+  const [formOpen, setFormOpen] = useState(false)
+  const [editing, setEditing] = useState<T | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<T | null>(null)
+  const [form, setForm] = useState<TPayload>(emptyPayload)
+
+  const filteredItems = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase('es')
+    if (!normalized) return resource.items
+    return resource.items.filter((item) => searchableText(item).toLocaleLowerCase('es').includes(normalized))
+  }, [query, resource.items, searchableText])
+
+  const openCreate = () => {
+    setEditing(null)
+    setForm(emptyPayload)
+    setFormOpen(true)
+  }
+
+  const openEdit = (item: T) => {
+    setEditing(item)
+    setForm(toPayload(item))
+    setFormOpen(true)
+  }
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault()
+    const success = editing ? await resource.update(editing.id, form) : await resource.create(form)
+    if (success) setFormOpen(false)
+  }
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return
+    const success = await resource.remove(pendingDelete.id)
+    if (success) setPendingDelete(null)
+  }
+
+  const updateField = (field: Field<TPayload>, value: string | boolean) => {
+    const nextValue = field.type === 'number' ? Number(value) : value
+    setForm((current) => ({ ...current, [field.key]: nextValue }))
+  }
+
+  return (
+    <div className="space-y-5">
+      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-sm font-semibold text-sage-600 dark:text-sage-400">Módulo académico</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-navy-950 dark:text-white">{title}</h2>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{description}</p>
+        </div>
+        <button className="focus-ring flex h-11 items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 text-sm font-semibold text-white transition hover:bg-navy-800 dark:bg-sage-500 dark:hover:bg-sage-600" type="button" onClick={openCreate}>
+          <Plus className="h-4 w-4" />
+          {newLabel}
+        </button>
+      </header>
+
+      <section className="overflow-hidden rounded-2xl border bg-[#fffdf8] shadow-panel dark:bg-stone-900">
+        <div className="flex flex-col justify-between gap-3 border-b p-4 sm:flex-row sm:items-center">
+          <label className="relative block w-full sm:max-w-xs">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input className="focus-ring h-10 w-full rounded-xl border bg-[#faf7f0] pl-10 pr-4 text-sm placeholder:text-slate-400 dark:bg-stone-950" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Buscar ${title.toLocaleLowerCase('es')}…`} />
+          </label>
+          <p className="text-xs text-slate-400">{resource.total} registros</p>
+        </div>
+
+        {resource.error && <div className="border-b bg-red-50 px-5 py-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">{resource.error}</div>}
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] border-collapse text-left">
+            <thead>
+              <tr className="border-b bg-[#faf7f0]/80 dark:bg-stone-950/50">
+                {columns.map((column) => <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400" key={column.label}>{column.label}</th>)}
+                <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {resource.loading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={index}>{columns.map((column) => <td className="px-5 py-4" key={column.label}><span className="block h-4 animate-pulse rounded bg-slate-100 dark:bg-slate-800" /></td>)}<td /></tr>
+                ))
+              ) : filteredItems.length === 0 ? (
+                <tr><td className="px-5 py-14 text-center text-sm text-slate-400" colSpan={columns.length + 1}>No se encontraron registros.</td></tr>
+              ) : (
+                filteredItems.map((item) => (
+                  <tr className="transition hover:bg-slate-50/70 dark:hover:bg-slate-800/40" key={item.id}>
+                    {columns.map((column) => <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600 dark:text-slate-300" key={column.label}>{column.render(item)}</td>)}
+                    <td className="px-5 py-4"><div className="flex justify-end gap-1"><button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/40" type="button" onClick={() => openEdit(item)} aria-label={`Editar ${singular}`}><Pencil className="h-4 w-4" /></button><button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40" type="button" onClick={() => setPendingDelete(item)} aria-label={`Eliminar ${singular}`}><Trash2 className="h-4 w-4" /></button></div></td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex items-center justify-between border-t px-4 py-3">
+          <p className="text-xs text-slate-400">Página {resource.page} de {Math.max(resource.totalPages, 1)}</p>
+          <div className="flex gap-2">
+            <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg border text-slate-500 disabled:opacity-40 dark:text-slate-300" type="button" disabled={resource.page <= 1 || resource.loading} onClick={() => resource.setPage((page) => page - 1)} aria-label="Página anterior"><ChevronLeft className="h-4 w-4" /></button>
+            <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg border text-slate-500 disabled:opacity-40 dark:text-slate-300" type="button" disabled={resource.page >= resource.totalPages || resource.loading} onClick={() => resource.setPage((page) => page + 1)} aria-label="Página siguiente"><ChevronRight className="h-4 w-4" /></button>
+          </div>
+        </div>
+      </section>
+
+      <Modal open={formOpen} title={editing ? `Editar ${singular.toLocaleLowerCase('es')}` : newLabel} description="Completa los campos requeridos." onClose={() => setFormOpen(false)}>
+        <form onSubmit={(event) => void submit(event)}>
+          <div className="grid gap-5 p-6 sm:grid-cols-2">
+            {fields.map((field) => {
+              const value = form[field.key]
+              if (field.type === 'checkbox') {
+                return <label className="flex items-center gap-3 self-end rounded-xl border bg-[#faf7f0] px-4 py-3 text-sm font-medium text-slate-700 dark:bg-stone-950 dark:text-slate-200" key={String(field.key)}><input className="h-4 w-4 accent-sage-600" type="checkbox" checked={Boolean(value)} onChange={(event) => updateField(field, event.target.checked)} />{field.label}</label>
+              }
+
+              const sharedClass = 'focus-ring mt-2 h-11 w-full rounded-xl border bg-[#faf7f0] px-3.5 text-sm dark:bg-stone-950'
+              return (
+                <label className="block" key={String(field.key)}>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{field.label}</span>
+                  {field.type === 'select' ? (
+                    <select className={sharedClass} value={String(value)} onChange={(event) => updateField(field, event.target.value)} required>
+                      {field.options?.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                    </select>
+                  ) : (
+                    <input className={sharedClass} type={field.type ?? 'text'} value={String(value)} placeholder={field.placeholder} min={field.min} max={field.max} onChange={(event) => updateField(field, event.target.value)} required />
+                  )}
+                </label>
+              )
+            })}
+          </div>
+          <div className="flex justify-end gap-3 border-t px-6 py-4">
+            <button className="focus-ring h-10 rounded-xl border px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800" type="button" onClick={() => setFormOpen(false)}>Cancelar</button>
+            <button className="focus-ring h-10 rounded-xl bg-navy-900 px-5 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-60 dark:bg-sage-500" type="submit" disabled={resource.saving}>{resource.saving ? 'Guardando…' : 'Guardar'}</button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal open={pendingDelete !== null} title={`Eliminar ${singular.toLocaleLowerCase('es')}`} description="Esta acción no se puede deshacer." onClose={() => setPendingDelete(null)}>
+        <div className="p-6"><p className="text-sm leading-6 text-slate-600 dark:text-slate-300">¿Confirmas que deseas eliminar este registro?</p></div>
+        <div className="flex justify-end gap-3 border-t px-6 py-4"><button className="focus-ring h-10 rounded-xl border px-4 text-sm font-semibold text-slate-600 dark:text-slate-300" type="button" onClick={() => setPendingDelete(null)}>Cancelar</button><button className="focus-ring h-10 rounded-xl bg-red-600 px-5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60" type="button" onClick={() => void confirmDelete()} disabled={resource.saving}>{resource.saving ? 'Eliminando…' : 'Eliminar'}</button></div>
+      </Modal>
+    </div>
+  )
+}
