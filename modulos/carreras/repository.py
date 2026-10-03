@@ -11,8 +11,11 @@ class CarreraRepository:
         ).first()
 
     @staticmethod
-    def listar_repository(db: Session):
-        return db.query(Carreras).all()
+    def listar_repository(db: Session, pagina_actual: int, limite: int):
+        query = db.query(Carreras)
+        total = query.count()
+        data = query.offset((pagina_actual - 1) * limite).limit(limite).all()
+        return total, data
 
     @staticmethod
     def buscar_repository(db: Session, id):
