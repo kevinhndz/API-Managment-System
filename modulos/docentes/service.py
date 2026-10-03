@@ -33,8 +33,10 @@ class DocentesService:
         return repo.guardar_docente_repository(db, nueva_docente)
 
     @staticmethod
-    def listar_service(db: Session, pagina_actual: int, limite: int):
-        total, data = repo.listar_repository(db, pagina_actual, limite)
+    def listar_service(
+        db: Session, pagina_actual: int, limite: int, busqueda: str | None = None
+    ):
+        total, data = repo.listar_repository(db, pagina_actual, limite, busqueda)
         return RespuestaPaginada[DocenteResponse](
             total=total,
             pagina_actual=pagina_actual,

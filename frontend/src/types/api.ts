@@ -9,6 +9,7 @@ export interface PaginatedResponse<T> {
 export interface PaginationParams {
   pagina_actual?: number
   limite?: number
+  busqueda?: string
 }
 
 export interface Aula {
