@@ -5,6 +5,9 @@ from core.schema import RespuestaPaginada
 from modulos.matriculas.repository import MatriculaRepository as repo
 from modulos.matriculas.schema import *
 from modulos.matriculas.tabla import Matriculas
+from modulos.asignaturas.tabla import Asignaturas
+from modulos.calificaciones.tabla import Calificaciones
+from modulos.estudiantes.tabla import Estudiantes
 from modulos.secciones.tabla import Secciones
 
 
@@ -18,6 +21,38 @@ class MatriculasService:
         seccion = db.query(Secciones).filter(Secciones.id == json.seccion_id).first()
         if seccion is None:
             raise RecursoNoEncontradoError("No existe esta seccion")
+
+        estudiante = (
+            db.query(Estudiantes).filter(Estudiantes.id == json.estudiante_id).first()
+        )
+        if estudiante is None:
+            raise RecursoNoEncontradoError("No existe este estudiante")
+
+        asignatura = (
+            db.query(Asignaturas)
+            .filter(Asignaturas.id == seccion.asignatura_id)
+            .first()
+        )
+        if asignatura is None:
+            raise RecursoNoEncontradoError("No existe esta asignatura")
+
+        if asignatura.requisito_id is not None:
+            requisito_aprobado = (
+                db.query(Calificaciones)
+                .join(Matriculas, Matriculas.id == Calificaciones.matricula_id)
+                .join(Secciones, Secciones.id == Matriculas.seccion_id)
+                .filter(
+                    Matriculas.estudiante_id == json.estudiante_id,
+                    Secciones.asignatura_id == asignatura.requisito_id,
+                    Matriculas.estado == "APROBADA",
+                    Calificaciones.nota_final >= 60,
+                )
+                .first()
+            )
+            if requisito_aprobado is None:
+                raise RecursoDuplicadoError(
+                    "El estudiante no ha aprobado el requisito de esta asignatura"
+                )
         ocupados = (
             db.query(Matriculas)
             .filter(

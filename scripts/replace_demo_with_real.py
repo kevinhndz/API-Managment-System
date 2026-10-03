@@ -254,9 +254,9 @@ def cargar():
         estudiantes = [
             {
                 "cuenta": f"2026-{i:04d}",
-                "nombre": f"Estudiante {NOMBRES[(i - 1) % 10]} {APELLIDOS[(i - 1) % 10]}",
-                "correo": f"estudiante{i:04d}@uph.edu",
-                "telefono": f"99{i:06d}",
+                "nombre": f"{NOMBRES[(i - 1) % 10]} {APELLIDOS[(i - 1) % 10]}",
+                "correo": f"{NOMBRES[(i - 1) % 10].lower()}.{APELLIDOS[(i - 1) % 10].lower()}-{i:04d}@h.com",
+                "telefono": f"+504 9{i:07d}",
                 "fechaNacimiento": date(1998 + i % 7, 1 + i % 9, 1),
                 "carrera_id": carreras[(i - 1) % len(carreras)].id,
                 "estado": True,
