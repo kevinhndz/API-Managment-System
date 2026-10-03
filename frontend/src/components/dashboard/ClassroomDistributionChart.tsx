@@ -17,10 +17,10 @@ export function ClassroomDistributionChart({ aulas }: ClassroomDistributionChart
   ).map(([name, value]) => ({ name: name.replace('Edificio ', ''), value }))
 
   return (
-    <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-panel dark:border-slate-800 dark:bg-[#151d1e] sm:p-6">
+    <article className="glass-card rounded-[1.25rem] p-5 sm:p-6">
       <div>
-        <h3 className="font-semibold tracking-tight text-navy-950 dark:text-white">Distribución de aulas</h3>
-        <p className="mt-1 text-xs text-slate-500">Registros agrupados por edificio</p>
+        <h3 className="font-semibold tracking-tight text-[#1a1c1a] dark:text-white">Distribución de aulas</h3>
+        <p className="mt-1 text-xs text-[#8a716f]">Registros agrupados por edificio</p>
       </div>
       {data.length === 0 ? (
         <div className="grid h-72 place-items-center text-center text-sm text-slate-400">No hay aulas registradas para graficar.</div>
