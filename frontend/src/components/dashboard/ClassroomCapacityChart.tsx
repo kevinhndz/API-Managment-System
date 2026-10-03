@@ -13,10 +13,10 @@ export function ClassroomCapacityChart({ aulas }: ClassroomCapacityChartProps) {
     .map((aula) => ({ codigo: aula.codigo, capacidad: aula.capacidad }))
 
   return (
-    <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-panel dark:border-slate-800 dark:bg-[#151d1e] sm:p-6">
+    <article className="glass-card rounded-[1.25rem] p-5 sm:p-6">
       <div>
-        <h3 className="font-semibold tracking-tight text-navy-950 dark:text-white">Capacidad por aula</h3>
-        <p className="mt-1 text-xs text-slate-500">Hasta ocho aulas con mayor capacidad</p>
+        <h3 className="font-semibold tracking-tight text-[#1a1c1a] dark:text-white">Capacidad por aula</h3>
+        <p className="mt-1 text-xs text-[#8a716f]">Hasta ocho aulas con mayor capacidad</p>
       </div>
       {data.length === 0 ? (
         <div className="grid h-72 place-items-center text-center text-sm text-slate-400">No hay capacidad registrada para graficar.</div>

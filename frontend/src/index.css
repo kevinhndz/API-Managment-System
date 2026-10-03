@@ -18,7 +18,9 @@
   }
 
   body {
-    @apply m-0 min-w-80 bg-[#f5f7f8] font-sans text-slate-950 antialiased dark:bg-[#101516] dark:text-slate-100;
+    @apply m-0 min-w-80 bg-[#faf9f6] text-[#1a1c1a] antialiased dark:bg-[#171817] dark:text-stone-100;
+    font-family: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+    background-image: radial-gradient(circle at 12% 10%, rgb(91 3 9 / 0.045), transparent 25rem), radial-gradient(circle at 85% 45%, rgb(212 154 69 / 0.07), transparent 22rem);
   }
 
   button,
@@ -27,6 +29,8 @@
   textarea {
     font: inherit;
   }
+
+  h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', ui-sans-serif, sans-serif; }
 }
 
 @layer components {
@@ -37,6 +41,15 @@
 
   .focus-ring {
     @apply outline-none ring-offset-2 ring-offset-white focus-visible:ring-2 focus-visible:ring-sage-500 dark:ring-offset-slate-950;
+  }
+
+  .glass-card {
+    @apply border border-white/70 bg-white/65 shadow-[0_18px_55px_-35px_rgb(38_28_22_/_0.55)] backdrop-blur-xl dark:border-white/10 dark:bg-stone-900/60;
+  }
+
+  .warm-grid {
+    background-image: linear-gradient(rgb(91 3 9 / 0.035) 1px, transparent 1px), linear-gradient(90deg, rgb(91 3 9 / 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
 
   .pressable {
