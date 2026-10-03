@@ -12,8 +12,11 @@ class DocenteRepository:
         ).first()
 
     @staticmethod
-    def listar_repository(db: Session):
-        return db.query(Docentes).all()
+    def listar_repository(db: Session, pagina_actual: int, limite: int):
+        query = db.query(Docentes)
+        total = query.count()
+        data = query.offset((pagina_actual - 1) * limite).limit(limite).all()
+        return total, data
 
     @staticmethod
     def buscar_repository(db: Session, id):
