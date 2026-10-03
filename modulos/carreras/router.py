@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from database.almacen import abrir_puerta_bd
+from core.schema import RespuestaPaginada
 from modulos.carreras.schema import (
     CarreraResponse,
     Editar_Parcialmente_Carrera,
@@ -19,9 +20,13 @@ def crear_carrera(json: Revisar_Json_Crear_Carrera, db: Session = Depends(abrir_
     return s.crear_service(db, json)
 
 
-@router.get("/", response_model=list[CarreraResponse])
-def listar_carreras(db: Session = Depends(abrir_puerta_bd)):
-    return s.listar_service(db)
+@router.get("/", response_model=RespuestaPaginada[CarreraResponse])
+def listar_carreras(
+    pagina_actual: int = Query(default=1, ge=1),
+    limite: int = Query(default=10, ge=1, le=100),
+    db: Session = Depends(abrir_puerta_bd),
+):
+    return s.listar_service(db, pagina_actual, limite)
 
 
 @router.get("/{id}", response_model=CarreraResponse)
