@@ -16,6 +16,7 @@ export function DocentesPage() {
     <EntityPage<Docente, DocentePayload>
       title="Docentes"
       singular="Docente"
+      newLabel="Nuevo docente"
       description="Administra el directorio y estado del personal docente."
       service={docentesApi}
       emptyPayload={emptyDocente}

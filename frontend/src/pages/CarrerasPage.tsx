@@ -14,6 +14,7 @@ export function CarrerasPage() {
     <EntityPage<Carrera, CarreraPayload>
       title="Carreras"
       singular="Carrera"
+      newLabel="Nueva carrera"
       description="Organiza la oferta académica y duración de los programas."
       service={carrerasApi}
       emptyPayload={emptyCarrera}

@@ -14,6 +14,7 @@ export function AulasPage() {
     <EntityPage<Aula, AulaPayload>
       title="Aulas"
       singular="Aula"
+      newLabel="Nueva aula"
       description="Gestiona espacios, capacidad y disponibilidad del campus."
       service={aulasApi}
       emptyPayload={emptyAula}

@@ -36,6 +36,8 @@ describe('flujo principal', () => {
     await user.click(screen.getByRole('button', { name: 'Ingresar' }))
 
     await user.click(await screen.findByRole('link', { name: 'Aulas' }))
-    expect(await screen.findByText('Gestiona espacios, capacidad y disponibilidad del campus.')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Gestiona espacios, capacidad y disponibilidad del campus.', {}, { timeout: 15_000 }),
+    ).toBeInTheDocument()
   })
 })

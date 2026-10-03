@@ -33,6 +33,7 @@ interface EntityPageProps<T extends EntityWithId, TPayload extends object> {
   title: string
   description: string
   singular: string
+  newLabel: string
   service: CrudService<T, TPayload>
   columns: Column<T>[]
   fields: Field<TPayload>[]
@@ -54,6 +55,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   title,
   description,
   singular,
+  newLabel,
   service,
   columns,
   fields,
@@ -113,7 +115,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
         </div>
         <button className="focus-ring flex h-11 items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 text-sm font-semibold text-white transition hover:bg-navy-800 dark:bg-sage-500 dark:hover:bg-sage-600" type="button" onClick={openCreate}>
           <Plus className="h-4 w-4" />
-          Nuevo {singular.toLocaleLowerCase('es')}
+          {newLabel}
         </button>
       </header>
 
@@ -164,7 +166,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
         </div>
       </section>
 
-      <Modal open={formOpen} title={editing ? `Editar ${singular.toLocaleLowerCase('es')}` : `Nuevo ${singular.toLocaleLowerCase('es')}`} description="Completa los campos requeridos." onClose={() => setFormOpen(false)}>
+      <Modal open={formOpen} title={editing ? `Editar ${singular.toLocaleLowerCase('es')}` : newLabel} description="Completa los campos requeridos." onClose={() => setFormOpen(false)}>
         <form onSubmit={(event) => void submit(event)}>
           <div className="grid gap-5 p-6 sm:grid-cols-2">
             {fields.map((field) => {
