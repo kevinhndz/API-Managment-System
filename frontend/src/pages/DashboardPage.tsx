@@ -1,5 +1,7 @@
 import { BookOpenCheck, Building2, GraduationCap, RefreshCw, UsersRound } from 'lucide-react'
 
+import { ClassroomCapacityChart } from '../components/dashboard/ClassroomCapacityChart'
+import { ClassroomDistributionChart } from '../components/dashboard/ClassroomDistributionChart'
 import { MetricCard } from '../components/dashboard/MetricCard'
 import { useDashboardData } from '../hooks/useDashboardData'
 
@@ -35,6 +37,11 @@ export function DashboardPage() {
         <MetricCard label="Capacidad total" value={totalCapacity} helper="Cupos entre todas las aulas" icon={BookOpenCheck} tone="amber" loading={loading} />
         <MetricCard label="Docentes activos" value={activeTeachers} helper={`${data.docentes.length} docentes registrados`} icon={UsersRound} tone="sage" loading={loading} />
         <MetricCard label="Carreras activas" value={activePrograms} helper={`${data.carreras.length} programas registrados`} icon={GraduationCap} tone="violet" loading={loading} />
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr]" aria-label="Gráficos académicos">
+        <ClassroomCapacityChart aulas={data.aulas} />
+        <ClassroomDistributionChart aulas={data.aulas} />
       </section>
     </div>
   )
