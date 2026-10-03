@@ -20,7 +20,15 @@ class EstudiantesService:
         check = repo.check_repository(db, json)
         if check is not None:
             raise RecursoDuplicadoError("Ya existe este estudiante")
-        estudiante = Estudiantes(**json.model_dump())
+        estudiante = Estudiantes(
+            cuenta=json.cuenta,
+            nombre=json.nombre,
+            correo=json.correo,
+            telefono=json.telefono,
+            fechaNacimiento=json.fechaNacimiento,
+            carrera_id=json.carrera_id,
+            estado=json.estado,
+        )
         return repo.guardar_estudiante_repository(db, estudiante)
 
     @staticmethod
@@ -43,24 +51,39 @@ class EstudiantesService:
 
     @staticmethod
     def editar_service(db: Session, id: int, json: Revisar_Json_Editar_Estudiante):
-        check = EstudiantesService.buscar_service(db, id)
+        check = repo.buscar_repository(db, id)
+        if check is None:
+            raise RecursoNoEncontradoError("No existe este estudiante")
+
         repo_check = repo.check_repository(db, json)
         if repo_check is not None and repo_check.id != id:
             raise RecursoDuplicadoError("Ya existe este estudiante")
-        for nombre, valor in json.model_dump().items():
-            setattr(check, nombre, valor)
+
+        check.cuenta = json.cuenta
+        check.nombre = json.nombre
+        check.correo = json.correo
+        check.telefono = json.telefono
+        check.fechaNacimiento = json.fechaNacimiento
+        check.carrera_id = json.carrera_id
+        check.estado = json.estado
         return repo.guardar_estudiante_repository(db, check)
 
     @staticmethod
     def editar_parcialmente_service(
         db: Session, id: int, json: Editar_Parcialmente_Estudiante
     ):
-        check = EstudiantesService.buscar_service(db, id)
+        check = repo.buscar_repository(db, id)
+        if check is None:
+            raise RecursoNoEncontradoError("No existe este estudiante")
+
         cambios = json.model_dump(exclude_unset=True)
-        for nombre, valor in cambios.items():
-            setattr(check, nombre, valor)
-        if cambios and repo.check_repository(db, check) not in (None, check):
-            raise RecursoDuplicadoError("Ya existe este estudiante")
+        if cambios:
+            for nombre, valor in cambios.items():
+                setattr(check, nombre, valor)
+
+            repo_check = repo.check_repository(db, check)
+            if repo_check is not None and repo_check.id != id:
+                raise RecursoDuplicadoError("Ya existe este estudiante")
         return repo.guardar_estudiante_repository(db, check)
 
     @staticmethod

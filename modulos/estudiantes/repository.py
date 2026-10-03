@@ -6,17 +6,7 @@ from modulos.estudiantes.tabla import Estudiantes
 class EstudianteRepository:
     @staticmethod
     def check_repository(db: Session, json):
-        filtros = [
-            Estudiantes.cuenta == json.cuenta,
-            Estudiantes.correo == json.correo,
-        ]
-        telefono = getattr(json, "telefono", None)
-        if telefono is not None:
-            filtros.append(Estudiantes.telefono == telefono)
-        return db.query(Estudiantes).filter(*filtros[:2]).first() or (
-            db.query(Estudiantes).filter(Estudiantes.telefono == telefono).first()
-            if telefono is not None else None
-        )
+        return db.query(Estudiantes).filter(Estudiantes.cuenta == json.cuenta).first()
 
     @staticmethod
     def guardar_estudiante_repository(db: Session, estudiante):
