@@ -1,6 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
+
 class Revisar_Json_Crear_Seccion(BaseModel):
     codigo: str = Field(min_length=1, max_length=20)
     asignatura_id: int
@@ -13,8 +14,10 @@ class Revisar_Json_Crear_Seccion(BaseModel):
     cupo_maximo: int = Field(ge=1)
     estado: str = "ABIERTA"
 
+
 class Revisar_Json_Editar_Seccion(Revisar_Json_Crear_Seccion):
     pass
+
 
 class Editar_Parcialmente_Seccion(BaseModel):
     codigo: Optional[str] = Field(default=None, min_length=1, max_length=20)
@@ -27,6 +30,7 @@ class Editar_Parcialmente_Seccion(BaseModel):
     hora_fin: Optional[str] = None
     cupo_maximo: Optional[int] = Field(default=None, ge=1)
     estado: Optional[str] = None
+
 
 class SeccionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

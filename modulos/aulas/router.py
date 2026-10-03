@@ -11,11 +11,7 @@ from modulos.aulas.schema import (
 )
 from modulos.aulas.service import AulasService as s
 
-
-router = APIRouter(
-    prefix = "/aulas",
-    tags = ["Aulas"]
-)
+router = APIRouter(prefix="/aulas", tags=["Aulas"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=AulaResponse)

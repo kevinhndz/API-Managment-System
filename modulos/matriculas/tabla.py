@@ -3,6 +3,7 @@ from sqlalchemy import Column, Date, ForeignKey, Integer, String
 from database.almacen import miClaseBase
 from database.base import PoderAuditor
 
+
 class Matriculas(miClaseBase, PoderAuditor):
     __tablename__ = "matriculas"
     id = Column(Integer, primary_key=True, index=True)

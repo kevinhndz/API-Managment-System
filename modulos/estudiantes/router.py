@@ -11,12 +11,15 @@ from modulos.estudiantes.schema import (
 )
 from modulos.estudiantes.service import EstudiantesService as s
 
-
 router = APIRouter(prefix="/estudiantes", tags=["Estudiantes"])
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=EstudianteResponse)
-def crear_estudiante(json: Revisar_Json_Crear_Estudiante, db: Session = Depends(abrir_puerta_bd)):
+@router.post(
+    "/", status_code=status.HTTP_201_CREATED, response_model=EstudianteResponse
+)
+def crear_estudiante(
+    json: Revisar_Json_Crear_Estudiante, db: Session = Depends(abrir_puerta_bd)
+):
     return s.crear_service(db, json)
 
 

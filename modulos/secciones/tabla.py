@@ -2,6 +2,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String
 from database.almacen import miClaseBase
 from database.base import PoderAuditor
 
+
 class Secciones(miClaseBase, PoderAuditor):
     __tablename__ = "secciones"
     id = Column(Integer, primary_key=True, index=True)

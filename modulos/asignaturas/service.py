@@ -6,8 +6,10 @@ from core.excepciones import RecursoDuplicadoError, RecursoNoEncontradoError
 from core.schema import RespuestaPaginada
 from modulos.asignaturas.repository import AsignaturaRepository as repo
 from modulos.asignaturas.schema import (
-    AsignaturaResponse, Editar_Parcialmente_Asignatura,
-    Revisar_Json_Crear_Asignatura, Revisar_Json_Editar_Asignatura,
+    AsignaturaResponse,
+    Editar_Parcialmente_Asignatura,
+    Revisar_Json_Crear_Asignatura,
+    Revisar_Json_Editar_Asignatura,
 )
 from modulos.asignaturas.tabla import Asignaturas
 
@@ -19,9 +21,11 @@ class AsignaturasService:
         if check is not None:
             raise RecursoDuplicadoError("Ya existe esta asignatura")
         nueva_asignatura = Asignaturas(
-            codigo=json.codigo, nombre=json.nombre,
+            codigo=json.codigo,
+            nombre=json.nombre,
             unidades_valorativas=json.unidades_valorativas,
-            carrera_id=json.carrera_id, requisito_id=json.requisito_id,
+            carrera_id=json.carrera_id,
+            requisito_id=json.requisito_id,
             activo=json.activo,
         )
         return repo.guardar_asignatura_repository(db, nueva_asignatura)
@@ -30,8 +34,11 @@ class AsignaturasService:
     def listar_service(db: Session, pagina_actual: int, limite: int):
         total, data = repo.listar_repository(db, pagina_actual, limite)
         return RespuestaPaginada[AsignaturaResponse](
-            total=total, pagina_actual=pagina_actual, limite=limite,
-            total_paginas=ceil(total / limite) if total else 0, data=data,
+            total=total,
+            pagina_actual=pagina_actual,
+            limite=limite,
+            total_paginas=ceil(total / limite) if total else 0,
+            data=data,
         )
 
     @staticmethod
@@ -56,7 +63,9 @@ class AsignaturasService:
         return repo.guardar_asignatura_repository(db, check)
 
     @staticmethod
-    def editar_parcialmente_service(db: Session, id: int, json: Editar_Parcialmente_Asignatura):
+    def editar_parcialmente_service(
+        db: Session, id: int, json: Editar_Parcialmente_Asignatura
+    ):
         check = AsignaturasService.buscar_service(db, id)
         if json.codigo is not None:
             check.codigo = json.codigo

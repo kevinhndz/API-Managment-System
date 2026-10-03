@@ -6,10 +6,14 @@ from modulos.docentes.tabla import Docentes
 class DocenteRepository:
     @staticmethod
     def check_repository(db: Session, json):
-        return db.query(Docentes).filter(
-            (Docentes.numero_empleado == json.numero_empleado)
-            | (Docentes.correo == json.correo)
-        ).first()
+        return (
+            db.query(Docentes)
+            .filter(
+                (Docentes.numero_empleado == json.numero_empleado)
+                | (Docentes.correo == json.correo)
+            )
+            .first()
+        )
 
     @staticmethod
     def listar_repository(db: Session, pagina_actual: int, limite: int):

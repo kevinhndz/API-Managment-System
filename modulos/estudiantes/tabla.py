@@ -18,7 +18,3 @@ class Estudiantes(miClaseBase, PoderAuditor):
 
     # relacion n:1
     carrera = relationship("Carreras", back_populates="estudiantes")
-    
-    
-    
-    

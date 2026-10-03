@@ -11,12 +11,13 @@ from modulos.carreras.schema import (
 )
 from modulos.carreras.service import CarrerasService as s
 
-
 router = APIRouter(prefix="/carreras", tags=["Carreras"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=CarreraResponse)
-def crear_carrera(json: Revisar_Json_Crear_Carrera, db: Session = Depends(abrir_puerta_bd)):
+def crear_carrera(
+    json: Revisar_Json_Crear_Carrera, db: Session = Depends(abrir_puerta_bd)
+):
     return s.crear_service(db, json)
 
 

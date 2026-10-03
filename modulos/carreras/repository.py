@@ -6,9 +6,11 @@ from modulos.carreras.tabla import Carreras
 class CarreraRepository:
     @staticmethod
     def check_repository(db: Session, json):
-        return db.query(Carreras).filter(
-            (Carreras.codigo == json.codigo) | (Carreras.nombre == json.nombre)
-        ).first()
+        return (
+            db.query(Carreras)
+            .filter((Carreras.codigo == json.codigo) | (Carreras.nombre == json.nombre))
+            .first()
+        )
 
     @staticmethod
     def listar_repository(db: Session, pagina_actual: int, limite: int):

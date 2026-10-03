@@ -2,13 +2,12 @@ from sqlalchemy.orm import Session
 from modulos.aulas.tabla import Aulas
 
 
+class AulaRepository:
 
-class AulaRepository():
-    
     @staticmethod
-    def check_repository (db: Session, json):
-      return db.query(Aulas).filter(Aulas.codigo == json.codigo).first()
-  
+    def check_repository(db: Session, json):
+        return db.query(Aulas).filter(Aulas.codigo == json.codigo).first()
+
     @staticmethod
     def guardar_aula_repository(db: Session, nueva_aula):
         db.add(nueva_aula)

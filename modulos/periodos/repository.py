@@ -6,9 +6,11 @@ from modulos.periodos.tabla import Periodos
 class PeriodoRepository:
     @staticmethod
     def check_repository(db: Session, json):
-        return db.query(Periodos).filter(
-            (Periodos.anio == json.anio) & (Periodos.numero == json.numero)
-        ).first()
+        return (
+            db.query(Periodos)
+            .filter((Periodos.anio == json.anio) & (Periodos.numero == json.numero))
+            .first()
+        )
 
     @staticmethod
     def guardar_periodo_repository(db: Session, periodo):

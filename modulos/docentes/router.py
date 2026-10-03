@@ -11,12 +11,13 @@ from modulos.docentes.schema import (
 )
 from modulos.docentes.service import DocentesService as s
 
-
 router = APIRouter(prefix="/docentes", tags=["Docentes"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=DocenteResponse)
-def crear_docente(json: Revisar_Json_Crear_Docente, db: Session = Depends(abrir_puerta_bd)):
+def crear_docente(
+    json: Revisar_Json_Crear_Docente, db: Session = Depends(abrir_puerta_bd)
+):
     return s.crear_service(db, json)
 
 

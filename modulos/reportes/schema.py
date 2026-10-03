@@ -2,6 +2,7 @@ from datetime import date
 from typing import Optional
 from pydantic import BaseModel
 
+
 class ReporteMatriculaItem(BaseModel):
     estudiante_id: int
     estudiante: str
@@ -11,6 +12,7 @@ class ReporteMatriculaItem(BaseModel):
     estado: str
     nota_final: Optional[float] = None
 
+
 class ReporteSeccionItem(BaseModel):
     seccion: str
     asignatura: str
@@ -19,4 +21,3 @@ class ReporteSeccionItem(BaseModel):
     aula: int
     cupo_maximo: int
     matriculados: int
-

@@ -6,8 +6,10 @@ from core.excepciones import RecursoDuplicadoError, RecursoNoEncontradoError
 from core.schema import RespuestaPaginada
 from modulos.periodos.repository import PeriodoRepository as repo
 from modulos.periodos.schema import (
-    Editar_Parcialmente_Periodo, PeriodoResponse,
-    Revisar_Json_Crear_Periodo, Revisar_Json_Editar_Periodo,
+    Editar_Parcialmente_Periodo,
+    PeriodoResponse,
+    Revisar_Json_Crear_Periodo,
+    Revisar_Json_Editar_Periodo,
 )
 from modulos.periodos.tabla import Periodos
 
@@ -18,11 +20,17 @@ class PeriodosService:
         check = repo.check_repository(db, json)
         if check is not None:
             raise RecursoDuplicadoError("Ya existe este periodo")
-        if json.activo and db.query(Periodos).filter(Periodos.activo == True).first() is not None:
+        if (
+            json.activo
+            and db.query(Periodos).filter(Periodos.activo == True).first() is not None
+        ):
             raise RecursoDuplicadoError("Ya existe un periodo activo")
         nuevo_periodo = Periodos(
-            anio=json.anio, numero=json.numero, fecha_inicio=json.fecha_inicio,
-            fecha_fin=json.fecha_fin, activo=json.activo,
+            anio=json.anio,
+            numero=json.numero,
+            fecha_inicio=json.fecha_inicio,
+            fecha_fin=json.fecha_fin,
+            activo=json.activo,
         )
         return repo.guardar_periodo_repository(db, nuevo_periodo)
 
@@ -30,8 +38,11 @@ class PeriodosService:
     def listar_service(db: Session, pagina_actual: int, limite: int):
         total, data = repo.listar_repository(db, pagina_actual, limite)
         return RespuestaPaginada[PeriodoResponse](
-            total=total, pagina_actual=pagina_actual, limite=limite,
-            total_paginas=ceil(total / limite) if total else 0, data=data,
+            total=total,
+            pagina_actual=pagina_actual,
+            limite=limite,
+            total_paginas=ceil(total / limite) if total else 0,
+            data=data,
         )
 
     @staticmethod
@@ -47,7 +58,13 @@ class PeriodosService:
         repo_check = repo.check_repository(db, json)
         if repo_check is not None and repo_check.id != id:
             raise RecursoDuplicadoError("Ya existe este periodo")
-        if json.activo and db.query(Periodos).filter(Periodos.activo == True, Periodos.id != id).first() is not None:
+        if (
+            json.activo
+            and db.query(Periodos)
+            .filter(Periodos.activo == True, Periodos.id != id)
+            .first()
+            is not None
+        ):
             raise RecursoDuplicadoError("Ya existe un periodo activo")
         check.anio = json.anio
         check.numero = json.numero
@@ -57,9 +74,17 @@ class PeriodosService:
         return repo.guardar_periodo_repository(db, check)
 
     @staticmethod
-    def editar_parcialmente_service(db: Session, id: int, json: Editar_Parcialmente_Periodo):
+    def editar_parcialmente_service(
+        db: Session, id: int, json: Editar_Parcialmente_Periodo
+    ):
         check = PeriodosService.buscar_service(db, id)
-        if json.activo is True and db.query(Periodos).filter(Periodos.activo == True, Periodos.id != id).first() is not None:
+        if (
+            json.activo is True
+            and db.query(Periodos)
+            .filter(Periodos.activo == True, Periodos.id != id)
+            .first()
+            is not None
+        ):
             raise RecursoDuplicadoError("Ya existe un periodo activo")
         if json.anio is not None:
             check.anio = json.anio

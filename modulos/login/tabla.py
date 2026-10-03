@@ -2,6 +2,7 @@ from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from database.almacen import miClaseBase
 from database.base import PoderAuditor
 
+
 class Usuarios(miClaseBase, PoderAuditor):
     __tablename__ = "usuarios"
     id = Column(Integer, primary_key=True, index=True)
