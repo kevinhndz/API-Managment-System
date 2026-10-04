@@ -30,7 +30,6 @@ export interface Docente {
   nombres: string
   apellidos: string
   correo: string
-  especialidad: string
   estado: boolean
 }
 
@@ -63,4 +62,10 @@ export interface DashboardData {
   aulas: Aula[]
   docentes: Docente[]
   carreras: Carrera[]
+  estudiantes: Estudiante[]
+  asignaturas: Asignatura[]
+  periodos: Periodo[]
+  secciones: Seccion[]
+  matriculas: Matricula[]
+  calificaciones: Calificacion[]
 }
