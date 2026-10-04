@@ -47,6 +47,36 @@
     @apply border border-white/70 bg-white/65 shadow-[0_18px_55px_-35px_rgb(38_28_22_/_0.55)] backdrop-blur-xl dark:border-white/10 dark:bg-stone-900/60;
   }
 
+  .morphing-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    color: #8a716f;
+    font-size: .8rem;
+    font-weight: 600;
+  }
+
+  .morphing-loader__square {
+    display: block;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: .35rem;
+    background: #5b0309;
+    box-shadow: 0 5px 16px rgb(91 3 9 / .24);
+    animation: morphing-square 1.4s cubic-bezier(.65, 0, .35, 1) infinite;
+  }
+
+  @keyframes morphing-square {
+    0%, 100% { transform: rotate(0deg) scale(.92); border-radius: .35rem; }
+    35% { transform: rotate(90deg) scale(1); border-radius: 50%; }
+    70% { transform: rotate(180deg) scale(.86); border-radius: .75rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .morphing-loader__square { animation: none; }
+  }
+
   @media (min-width: 1024px) {
     aside.group { width: var(--sidebar-width); }
     aside.group > [role='separator'] { opacity: 0; transition: opacity 160ms ease; }
