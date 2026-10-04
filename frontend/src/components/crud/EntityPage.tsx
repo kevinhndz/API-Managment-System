@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react'
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
 
 import type { CrudService } from '../../services/api'
@@ -6,6 +6,7 @@ import { useCrudResource } from '../../hooks/useCrudResource'
 import { usePagination } from '../../hooks/usePagination'
 import { Modal } from '../ui/Modal'
 import { MorphingSquare } from '../ui/MorphingSquare'
+import { ActionMenu } from '../ui/ActionMenu'
 
 interface EntityWithId {
   id: number
@@ -150,7 +151,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
                 filteredItems.map((item) => (
                   <tr className="transition hover:bg-slate-50/70 dark:hover:bg-slate-800/40" key={item.id}>
                     {columns.map((column) => <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600 dark:text-slate-300" key={column.label}>{column.render(item)}</td>)}
-                    <td className="px-5 py-4"><div className="flex justify-end gap-1"><button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/40" type="button" onClick={() => openEdit(item)} aria-label={`Editar ${singular}`}><Pencil className="h-4 w-4" /></button><button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40" type="button" onClick={() => setPendingDelete(item)} aria-label={`Eliminar ${singular}`}><Trash2 className="h-4 w-4" /></button></div></td>
+                    <td className="px-5 py-4 text-right"><ActionMenu singular={singular} onEdit={() => openEdit(item)} onDelete={() => setPendingDelete(item)} /></td>
                   </tr>
                 ))
               )}
