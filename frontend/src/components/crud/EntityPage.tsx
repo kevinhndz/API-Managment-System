@@ -73,6 +73,11 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   const [pendingDelete, setPendingDelete] = useState<T | null>(null)
   const [form, setForm] = useState<TPayload>(emptyPayload)
   const [statusFilter, setStatusFilter] = useState('todos')
+  const normalizeStatus = (value: string | boolean | undefined) => {
+    if (value === true) return 'activo'
+    if (value === false) return 'inactivo'
+    return String(value ?? '').trim().toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  }
   const pagination = usePagination({ currentPage: resource.page, totalPages: Math.max(resource.totalPages, 1), paginationItemsToDisplay: 7 })
 
   const filteredItems = useMemo(() => {
@@ -81,7 +86,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
     const matchesStatus = (item: T) => {
       if (statusFilter === 'todos') return true
       const value = (item as T & { estado?: string | boolean; activo?: boolean }).estado ?? (item as T & { activo?: boolean }).activo
-      return String(value).toLocaleLowerCase('es') === statusFilter
+      return normalizeStatus(value) === statusFilter
     }
     return resource.items.filter((item) => matchesQuery(item) && matchesStatus(item))
   }, [query, resource.items, searchableText, statusFilter])
@@ -137,7 +142,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input className="focus-ring h-10 w-full rounded-xl border bg-[#faf7f0] pl-10 pr-4 text-sm placeholder:text-slate-400 dark:bg-stone-950" value={query} onChange={(event) => { setQuery(event.target.value); resource.setPage(1) }} placeholder={`Buscar ${title.toLocaleLowerCase('es')}…`} />
           </label>
-          <div className="flex items-center gap-3"><p className="text-xs text-slate-400">{resource.total} registros</p>{hasStatus && <select className="focus-ring h-10 rounded-xl border bg-[#faf7f0] px-3 text-xs font-semibold text-slate-600 dark:bg-stone-950 dark:text-slate-300" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filtrar por estado"><option value="todos">Todos los estados</option><option value="true">Activos</option><option value="false">Inactivos</option><option value="abierta">Abiertas</option><option value="cerrada">Cerradas</option><option value="activa">Activas</option><option value="cancelada">Canceladas</option><option value="aprobada">Aprobadas</option><option value="reprobada">Reprobadas</option></select>}</div>
+          <div className="flex flex-wrap items-center gap-3"><p className="text-xs text-slate-400">{resource.total} registros</p>{hasStatus && <select className="focus-ring h-10 rounded-xl border bg-[#faf7f0] px-3 text-xs font-semibold text-slate-600 dark:bg-stone-950 dark:text-slate-300" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); resource.setPage(1) }} aria-label="Filtrar por estado"><option value="todos">Todos los estados</option><option value="activo">Activos</option><option value="inactivo">Inactivos</option><option value="abierta">Abiertas</option><option value="cerrada">Cerradas</option><option value="activa">Activas</option><option value="cancelada">Canceladas</option><option value="aprobada">Aprobadas</option><option value="reprobada">Reprobadas</option></select>}<p className="w-full text-xs font-medium text-[#8a716f] sm:w-auto">{statusFilter === 'todos' ? `Se encontraron ${filteredItems.length} registros en esta página` : `Se encontraron ${filteredItems.length} registros con estado ${statusFilter}`}</p></div>
         </div>
 
         {resource.error && <div className="border-b bg-red-50 px-5 py-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">{resource.error}</div>}
@@ -168,7 +173,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
         </div>
 
         <div className="flex flex-col gap-3 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-slate-400">Página {resource.page} de {Math.max(resource.totalPages, 1)}</p>
+          <p className="text-xs text-slate-400">Página {resource.page} de {Math.max(resource.totalPages, 1)} · {filteredItems.length} visibles</p>
           <nav className="flex max-w-full items-center justify-center gap-1 overflow-x-auto pb-0.5" aria-label={`Paginación de ${title.toLocaleLowerCase('es')}`}>
             <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg border text-slate-500 transition hover:bg-[#faf7f0] disabled:pointer-events-none disabled:opacity-40 dark:text-slate-300 dark:hover:bg-stone-800" type="button" disabled={resource.page <= 1 || resource.loading} onClick={() => resource.setPage((page) => page - 1)} aria-label="Página anterior"><ChevronLeft className="h-4 w-4" /></button>
             {pagination.showLeftEllipsis && <><button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-sm text-slate-600 hover:bg-[#faf7f0] dark:text-slate-300 dark:hover:bg-stone-800" type="button" onClick={() => resource.setPage(1)} aria-label="Ir a la primera página">1</button><span className="grid h-9 w-6 place-items-center text-slate-400" aria-hidden="true">…</span></>}
