@@ -7,6 +7,7 @@ import type {
   DocentePayload,
   PaginatedResponse,
   PaginationParams,
+  Estudiante, EstudiantePayload, Asignatura, AsignaturaPayload, Periodo, PeriodoPayload, Seccion, SeccionPayload, Matricula, MatriculaPayload, Calificacion, CalificacionPayload,
 } from '../types/api'
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')
@@ -93,3 +94,9 @@ function createCrudService<T, TPayload>(path: string): CrudService<T, TPayload> 
 export const aulasApi = createCrudService<Aula, AulaPayload>('/aulas')
 export const docentesApi = createCrudService<Docente, DocentePayload>('/docentes')
 export const carrerasApi = createCrudService<Carrera, CarreraPayload>('/carreras')
+export const estudiantesApi = createCrudService<Estudiante, EstudiantePayload>('/estudiantes')
+export const asignaturasApi = createCrudService<Asignatura, AsignaturaPayload>('/asignaturas')
+export const periodosApi = createCrudService<Periodo, PeriodoPayload>('/periodos')
+export const seccionesApi = createCrudService<Seccion, SeccionPayload>('/secciones')
+export const matriculasApi = createCrudService<Matricula, MatriculaPayload>('/matriculas')
+export const calificacionesApi = createCrudService<Calificacion, CalificacionPayload>('/calificaciones')

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, LogOut, X } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, LogOut, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 import { brandIcon as BrandIcon, navigationItems } from '../../config/navigation'
@@ -17,6 +17,12 @@ interface SidebarProps {
 export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onToggle }: SidebarProps) {
   const { logout } = useAuth()
   const [resizing, setResizing] = useState(false)
+  const [groups, setGroups] = useState({ academico: true, oferta: true, operacion: true })
+  const groupedNavigation = [
+    { key: 'academico' as const, label: 'Gestión académica', items: navigationItems.filter((item) => ['/aulas', '/docentes', '/carreras', '/estudiantes'].includes(item.path)) },
+    { key: 'oferta' as const, label: 'Oferta y periodos', items: navigationItems.filter((item) => ['/asignaturas', '/periodos', '/secciones'].includes(item.path)) },
+    { key: 'operacion' as const, label: 'Operación académica', items: navigationItems.filter((item) => ['/matriculas', '/calificaciones'].includes(item.path)) },
+  ]
 
   return (
     <>
@@ -68,8 +74,7 @@ export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onTogg
         </button>
 
         <nav className={`mt-12 flex-1 space-y-1.5 ${collapsed ? 'lg:px-1' : ''}`} aria-label="Navegación principal">
-          <p className={`mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a716f] ${collapsed ? 'lg:hidden' : ''}`}>Administración</p>
-          {navigationItems.map(({ label, path, icon: Icon }) => (
+          {navigationItems.filter((item) => item.path === '/').map(({ label, path, icon: Icon }) => (
             <NavLink
               key={path}
               to={path}
@@ -87,6 +92,12 @@ export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onTogg
               <span className={collapsed ? 'lg:hidden' : ''}>{label}</span>
             </NavLink>
           ))}
+          {groupedNavigation.map((group) => <section className="mt-5" key={group.key}>
+            <button className={`focus-ring mb-2 flex w-full items-center justify-between rounded-lg px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8a716f] hover:bg-[#e9e8e5] dark:hover:bg-stone-800 ${collapsed ? 'lg:justify-center' : ''}`} type="button" onClick={() => setGroups((current) => ({ ...current, [group.key]: !current[group.key] }))} aria-expanded={collapsed ? undefined : groups[group.key]} title={group.label}>
+              <span className={collapsed ? 'lg:hidden' : ''}>{group.label}</span><ChevronDown className={`${collapsed ? 'lg:hidden' : ''} h-3.5 w-3.5 transition-transform ${groups[group.key] ? '' : '-rotate-90'}`} />
+            </button>
+            {groups[group.key] && <div className="space-y-1.5">{group.items.map(({ label, path, icon: Icon }) => <NavLink key={path} to={path} onClick={onClose} className={({ isActive }) => `focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${collapsed ? 'lg:justify-center lg:px-2' : ''} ${isActive ? 'bg-[#5b0309] text-white shadow-sm dark:bg-[#7a1c1c]' : 'text-[#574240] hover:bg-[#e9e8e5] hover:text-[#5b0309] dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-white'}`}><Icon className="h-[18px] w-[18px]" /><span className={collapsed ? 'lg:hidden' : ''}>{label}</span></NavLink>)}</div>}
+          </section>)}
         </nav>
 
         <button

@@ -46,6 +46,19 @@ export interface Carrera {
 
 export type CarreraPayload = Omit<Carrera, 'id'>
 
+export interface Estudiante { id: number; cuenta: string; nombre: string; correo: string; telefono?: string | null; fechaNacimiento: string; carrera_id: number; estado: boolean }
+export type EstudiantePayload = Omit<Estudiante, 'id'>
+export interface Asignatura { id: number; codigo: string; nombre: string; unidades_valorativas: number; carrera_id: number; requisito_id?: number | null; activo: boolean }
+export type AsignaturaPayload = Omit<Asignatura, 'id'>
+export interface Periodo { id: number; anio: number; numero: number; fecha_inicio: string; fecha_fin: string; activo: boolean }
+export type PeriodoPayload = Omit<Periodo, 'id'>
+export interface Seccion { id: number; codigo: string; asignatura_id: number; docente_id: number; periodo_id: number; aula_id: number; dias: string; hora_inicio: string; hora_fin: string; cupo_maximo: number; estado: string }
+export type SeccionPayload = Omit<Seccion, 'id'>
+export interface Matricula { id: number; estudiante_id: number; seccion_id: number; fecha_matricula: string; estado: string }
+export type MatriculaPayload = Omit<Matricula, 'id'>
+export interface Calificacion { id: number; matricula_id: number; primer_parcial: number; segundo_parcial: number; tercer_parcial: number; nota_final: number; observacion?: string | null }
+export type CalificacionPayload = Omit<Calificacion, 'id' | 'nota_final'>
+
 export interface DashboardData {
   aulas: Aula[]
   docentes: Docente[]
