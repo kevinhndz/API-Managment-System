@@ -4,6 +4,8 @@ import { ClassroomCapacityChart } from '../components/dashboard/ClassroomCapacit
 import { ClassroomDistributionChart } from '../components/dashboard/ClassroomDistributionChart'
 import { useAuth } from '../contexts/AuthContext'
 import { useDashboardData } from '../hooks/useDashboardData'
+import { CircularCarousel } from '../components/dashboard/CircularCarousel'
+import { ElectricBorder } from '../components/dashboard/ElectricBorder'
 
 const classroomImage = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=85'
 const teachingImage = 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=85'
@@ -17,7 +19,8 @@ const metricImages = {
 
 function ImageMetricCard({ label, value, helper, image }: { label: string; value: number; helper: string; image: string }) {
   return (
-    <article className="group relative h-44 overflow-hidden rounded-[1.15rem] shadow-[0_18px_40px_-24px_rgb(39_25_24_/_0.65)]">
+    <ElectricBorder color="#7df9ff" speed={0.8} chaos={0.16} borderRadius={22} className="group relative h-44">
+      <article className="relative h-full overflow-hidden rounded-[1.15rem] shadow-[0_18px_40px_-24px_rgb(39_25_24_/_0.65)]">
       <img className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" src={image} alt="" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#171312]/95 via-[#171312]/35 to-black/5" />
       <div className="relative flex h-full flex-col justify-end p-5 text-white">
@@ -27,7 +30,8 @@ function ImageMetricCard({ label, value, helper, image }: { label: string; value
           <span className="mb-1 text-[11px] text-white/75">{helper}</span>
         </div>
       </div>
-    </article>
+      </article>
+    </ElectricBorder>
   )
 }
 
@@ -77,6 +81,15 @@ export function DashboardPage() {
         <ImageMetricCard label="Capacidad total" value={totalCapacity} helper="cupos" image={metricImages.capacity} />
         <ImageMetricCard label="Docentes activos" value={activeTeachers} helper={`${data.docentes.length} registrados`} image={metricImages.teachers} />
         <ImageMetricCard label="Carreras activas" value={activePrograms} helper="programas" image={metricImages.programs} />
+      </section>
+
+      <section className="dashboard-reveal glass-card overflow-hidden rounded-[1.5rem]" aria-label="Vista circular de métricas">
+        <CircularCarousel speed={18} items={[
+          { src: metricImages.classrooms, alt: 'Aulas universitarias', title: 'Aulas', subtitle: `${data.aulas.length} registradas` },
+          { src: metricImages.capacity, alt: 'Espacio académico', title: 'Capacidad', subtitle: `${totalCapacity} cupos` },
+          { src: metricImages.teachers, alt: 'Docente en clase', title: 'Docentes', subtitle: `${activeTeachers} activos` },
+          { src: metricImages.programs, alt: 'Edificio universitario', title: 'Carreras', subtitle: `${activePrograms} activas` },
+        ]} />
       </section>
 
       <section className="dashboard-reveal grid gap-5 xl:grid-cols-[1.25fr_.75fr]" aria-label="Gráficos académicos">
