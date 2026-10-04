@@ -5,6 +5,10 @@ interface UsePaginationProps {
 }
 
 export function usePagination({ currentPage, totalPages, paginationItemsToDisplay }: UsePaginationProps) {
+  if (totalPages <= 0) {
+    return { pages: [], showLeftEllipsis: false, showRightEllipsis: false }
+  }
+
   const showLeftEllipsis = currentPage - 1 > paginationItemsToDisplay / 2
   const showRightEllipsis = totalPages - currentPage + 1 > paginationItemsToDisplay / 2
 
