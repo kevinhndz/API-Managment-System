@@ -25,7 +25,7 @@ interface FieldOption {
 interface Field<TPayload> {
   key: keyof TPayload
   label: string
-  type?: 'text' | 'email' | 'number' | 'select' | 'checkbox'
+  type?: 'text' | 'email' | 'number' | 'date' | 'select' | 'checkbox'
   placeholder?: string
   min?: number
   max?: number
