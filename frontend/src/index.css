@@ -47,7 +47,7 @@
     @apply border border-white/70 bg-white/65 shadow-[0_18px_55px_-35px_rgb(38_28_22_/_0.55)] backdrop-blur-xl dark:border-white/10 dark:bg-stone-900/60;
   }
 
-  .electric-border { position: relative; isolation: isolate; overflow: visible; }
+  .electric-border { position: relative; isolation: isolate; overflow: visible; transition: filter 200ms ease; }
   .electric-border::before { content: ''; position: absolute; inset: -2px; border-radius: inherit; background: linear-gradient(135deg, rgb(125 249 255 / .72), transparent 35%, rgb(125 249 255 / .2) 70%, rgb(125 249 255 / .85)); filter: blur(8px); opacity: .7; z-index: -1; }
   .electric-border__canvas { position: absolute; inset: -3px; width: calc(100% + 6px); height: calc(100% + 6px); z-index: 3; pointer-events: none; }
   .electric-border__content { position: relative; height: 100%; border-radius: inherit; overflow: hidden; z-index: 1; }
