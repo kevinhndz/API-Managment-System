@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react'
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 
 import type { CrudService } from '../../services/api'
 import { useCrudResource } from '../../hooks/useCrudResource'
@@ -77,11 +77,28 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   const [pendingDelete, setPendingDelete] = useState<T | null>(null)
   const [form, setForm] = useState<TPayload>(emptyPayload)
   const [statusFilter, setStatusFilter] = useState('todos')
+  const [statusItems, setStatusItems] = useState<T[] | null>(null)
+  const [statusRefresh, setStatusRefresh] = useState(0)
   const normalizeStatus = (value: string | boolean | undefined) => {
     if (value === true) return 'activo'
     if (value === false) return 'inactivo'
     return String(value ?? '').trim().toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
   }
+
+  useEffect(() => {
+    if (statusFilter === 'todos') { setStatusItems(null); return undefined }
+    let active = true
+    void (async () => {
+      try {
+        const first = await service.list({ pagina_actual: 1, limite: 100 })
+        const rest = await Promise.all(Array.from({ length: Math.max(0, first.total_paginas - 1) }, (_, index) => service.list({ pagina_actual: index + 2, limite: 100 })))
+        if (active) setStatusItems([...first.data, ...rest.flatMap((page) => page.data)])
+      } catch {
+        if (active) setStatusItems([])
+      }
+    })()
+    return () => { active = false }
+  }, [service, statusFilter, statusRefresh])
   const pagination = usePagination({ currentPage: resource.page, totalPages: Math.max(resource.totalPages, 1), paginationItemsToDisplay: 7 })
 
   const filteredItems = useMemo(() => {
@@ -92,19 +109,20 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
       const value = (item as T & { estado?: string | boolean; activo?: boolean }).estado ?? (item as T & { activo?: boolean }).activo
       return normalizeStatus(value) === statusFilter
     }
-    return resource.items.filter((item) => matchesQuery(item) && matchesStatus(item))
-  }, [query, resource.items, searchableText, statusFilter])
+    const sourceItems = statusFilter === 'todos' ? resource.items : statusItems ?? []
+    return sourceItems.filter((item) => matchesQuery(item) && matchesStatus(item))
+  }, [query, resource.items, searchableText, statusFilter, statusItems])
 
   const availableStatusOptions = useMemo<StatusOption[]>(() => {
     if (statusOptions?.length) return statusOptions
     const hasBooleanStatus = resource.items.some((item) => typeof (item as T & { activo?: unknown }).activo === 'boolean' || typeof (item as T & { estado?: unknown }).estado === 'boolean')
     if (hasBooleanStatus) return [{ value: 'activo', label: 'Activos' }, { value: 'inactivo', label: 'Inactivos' }]
-    const values = new Set(resource.items.map((item) => {
+    const values = new Set((statusItems ?? resource.items).map((item) => {
       const value = (item as T & { estado?: string | boolean; activo?: boolean }).estado ?? (item as T & { activo?: boolean }).activo
       return value === true ? 'activo' : value === false ? 'inactivo' : normalizeStatus(value)
     }).filter(Boolean))
     return [...values].map((value) => ({ value, label: value.charAt(0).toLocaleUpperCase('es') + value.slice(1) }))
-  }, [resource.items, statusOptions])
+  }, [resource.items, statusItems, statusOptions])
   const hasStatus = availableStatusOptions.length > 0 && resource.items.some((item) => 'estado' in item || 'activo' in item)
 
   const openCreate = () => {
@@ -122,13 +140,13 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   const submit = async (event: FormEvent) => {
     event.preventDefault()
     const success = editing ? await resource.update(editing.id, form) : await resource.create(form)
-    if (success) setFormOpen(false)
+    if (success) { setFormOpen(false); setStatusRefresh((value) => value + 1) }
   }
 
   const confirmDelete = async () => {
     if (!pendingDelete) return
     const success = await resource.remove(pendingDelete.id)
-    if (success) setPendingDelete(null)
+    if (success) { setPendingDelete(null); setStatusRefresh((value) => value + 1) }
   }
 
   const updateField = (field: Field<TPayload>, value: string | boolean) => {
