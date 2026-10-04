@@ -7,7 +7,6 @@ import { useDashboardData } from '../hooks/useDashboardData'
 import { CircularCarousel } from '../components/dashboard/CircularCarousel'
 import { Progress } from '../components/ui/Progress'
 import { AcademicActivityCard } from '../components/dashboard/AcademicActivityCard'
-import { AcademicFunnel } from '../components/dashboard/AcademicFunnel'
 
 const classroomImage = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=85'
 const teachingImage = 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=85'
@@ -16,6 +15,12 @@ const metricImages = {
   capacity: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=85',
   teachers: teachingImage,
   programs: 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1200&q=85',
+  students: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=85',
+  subjects: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=85',
+  periods: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=1200&q=85',
+  sections: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=85',
+  enrollments: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85',
+  grades: 'https://images.unsplash.com/photo-1453738773917-9c3eff1db985?auto=format&fit=crop&w=1200&q=85',
 }
 
 export function DashboardPage() {
@@ -30,11 +35,6 @@ export function DashboardPage() {
   const activeEnrollments = data.matriculas.filter((enrollment) => enrollment.estado.toLocaleLowerCase('es') === 'activa').length
   const graded = data.calificaciones.filter((grade) => grade.nota_final !== null && grade.nota_final !== undefined)
   const averageGrade = graded.length ? (graded.reduce((total, grade) => total + grade.nota_final, 0) / graded.length).toFixed(1) : '—'
-  const enrollmentStages = ['REGISTROS', 'ACTIVA', 'CERRADA', 'CANCELADA', 'EVALUADAS'].map((status, index) => ({
-    label: status.charAt(0) + status.slice(1).toLocaleLowerCase('es'),
-    value: index === 0 ? data.matriculas.length : index === 4 ? graded.length : data.matriculas.filter((enrollment) => enrollment.estado.toLocaleUpperCase('es') === status).length,
-    color: ['#5b0309', '#378b64', '#b7793f', '#8a716f', '#24466e'][index],
-  }))
   const greeting = user?.name ? `Buenos días, ${user.name.split(' ')[0]}` : 'Buenos días'
 
   return (
@@ -76,6 +76,12 @@ export function DashboardPage() {
           { src: metricImages.capacity, alt: 'Espacio académico', title: 'Capacidad', subtitle: `${totalCapacity} cupos` },
           { src: metricImages.teachers, alt: 'Docente en clase', title: 'Docentes', subtitle: `${activeTeachers} activos` },
           { src: metricImages.programs, alt: 'Edificio universitario', title: 'Carreras', subtitle: `${activePrograms} activas` },
+          { src: metricImages.students, alt: 'Estudiantes universitarios', title: 'Estudiantes', subtitle: `${activeStudents} activos` },
+          { src: metricImages.subjects, alt: 'Libros y asignaturas', title: 'Asignaturas', subtitle: `${data.asignaturas.length} registradas` },
+          { src: metricImages.periods, alt: 'Calendario académico', title: 'Períodos', subtitle: `${data.secciones.length ? 'En curso' : 'Sin registros'}` },
+          { src: metricImages.sections, alt: 'Clase universitaria', title: 'Secciones', subtitle: `${data.secciones.length} registradas` },
+          { src: metricImages.enrollments, alt: 'Registro académico', title: 'Matrículas', subtitle: `${activeEnrollments} activas` },
+          { src: metricImages.grades, alt: 'Calificaciones académicas', title: 'Calificaciones', subtitle: `${graded.length} evaluadas` },
         ]} />
       </section>
 
@@ -91,9 +97,7 @@ export function DashboardPage() {
         <ClassroomDistributionChart aulas={data.aulas} />
       </section>
 
-      <section className="dashboard-reveal grid gap-5 xl:grid-cols-2" aria-label="Actividad académica">
-        <AcademicFunnel title="Matrículas" tone="blue" stages={enrollmentStages} />
-        <AcademicFunnel title="Oferta de secciones" tone="orange" stages={['REGISTROS', 'ABIERTAS', 'CERRADAS', 'CANCELADAS', 'CON CUPO'].map((label, index) => ({ label: label.charAt(0) + label.slice(1).toLocaleLowerCase('es'), value: index === 0 ? data.secciones.length : index === 4 ? data.secciones.filter((section) => section.cupo_maximo > 0).length : data.secciones.filter((section) => section.estado.toLocaleUpperCase('es') === label.slice(0, -1)).length }))} />
+      <section className="dashboard-reveal grid gap-5 xl:grid-cols-[.85fr_1.15fr]" aria-label="Actividad académica">
         <article className="glass-card rounded-[1.25rem] p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a716f]">Oferta actual</p><h3 className="mt-2 font-semibold tracking-tight text-[#1a1c1a] dark:text-white">Secciones con mayor ocupación</h3><p className="mt-1 text-xs text-[#8a716f]">Cupos utilizados frente al límite de cada clase</p></div>
