@@ -1,0 +1,2 @@
+# Los scripts auxiliares no representan el código principal de la aplicación.
+scripts/*.py linguist-vendored
