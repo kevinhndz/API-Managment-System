@@ -64,6 +64,7 @@ export interface DashboardData {
   carreras: Carrera[]
   estudiantes: Estudiante[]
   asignaturas: Asignatura[]
+  periodos: Periodo[]
   secciones: Seccion[]
   matriculas: Matricula[]
   calificaciones: Calificacion[]

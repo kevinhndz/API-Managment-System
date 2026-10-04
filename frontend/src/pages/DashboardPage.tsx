@@ -78,7 +78,7 @@ export function DashboardPage() {
           { src: metricImages.programs, alt: 'Edificio universitario', title: 'Carreras', subtitle: `${activePrograms} activas` },
           { src: metricImages.students, alt: 'Estudiantes universitarios', title: 'Estudiantes', subtitle: `${activeStudents} activos` },
           { src: metricImages.subjects, alt: 'Libros y asignaturas', title: 'Asignaturas', subtitle: `${data.asignaturas.length} registradas` },
-          { src: metricImages.periods, alt: 'Calendario académico', title: 'Períodos', subtitle: `${data.secciones.length ? 'En curso' : 'Sin registros'}` },
+          { src: metricImages.periods, alt: 'Calendario académico', title: 'Períodos', subtitle: `${data.periodos.length} registrados` },
           { src: metricImages.sections, alt: 'Clase universitaria', title: 'Secciones', subtitle: `${data.secciones.length} registradas` },
           { src: metricImages.enrollments, alt: 'Registro académico', title: 'Matrículas', subtitle: `${activeEnrollments} activas` },
           { src: metricImages.grades, alt: 'Calificaciones académicas', title: 'Calificaciones', subtitle: `${graded.length} evaluadas` },
