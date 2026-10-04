@@ -47,6 +47,12 @@
     @apply border border-white/70 bg-white/65 shadow-[0_18px_55px_-35px_rgb(38_28_22_/_0.55)] backdrop-blur-xl dark:border-white/10 dark:bg-stone-900/60;
   }
 
+  @media (min-width: 1024px) {
+    aside.group { width: var(--sidebar-width); }
+    aside.group > [role='separator'] { opacity: 0; transition: opacity 160ms ease; }
+    aside.group:hover > [role='separator'], aside.group > [role='separator']:active { opacity: 1; }
+  }
+
   .circular-carousel { position: relative; min-height: 360px; perspective: 1100px; overflow: hidden; display: grid; place-items: center; isolation: isolate; }
   .circular-carousel::before { content: ''; position: absolute; width: 55%; aspect-ratio: 1; border-radius: 999px; background: radial-gradient(circle, rgb(125 249 255 / .16), transparent 68%); filter: blur(12px); }
   .circular-carousel__stage { position: relative; width: var(--carousel-radius); height: 190px; transform-style: preserve-3d; animation: carousel-drift var(--carousel-speed) linear infinite; }
