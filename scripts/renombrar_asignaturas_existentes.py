@@ -2,6 +2,14 @@
 
 from database.almacen import llaves
 from modulos.asignaturas.tabla import Asignaturas
+from modulos.aulas.tabla import Aulas
+from modulos.carreras.tabla import Carreras
+from modulos.docentes.tabla import Docentes
+from modulos.estudiantes.tabla import Estudiantes
+from modulos.periodos.tabla import Periodos
+from modulos.secciones.tabla import Secciones
+from modulos.matriculas.tabla import Matriculas
+from modulos.calificaciones.tabla import Calificaciones
 
 NOMBRES = [
     'Programación I', 'Programación II', 'Sociología', 'Estructura de Datos',
