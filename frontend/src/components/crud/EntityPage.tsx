@@ -3,6 +3,7 @@ import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
 
 import type { CrudService } from '../../services/api'
 import { useCrudResource } from '../../hooks/useCrudResource'
+import { usePagination } from '../../hooks/usePagination'
 import { Modal } from '../ui/Modal'
 
 interface EntityWithId {
@@ -69,6 +70,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   const [editing, setEditing] = useState<T | null>(null)
   const [pendingDelete, setPendingDelete] = useState<T | null>(null)
   const [form, setForm] = useState<TPayload>(emptyPayload)
+  const pagination = usePagination({ currentPage: resource.page, totalPages: Math.max(resource.totalPages, 1), paginationItemsToDisplay: 7 })
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase('es')
@@ -157,12 +159,15 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
           </table>
         </div>
 
-        <div className="flex items-center justify-between border-t px-4 py-3">
+        <div className="flex flex-col gap-3 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-slate-400">Página {resource.page} de {Math.max(resource.totalPages, 1)}</p>
-          <div className="flex gap-2">
-            <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg border text-slate-500 disabled:opacity-40 dark:text-slate-300" type="button" disabled={resource.page <= 1 || resource.loading} onClick={() => resource.setPage((page) => page - 1)} aria-label="Página anterior"><ChevronLeft className="h-4 w-4" /></button>
-            <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg border text-slate-500 disabled:opacity-40 dark:text-slate-300" type="button" disabled={resource.page >= resource.totalPages || resource.loading} onClick={() => resource.setPage((page) => page + 1)} aria-label="Página siguiente"><ChevronRight className="h-4 w-4" /></button>
-          </div>
+          <nav className="flex items-center justify-center gap-1" aria-label={`Paginación de ${title.toLocaleLowerCase('es')}`}>
+            <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg border text-slate-500 transition hover:bg-[#faf7f0] disabled:pointer-events-none disabled:opacity-40 dark:text-slate-300 dark:hover:bg-stone-800" type="button" disabled={resource.page <= 1 || resource.loading} onClick={() => resource.setPage((page) => page - 1)} aria-label="Página anterior"><ChevronLeft className="h-4 w-4" /></button>
+            {pagination.showLeftEllipsis && <><button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-sm text-slate-600 hover:bg-[#faf7f0] dark:text-slate-300 dark:hover:bg-stone-800" type="button" onClick={() => resource.setPage(1)}>1</button><span className="grid h-9 w-6 place-items-center text-slate-400" aria-hidden="true">…</span></>}
+            {pagination.pages.map((page) => <button className={`focus-ring grid h-9 w-9 place-items-center rounded-lg text-sm font-medium transition ${resource.page === page ? 'bg-[#5b0309] text-white shadow-sm dark:bg-rose-900' : 'text-slate-600 hover:bg-[#faf7f0] dark:text-slate-300 dark:hover:bg-stone-800'}`} type="button" key={page} disabled={resource.loading} onClick={() => resource.setPage(page)} aria-current={resource.page === page ? 'page' : undefined}>{page}</button>)}
+            {pagination.showRightEllipsis && <><span className="grid h-9 w-6 place-items-center text-slate-400" aria-hidden="true">…</span><button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-sm text-slate-600 hover:bg-[#faf7f0] dark:text-slate-300 dark:hover:bg-stone-800" type="button" onClick={() => resource.setPage(resource.totalPages)}>{resource.totalPages}</button></>}
+            <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg border text-slate-500 transition hover:bg-[#faf7f0] disabled:pointer-events-none disabled:opacity-40 dark:text-slate-300 dark:hover:bg-stone-800" type="button" disabled={resource.page >= resource.totalPages || resource.loading} onClick={() => resource.setPage((page) => page + 1)} aria-label="Página siguiente"><ChevronRight className="h-4 w-4" /></button>
+          </nav>
         </div>
       </section>
 
