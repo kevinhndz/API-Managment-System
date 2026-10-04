@@ -5,6 +5,7 @@ import { ClassroomDistributionChart } from '../components/dashboard/ClassroomDis
 import { useAuth } from '../contexts/AuthContext'
 import { useDashboardData } from '../hooks/useDashboardData'
 import { CircularCarousel } from '../components/dashboard/CircularCarousel'
+import { Progress } from '../components/ui/Progress'
 
 const classroomImage = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=85'
 const teachingImage = 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=85'
@@ -26,6 +27,7 @@ export function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-[1440px] space-y-8">
+      {loading && <section className="dashboard-reveal glass-card rounded-[1.5rem] p-6 sm:p-8" aria-label="Carga del dashboard"><Progress label="Sincronizando el campus..." /></section>}
       <section className="dashboard-reveal grid gap-5 xl:grid-cols-[1.35fr_.65fr]">
         <div className="relative min-h-[285px] overflow-hidden rounded-[1.5rem] bg-[#5b0309] p-7 text-white shadow-[0_24px_70px_-35px_rgb(91_3_9_/_0.75)] sm:p-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgb(255_223_152_/_0.22),transparent_24rem)]" />
