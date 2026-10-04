@@ -72,13 +72,21 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   const [editing, setEditing] = useState<T | null>(null)
   const [pendingDelete, setPendingDelete] = useState<T | null>(null)
   const [form, setForm] = useState<TPayload>(emptyPayload)
+  const [statusFilter, setStatusFilter] = useState('todos')
   const pagination = usePagination({ currentPage: resource.page, totalPages: Math.max(resource.totalPages, 1), paginationItemsToDisplay: 7 })
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase('es')
-    if (!normalized) return resource.items
-    return resource.items.filter((item) => searchableText(item).toLocaleLowerCase('es').includes(normalized))
-  }, [query, resource.items, searchableText])
+    const matchesQuery = (item: T) => !normalized || searchableText(item).toLocaleLowerCase('es').includes(normalized)
+    const matchesStatus = (item: T) => {
+      if (statusFilter === 'todos') return true
+      const value = (item as T & { estado?: string | boolean; activo?: boolean }).estado ?? (item as T & { activo?: boolean }).activo
+      return String(value).toLocaleLowerCase('es') === statusFilter
+    }
+    return resource.items.filter((item) => matchesQuery(item) && matchesStatus(item))
+  }, [query, resource.items, searchableText, statusFilter])
+
+  const hasStatus = resource.items.some((item) => 'estado' in item || 'activo' in item)
 
   const openCreate = () => {
     setEditing(null)
@@ -129,7 +137,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input className="focus-ring h-10 w-full rounded-xl border bg-[#faf7f0] pl-10 pr-4 text-sm placeholder:text-slate-400 dark:bg-stone-950" value={query} onChange={(event) => { setQuery(event.target.value); resource.setPage(1) }} placeholder={`Buscar ${title.toLocaleLowerCase('es')}…`} />
           </label>
-          <p className="text-xs text-slate-400">{resource.total} registros</p>
+          <div className="flex items-center gap-3"><p className="text-xs text-slate-400">{resource.total} registros</p>{hasStatus && <select className="focus-ring h-10 rounded-xl border bg-[#faf7f0] px-3 text-xs font-semibold text-slate-600 dark:bg-stone-950 dark:text-slate-300" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filtrar por estado"><option value="todos">Todos los estados</option><option value="true">Activos</option><option value="false">Inactivos</option><option value="abierta">Abiertas</option><option value="cerrada">Cerradas</option><option value="activa">Activas</option><option value="cancelada">Canceladas</option><option value="aprobada">Aprobadas</option><option value="reprobada">Reprobadas</option></select>}</div>
         </div>
 
         {resource.error && <div className="border-b bg-red-50 px-5 py-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">{resource.error}</div>}
