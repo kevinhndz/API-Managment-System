@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-interface CarouselItem { title: string; subtitle: string }
+interface CarouselItem { src: string; alt: string; title: string; subtitle: string }
 
 interface CircularCarouselProps {
   items: CarouselItem[]
@@ -14,6 +14,7 @@ export function CircularCarousel({ items, cardWidth = 170, speed = 14 }: Circula
   return <div className="circular-carousel" style={{ '--carousel-radius': `${radius}px`, '--carousel-speed': `${speed}s`, '--card-width': `${cardWidth}px` } as React.CSSProperties}>
     <div className="circular-carousel__stage">
       {items.map((item, index) => <button key={item.title} type="button" className={`circular-carousel__card ${index === active ? 'is-active' : ''}`} style={{ transform: `rotateY(${index * (360 / items.length)}deg) translateZ(var(--carousel-radius))` }} onClick={() => setActive(index)} aria-label={`Ver ${item.title}`}>
+        <img src={item.src} alt={item.alt} />
         <span><strong>{item.title}</strong><small>{item.subtitle}</small></span>
       </button>)}
     </div>

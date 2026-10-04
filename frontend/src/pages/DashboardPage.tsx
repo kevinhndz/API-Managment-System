@@ -8,6 +8,12 @@ import { CircularCarousel } from '../components/dashboard/CircularCarousel'
 
 const classroomImage = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=85'
 const teachingImage = 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=85'
+const metricImages = {
+  classrooms: classroomImage,
+  capacity: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=85',
+  teachers: teachingImage,
+  programs: 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1200&q=85',
+}
 
 export function DashboardPage() {
   const { data, loading, error, refresh } = useDashboardData()
@@ -52,10 +58,10 @@ export function DashboardPage() {
 
       <section className="dashboard-reveal glass-card overflow-hidden rounded-[1.5rem]" aria-label="Vista circular de métricas">
         <CircularCarousel speed={18} items={[
-          { title: 'Aulas', subtitle: `${data.aulas.length} registradas` },
-          { title: 'Capacidad', subtitle: `${totalCapacity} cupos` },
-          { title: 'Docentes', subtitle: `${activeTeachers} activos` },
-          { title: 'Carreras', subtitle: `${activePrograms} activas` },
+          { src: metricImages.classrooms, alt: 'Aulas universitarias', title: 'Aulas', subtitle: `${data.aulas.length} registradas` },
+          { src: metricImages.capacity, alt: 'Espacio académico', title: 'Capacidad', subtitle: `${totalCapacity} cupos` },
+          { src: metricImages.teachers, alt: 'Docente en clase', title: 'Docentes', subtitle: `${activeTeachers} activos` },
+          { src: metricImages.programs, alt: 'Edificio universitario', title: 'Carreras', subtitle: `${activePrograms} activas` },
         ]} />
       </section>
 
