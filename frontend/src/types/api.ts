@@ -30,7 +30,6 @@ export interface Docente {
   nombres: string
   apellidos: string
   correo: string
-  especialidad: string
   estado: boolean
 }
 
