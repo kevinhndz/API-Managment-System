@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { ChevronLeft, ChevronRight, LogOut, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
@@ -7,12 +8,15 @@ import { useAuth } from '../../contexts/AuthContext'
 interface SidebarProps {
   open: boolean
   collapsed: boolean
+  width: number
+  onWidthChange: (width: number) => void
   onClose: () => void
   onToggle: () => void
 }
 
-export function Sidebar({ open, collapsed, onClose, onToggle }: SidebarProps) {
+export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onToggle }: SidebarProps) {
   const { logout } = useAuth()
+  const [resizing, setResizing] = useState(false)
 
   return (
     <>
@@ -23,8 +27,27 @@ export function Sidebar({ open, collapsed, onClose, onToggle }: SidebarProps) {
         onClick={onClose}
       />
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[#e3e2df] bg-[#f4f3f0] px-4 py-6 shadow-xl transition-[width,transform] duration-300 ease-[var(--ease-drawer)] dark:border-stone-800 dark:bg-[#211f1d] lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${collapsed ? 'lg:w-[88px]' : 'lg:w-64'} w-64 ${open ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`group fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[#e3e2df] bg-[#f4f3f0] px-4 py-6 shadow-xl transition-[width,transform] duration-300 ease-[var(--ease-drawer)] dark:border-stone-800 dark:bg-[#211f1d] lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${resizing ? 'select-none' : ''} w-64 ${open ? 'translate-x-0' : '-translate-x-full'}`}
+        style={{ '--sidebar-width': `${collapsed ? 88 : width}px` } as React.CSSProperties}
       >
+        <div
+          className="absolute inset-y-0 -right-1 hidden w-2 cursor-col-resize lg:block"
+          role="separator"
+          aria-label="Ajustar ancho del menú lateral"
+          aria-orientation="vertical"
+          onPointerDown={(event) => {
+            event.currentTarget.setPointerCapture(event.pointerId)
+            setResizing(true)
+          }}
+          onPointerMove={(event) => {
+            if (!resizing) return
+            onWidthChange(Math.min(420, Math.max(200, event.clientX)))
+          }}
+          onPointerUp={(event) => {
+            event.currentTarget.releasePointerCapture(event.pointerId)
+            setResizing(false)
+          }}
+        />
         <div className={`flex items-center px-2 ${collapsed ? 'lg:justify-center' : 'justify-between'}`}>
           <div className="flex min-w-0 items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-navy-900 text-white dark:bg-sage-500">

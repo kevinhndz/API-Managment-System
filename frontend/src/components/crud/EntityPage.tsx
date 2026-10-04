@@ -172,7 +172,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
             {fields.map((field) => {
               const value = form[field.key]
               if (field.type === 'checkbox') {
-                return <label className="flex items-center gap-3 self-end rounded-xl border bg-[#faf7f0] px-4 py-3 text-sm font-medium text-slate-700 dark:bg-stone-950 dark:text-slate-200" key={String(field.key)}><input className="h-4 w-4 accent-sage-600" type="checkbox" checked={Boolean(value)} onChange={(event) => updateField(field, event.target.checked)} />{field.label}</label>
+                return <label className="flex items-center gap-3 self-end rounded-xl border bg-[#faf7f0] px-4 py-3 text-sm font-medium text-slate-700 dark:bg-stone-950 dark:text-slate-200" key={String(field.key)}><input className="peer sr-only" type="checkbox" checked={Boolean(value)} onChange={(event) => updateField(field, event.target.checked)} /><span aria-hidden="true" className="relative h-6 w-11 shrink-0 rounded-full bg-slate-300 transition-colors after:absolute after:left-1 after:top-1 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:bg-[#7b4bd9] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-[#7b4bd9]/50 dark:bg-stone-700" />{field.label}</label>
               }
 
               const sharedClass = 'focus-ring mt-2 h-11 w-full rounded-xl border bg-[#faf7f0] px-3.5 text-sm dark:bg-stone-950'
