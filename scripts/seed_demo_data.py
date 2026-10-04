@@ -24,6 +24,12 @@ NOMBRES = [
     "Gabriela",
     "Miguel",
 ]
+
+NOMBRES_ASIGNATURAS = [
+    'Programación I', 'Programación II', 'Sociología', 'Estructura de Datos',
+    'Derecho Constitucional', 'Matemática I', 'Matemática II', 'Comunicación Oral y Escrita',
+    'Bases de Datos I', 'Ingeniería de Software', 'Economía', 'Ética Profesional',
+]
 APELLIDOS = [
     "Hernández",
     "Martínez",
@@ -114,7 +120,7 @@ def cargar():
             [
                 {
                     "codigo": f"DEMO-ASI-{i:04d}",
-                    "nombre": f"Asignatura Demo {i:04d}",
+                    "nombre": NOMBRES_ASIGNATURAS[(i - 1) % len(NOMBRES_ASIGNATURAS)] if i <= len(NOMBRES_ASIGNATURAS) else f"{NOMBRES_ASIGNATURAS[(i - 1) % len(NOMBRES_ASIGNATURAS)]} {(i - 1) // len(NOMBRES_ASIGNATURAS) + 1}",
                     "unidades_valorativas": 3 + i % 3,
                     "carrera_id": carreras[(i - 1) % 10].id,
                     "activo": True,
