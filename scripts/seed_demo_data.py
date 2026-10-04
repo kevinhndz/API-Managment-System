@@ -120,7 +120,7 @@ def cargar():
             [
                 {
                     "codigo": f"DEMO-ASI-{i:04d}",
-                    "nombre": f"{NOMBRES_ASIGNATURAS[(i - 1) % len(NOMBRES_ASIGNATURAS)]} {(i - 1) // len(NOMBRES_ASIGNATURAS) + 1}",
+                    "nombre": NOMBRES_ASIGNATURAS[(i - 1) % len(NOMBRES_ASIGNATURAS)] if i <= len(NOMBRES_ASIGNATURAS) else f"{NOMBRES_ASIGNATURAS[(i - 1) % len(NOMBRES_ASIGNATURAS)]} {(i - 1) // len(NOMBRES_ASIGNATURAS) + 1}",
                     "unidades_valorativas": 3 + i % 3,
                     "carrera_id": carreras[(i - 1) % 10].id,
                     "activo": True,

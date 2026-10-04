@@ -20,9 +20,12 @@ NOMBRES = [
 
 def actualizar_nombres() -> int:
     with llaves() as db:
-        materias = db.query(Asignaturas).filter(Asignaturas.nombre.ilike('%temp%')).order_by(Asignaturas.id).all()
+        materias = db.query(Asignaturas).order_by(Asignaturas.id).all()
         for index, materia in enumerate(materias):
-            materia.nombre = f'{NOMBRES[index % len(NOMBRES)]} {(index // len(NOMBRES)) + 1}'
+            base = NOMBRES[index % len(NOMBRES)]
+            materia.nombre = f'__actualizando__{index}'
+            db.flush()
+            materia.nombre = base if index < len(NOMBRES) else f'{base} {(index // len(NOMBRES)) + 1}'
         db.commit()
         return len(materias)
 
