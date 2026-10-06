@@ -12,6 +12,10 @@ import type {
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')
 
+export async function iniciarSesion(usuario: string, contrasena: string) {
+  return request<{ token: string; tipo: string }>('/login/', { method: 'POST', body: JSON.stringify({ usuario, contrasena }) })
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
