@@ -8,6 +8,7 @@ from openpyxl import Workbook
 from modulos.docentes.tabla import Docentes
 from modulos.estudiantes.tabla import Estudiantes
 from modulos.matriculas.tabla import Matriculas
+from modulos.calificaciones.tabla import Calificaciones
 from core.config import settings
 
 
@@ -36,6 +37,12 @@ class ChatbotService:
             else:
                 resultado = ChatbotService.ejecutar_herramienta(db, "listar_estudiantes", {"estado": estado_docente})
             return {"respuesta": f"Encontre {resultado.get('total', 0)} registros de estudiantes.", "filas": resultado.get("filas", []), "archivo": resultado.get("archivo")}
+        if any(palabra in texto for palabra in ["calificacion", "calificación", "nota", "notas"]):
+            termino = texto
+            for palabra in ["calificaciones", "calificacion", "calificación", "nota final", "notas", "nota"]:
+                termino = termino.replace(palabra, "")
+            filas = ChatbotService.calificaciones(db, termino.strip())
+            return {"respuesta": f"Encontre {len(filas)} calificaciones.", "filas": filas[:100], "archivo": None}
         if "matricula" in texto or "inscripcion" in texto:
             estado = "cancelada" if "cancel" in texto else "activa" if "activa" in texto else "todos"
             resultado = ChatbotService.ejecutar_herramienta(db, "generar_excel_matriculas" if reporte else "listar_matriculas", {"estado": estado})
@@ -64,6 +71,18 @@ class ChatbotService:
         if estado != "todos":
             consulta = consulta.filter(Matriculas.estado.ilike(estado))
         return [{"id": item.id, "estudiante_id": item.estudiante_id, "seccion_id": item.seccion_id, "fecha": str(item.fecha_matricula), "estado": item.estado} for item in consulta.all()]
+
+    # Busca calificaciones por nombre, cuenta o identificador relacionado.
+    @staticmethod
+    def calificaciones(db: Session, termino: str = "") -> list[dict]:
+        consulta = db.query(Calificaciones, Matriculas, Estudiantes).join(Matriculas, Calificaciones.matricula_id == Matriculas.id).join(Estudiantes, Matriculas.estudiante_id == Estudiantes.id)
+        filas = []
+        for calificacion, matricula, estudiante in consulta.all():
+            texto = f"{calificacion.id} {matricula.id} {estudiante.id} {estudiante.nombre} {estudiante.cuenta}".lower()
+            if termino.strip() and termino.lower() not in texto:
+                continue
+            filas.append({"calificacion_id": calificacion.id, "estudiante": estudiante.nombre, "cuenta": estudiante.cuenta, "matricula_id": matricula.id, "primer_parcial": float(calificacion.primer_parcial), "segundo_parcial": float(calificacion.segundo_parcial), "tercer_parcial": float(calificacion.tercer_parcial), "nota_final": float(calificacion.nota_final), "observacion": calificacion.observacion or ""})
+        return filas
 
     # Busca identificadores y nombres en los registros permitidos para lectura.
     @staticmethod
@@ -98,13 +117,19 @@ class ChatbotService:
     # Describe las herramientas para que el modelo elija la funcion correcta.
     @staticmethod
     def herramientas() -> list[dict]:
-        return [{"type": "function", "function": {"name": "listar_docentes", "description": "Lista docentes por estado activo, inactivo o todos.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activo", "inactivo", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "listar_estudiantes", "description": "Lista estudiantes por estado activo, inactivo o todos.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activo", "inactivo", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "listar_matriculas", "description": "Lista matriculas por estado activa, cancelada o todos.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activa", "cancelada", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "buscar_registros", "description": "Busca por codigo, numero de empleado, cuenta, nombre o id. La informacion es interna del sistema y se puede consultar; nunca inventes ni rechaces la consulta por privacidad.", "parameters": {"type": "object", "properties": {"modulo": {"type": "string", "enum": ["docentes", "estudiantes", "matriculas"]}, "termino": {"type": "string"}}, "required": ["modulo", "termino"]}}}, {"type": "function", "function": {"name": "generar_excel_docentes", "description": "Genera un Excel descargable con docentes filtrados por estado.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activo", "inactivo", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "generar_excel_matriculas", "description": "Genera un Excel descargable con matriculas filtradas por estado.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activa", "cancelada", "todos"]}}, "required": ["estado"]}}}]
+        def herramienta(nombre: str, descripcion: str, propiedades: dict, requeridos: list[str]) -> dict:
+            return {"type": "function", "function": {"name": nombre, "description": descripcion, "parameters": {"type": "object", "properties": propiedades, "required": requeridos}}}
+        estado_docente = {"estado": {"type": "string", "enum": ["activo", "inactivo", "todos"]}}
+        estado_matricula = {"estado": {"type": "string", "enum": ["activa", "cancelada", "todos"]}}
+        return [herramienta("listar_docentes", "Lista docentes por estado.", estado_docente, ["estado"]), herramienta("listar_estudiantes", "Lista estudiantes por estado.", estado_docente, ["estado"]), herramienta("listar_matriculas", "Lista matriculas por estado.", estado_matricula, ["estado"]), herramienta("buscar_calificaciones", "Busca notas por nombre, cuenta, estudiante o matricula.", {"termino": {"type": "string"}}, ["termino"]), herramienta("buscar_registros", "Busca registros por codigo, cuenta, nombre o id.", {"modulo": {"type": "string", "enum": ["docentes", "estudiantes", "matriculas"]}, "termino": {"type": "string"}}, ["modulo", "termino"]), herramienta("generar_excel_docentes", "Genera Excel de docentes.", estado_docente, ["estado"]), herramienta("generar_excel_matriculas", "Genera Excel de matriculas.", estado_matricula, ["estado"])]
 
     # Ejecuta una herramienta solicitada por el modelo local.
     @staticmethod
     def ejecutar_herramienta(db: Session, nombre: str, argumentos: dict) -> dict:
         estado = argumentos.get("estado", "todos")
-        if nombre == "buscar_registros":
+        if nombre == "buscar_calificaciones":
+            filas = ChatbotService.calificaciones(db, argumentos.get("termino", ""))
+        elif nombre == "buscar_registros":
             filas = ChatbotService.buscar(db, argumentos.get("modulo", "estudiantes"), argumentos.get("termino", ""))
         elif nombre in {"listar_docentes", "generar_excel_docentes"}:
             filas = ChatbotService.docentes(db, estado)
