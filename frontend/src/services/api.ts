@@ -12,10 +12,6 @@ import type {
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')
 
-// Envia una pregunta al agente de estudiantes.
-export async function enviarMensajeChatbot(mensaje: string) {
-  return request<{ respuesta: string; total: number | null }>('/chatbot/mensaje', { method: 'POST', body: JSON.stringify({ mensaje }) })
-}
 
 export async function iniciarSesion(usuario: string, contrasena: string) {
   return request<{ token: string; tipo: string }>('/login/', { method: 'POST', body: JSON.stringify({ usuario, contrasena }) })

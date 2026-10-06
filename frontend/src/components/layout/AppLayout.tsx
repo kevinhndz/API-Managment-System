@@ -4,14 +4,11 @@ import { Outlet } from 'react-router-dom'
 import { Navbar } from './Navbar'
 import { Sidebar } from './Sidebar'
 import { GravityStarsBackground } from '../ui/GravityStarsBackground'
-import { ChatbotButton } from '../chatbot/ChatbotButton'
-import { ChatbotPanel } from '../chatbot/ChatbotPanel'
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(256)
-  const [chatbotOpen, setChatbotOpen] = useState(false)
 
   return (
     <div className="warm-grid relative flex min-h-screen overflow-hidden bg-[#faf9f6] dark:bg-[#171817]">
@@ -23,7 +20,6 @@ export function AppLayout() {
           <Outlet />
         </div>
       </div>
-      {chatbotOpen ? <ChatbotPanel onClose={() => setChatbotOpen(false)} /> : <ChatbotButton onClick={() => setChatbotOpen(true)} />}
     </div>
   )
 }
