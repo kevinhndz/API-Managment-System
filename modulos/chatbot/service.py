@@ -1,5 +1,5 @@
-import csv
-import re
+import json
+import requests
 from pathlib import Path
 from sqlalchemy.orm import Session
 from openpyxl import Workbook
@@ -7,6 +7,7 @@ from openpyxl import Workbook
 from modulos.docentes.tabla import Docentes
 from modulos.estudiantes.tabla import Estudiantes
 from modulos.matriculas.tabla import Matriculas
+from core.config import settings
 
 
 # Esta carpeta guarda temporalmente reportes generados por el chatbot.
@@ -14,28 +15,6 @@ REPORTES_DIR = Path("reportes_generados")
 
 
 class ChatbotService:
-    # Normaliza palabras para tolerar mayusculas y errores sencillos.
-    @staticmethod
-    def normalizar(texto: str) -> str:
-        texto_limpio = re.sub(r"[^a-z0-9 ]", "", texto.lower())
-        return texto_limpio.replace("inactib", "inactiv")
-
-    # Selecciona una funcion de negocio segun palabras y sinonimos del usuario.
-    @staticmethod
-    def interpretar(mensaje: str) -> tuple[str, str]:
-        texto = ChatbotService.normalizar(mensaje)
-        reporte = any(palabra in texto for palabra in ["excel", "reporte", "archivo", "descargar", "listado"])
-        if any(palabra in texto for palabra in ["docente", "docentes", "maestro", "maestros", "profesor", "profesores", "profe", "profes"]):
-            estado = "inactivo" if any(palabra in texto for palabra in ["inactivo", "desactivado", "no trabaja", "no trabajan"]) else "activo" if "activo" in texto else "todos"
-            return ("generar_excel_docentes" if reporte else "listar_docentes", estado)
-        if any(palabra in texto for palabra in ["matricula", "matriculas", "inscripcion", "inscripciones"]):
-            estado = "cancelada" if "cancel" in texto else "activa" if any(palabra in texto for palabra in ["activa", "activas", "vigente", "vigentes"]) else "todos"
-            return ("generar_excel_matriculas" if reporte else "listar_matriculas", estado)
-        if any(palabra in texto for palabra in ["estudiante", "estudiantes", "alumno", "alumnos"]):
-            estado = "inactivo" if any(palabra in texto for palabra in ["inactivo", "desactivado", "desactivados"]) else "activo" if "activo" in texto else "todos"
-            return ("listar_estudiantes", estado)
-        return ("ayuda", "todos")
-
     # Ejecuta la funcion de negocio para docentes.
     @staticmethod
     def docentes(db: Session, estado: str) -> list[dict]:
@@ -76,19 +55,43 @@ class ChatbotService:
         libro.save(ruta)
         return ruta.name
 
-    # Coordina interpretacion, consulta y generacion del archivo.
+    # Describe las herramientas para que el modelo elija la funcion correcta.
+    @staticmethod
+    def herramientas() -> list[dict]:
+        return [{"type": "function", "function": {"name": "listar_docentes", "description": "Lista docentes por estado activo, inactivo o todos.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activo", "inactivo", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "listar_estudiantes", "description": "Lista estudiantes por estado activo, inactivo o todos.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activo", "inactivo", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "listar_matriculas", "description": "Lista matriculas por estado activa, cancelada o todos.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activa", "cancelada", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "generar_excel_docentes", "description": "Genera un Excel descargable con docentes filtrados por estado.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activo", "inactivo", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "generar_excel_matriculas", "description": "Genera un Excel descargable con matriculas filtradas por estado.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activa", "cancelada", "todos"]}}, "required": ["estado"]}}}]
+
+    # Ejecuta una herramienta solicitada por el modelo local.
+    @staticmethod
+    def ejecutar_herramienta(db: Session, nombre: str, argumentos: dict) -> dict:
+        estado = argumentos.get("estado", "todos")
+        if nombre in {"listar_docentes", "generar_excel_docentes"}:
+            filas = ChatbotService.docentes(db, estado)
+        elif nombre in {"listar_estudiantes"}:
+            filas = ChatbotService.estudiantes(db, estado)
+        elif nombre in {"listar_matriculas", "generar_excel_matriculas"}:
+            filas = ChatbotService.matriculas(db, estado)
+        else:
+            return {"error": "Herramienta no permitida"}
+        archivo = ChatbotService.crear_csv(f"{nombre}-{estado}.xlsx", filas) if nombre.startswith("generar") else None
+        return {"total": len(filas), "filas": filas[:100], "archivo": archivo}
+
+    # Envia el mensaje al modelo y ejecuta las herramientas que el modelo solicite.
     @staticmethod
     def responder(db: Session, mensaje: str) -> dict:
-        funcion, estado = ChatbotService.interpretar(mensaje)
-        if funcion == "ayuda":
-            return {"respuesta": "Puedo listar docentes o estudiantes por estado y generar reportes CSV compatibles con Excel de docentes y matriculas.", "filas": [], "archivo": None}
-        if funcion in {"listar_docentes", "generar_excel_docentes"}:
-            filas = ChatbotService.docentes(db, estado)
-            archivo = ChatbotService.crear_csv(f"docentes-{estado}.csv", filas) if funcion.startswith("generar") else None
-            return {"respuesta": f"Encontre {len(filas)} docentes con estado {estado}.", "filas": filas[:50], "archivo": archivo}
-        if funcion == "listar_estudiantes":
-            filas = ChatbotService.estudiantes(db, estado)
-            return {"respuesta": f"Encontre {len(filas)} estudiantes con estado {estado}.", "filas": filas[:50], "archivo": None}
-        filas = ChatbotService.matriculas(db, estado)
-        archivo = ChatbotService.crear_csv(f"matriculas-{estado}.csv", filas) if funcion.startswith("generar") else None
-        return {"respuesta": f"Encontre {len(filas)} matriculas con estado {estado}.", "filas": filas[:50], "archivo": archivo}
+        mensajes = [{"role": "system", "content": "Eres el asistente de CampusFlow. Responde en espanol claro, no inventes datos y usa herramientas cuando la consulta pida informacion del sistema o reportes."}, {"role": "user", "content": mensaje}]
+        for _ in range(3):
+            respuesta = requests.post(f"{settings.OLLAMA_URL}/api/chat", json={"model": settings.OLLAMA_MODEL, "messages": mensajes, "tools": ChatbotService.herramientas(), "stream": False}, timeout=90)
+            respuesta.raise_for_status()
+            mensaje_modelo = respuesta.json().get("message", {})
+            llamadas = mensaje_modelo.get("tool_calls", [])
+            mensajes.append(mensaje_modelo)
+            if not llamadas:
+                return {"respuesta": mensaje_modelo.get("content", "No pude generar una respuesta."), "filas": [], "archivo": None}
+            ultimo = {"filas": [], "archivo": None}
+            for llamada in llamadas:
+                nombre = llamada["function"]["name"]
+                argumentos = llamada["function"].get("arguments", {})
+                resultado = ChatbotService.ejecutar_herramienta(db, nombre, argumentos)
+                ultimo = resultado
+                mensajes.append({"role": "tool", "content": json.dumps(resultado, ensure_ascii=False), "tool_name": nombre})
+        return {"respuesta": "El modelo no termino la consulta.", "filas": ultimo.get("filas", []), "archivo": ultimo.get("archivo")}

@@ -4,6 +4,8 @@ class Settings(BaseSettings):
     
     DATABASE_URL: str
     SECRET_KEY: str
+    OLLAMA_URL: str = "http://127.0.0.1:11434"
+    OLLAMA_MODEL: str = "qwen2.5:1.5b"
 
     # Configuracion de Pydantic para indicarle que lea el archivo .env automaticamente
     model_config = SettingsConfigDict(
