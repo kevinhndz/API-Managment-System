@@ -10,7 +10,6 @@ from modulos.matriculas.router import router as router_matriculas
 from modulos.calificaciones.router import router as router_calificaciones
 from modulos.reportes.router import router as router_reportes
 from modulos.login.router import router as router_login
-from modulos.chatbot.router import router as router_chatbot
 from modulos.login.tabla import Usuarios
 from core.escuchadores import ExcepcionesGlobales as eg
 from modulos.carreras.tabla import Carreras
@@ -31,5 +30,4 @@ app.include_router(router_matriculas)
 app.include_router(router_calificaciones)
 app.include_router(router_reportes)
 app.include_router(router_login)
-app.include_router(router_chatbot)
 eg.directorio(app)
