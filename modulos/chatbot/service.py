@@ -1,4 +1,5 @@
 import json
+import re
 import requests
 from pathlib import Path
 from sqlalchemy.orm import Session
@@ -15,6 +16,31 @@ REPORTES_DIR = Path("reportes_generados")
 
 
 class ChatbotService:
+    # Recupera consultas claras cuando el modelo pequeno responde solo con texto.
+    @staticmethod
+    def respaldo_consulta(db: Session, mensaje: str) -> dict | None:
+        texto = mensaje.lower()
+        reporte = any(palabra in texto for palabra in ["excel", "reporte", "archivo", "descarga"])
+        estado_docente = "inactivo" if any(palabra in texto for palabra in ["inactivo", "desactivado", "no trabaja"]) else "activo" if "activo" in texto else "todos"
+        if any(palabra in texto for palabra in ["docente", "profesor", "maestro", "empleado"]):
+            codigo = re.search(r"doc[- ]?\d+", texto)
+            if codigo:
+                resultado = ChatbotService.ejecutar_herramienta(db, "buscar_registros", {"modulo": "docentes", "termino": codigo.group(0).replace(" ", "-")})
+            else:
+                resultado = ChatbotService.ejecutar_herramienta(db, "generar_excel_docentes" if reporte else "listar_docentes", {"estado": estado_docente})
+            return {"respuesta": f"Encontre {resultado.get('total', 0)} registros de docentes.", "filas": resultado.get("filas", []), "archivo": resultado.get("archivo")}
+        if any(palabra in texto for palabra in ["estudiante", "alumno", "cuenta"]):
+            cuenta = re.search(r"\b\d{4}[- ]\d{4}\b", texto)
+            if cuenta:
+                resultado = ChatbotService.ejecutar_herramienta(db, "buscar_registros", {"modulo": "estudiantes", "termino": cuenta.group(0).replace(" ", "-")})
+            else:
+                resultado = ChatbotService.ejecutar_herramienta(db, "listar_estudiantes", {"estado": estado_docente})
+            return {"respuesta": f"Encontre {resultado.get('total', 0)} registros de estudiantes.", "filas": resultado.get("filas", []), "archivo": resultado.get("archivo")}
+        if "matricula" in texto or "inscripcion" in texto:
+            estado = "cancelada" if "cancel" in texto else "activa" if "activa" in texto else "todos"
+            resultado = ChatbotService.ejecutar_herramienta(db, "generar_excel_matriculas" if reporte else "listar_matriculas", {"estado": estado})
+            return {"respuesta": f"Encontre {resultado.get('total', 0)} matriculas.", "filas": resultado.get("filas", []), "archivo": resultado.get("archivo")}
+        return None
     # Ejecuta la funcion de negocio para docentes.
     @staticmethod
     def docentes(db: Session, estado: str) -> list[dict]:
@@ -102,6 +128,9 @@ class ChatbotService:
             llamadas = mensaje_modelo.get("tool_calls", [])
             mensajes.append(mensaje_modelo)
             if not llamadas:
+                respaldo = ChatbotService.respaldo_consulta(db, mensaje)
+                if respaldo:
+                    return respaldo
                 return {"respuesta": mensaje_modelo.get("content", "No pude generar una respuesta."), "filas": [], "archivo": None}
             ultimo = {"filas": [], "archivo": None}
             for llamada in llamadas:
