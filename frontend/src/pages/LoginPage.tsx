@@ -5,10 +5,10 @@ import { useForm } from 'react-hook-form'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
-import { DEMO_CREDENTIALS, useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext'
 
 const loginSchema = z.object({
-  email: z.string().email('Ingresa un correo válido.'),
+  usuario: z.string().min(3, 'Ingresa tu usuario.'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres.'),
 })
 
@@ -23,7 +23,6 @@ export function LoginPage() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({ resolver: zodResolver(loginSchema) })
 
@@ -32,19 +31,13 @@ export function LoginPage() {
   const onSubmit = handleSubmit(async (values) => {
     setServerError('')
     try {
-      await login(values.email, values.password)
+      await login(values.usuario, values.password)
       const destination = (location.state as { from?: string } | null)?.from ?? '/'
       navigate(destination, { replace: true })
     } catch (error) {
       setServerError(error instanceof Error ? error.message : 'No fue posible iniciar sesión.')
     }
   })
-
-  const useDemoAccount = () => {
-    setValue('email', DEMO_CREDENTIALS.email, { shouldValidate: true })
-    setValue('password', DEMO_CREDENTIALS.password, { shouldValidate: true })
-    setServerError('')
-  }
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#151112] px-4 py-5 sm:px-8 sm:py-8">
@@ -85,18 +78,18 @@ export function LoginPage() {
 
             <form className="mt-8 space-y-5" onSubmit={onSubmit} noValidate>
               <label className="block">
-                <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.12em] text-[#d8c9c8]">Correo electrónico</span>
+                <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.12em] text-[#d8c9c8]">Usuario</span>
                 <span className="relative block">
                   <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7e6d6d]" />
                   <input
                     className="focus-ring h-12 w-full rounded-xl border border-[#3d2b2d] bg-[#211719] pl-11 pr-4 text-sm text-white placeholder:text-[#7e6d6d]"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="nombre@campus.edu"
-                    {...register('email')}
+                    type="text"
+                    autoComplete="username"
+                    placeholder="admin"
+                    {...register('usuario')}
                   />
                 </span>
-                {errors.email && <span className="mt-1.5 block text-xs text-red-600">{errors.email.message}</span>}
+                {errors.usuario && <span className="mt-1.5 block text-xs text-red-600">{errors.usuario.message}</span>}
               </label>
 
               <label className="block">
@@ -134,17 +127,6 @@ export function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-7 rounded-xl border border-[#302224] bg-[#1e1618] p-4 text-sm">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="font-medium text-[#e6d8d6]">Acceso de demostración</p>
-                  <p className="mt-1 text-xs text-[#988685]">Credenciales disponibles para revisión local.</p>
-                </div>
-                <button className="focus-ring shrink-0 rounded-lg border border-[#493033] px-3 py-2 text-xs font-semibold text-[#f05b52] hover:bg-[#2b1b1e]" type="button" onClick={useDemoAccount}>
-                  Completar
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </section>
