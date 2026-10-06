@@ -30,6 +30,7 @@ interface Field<TPayload> {
   min?: number
   max?: number
   options?: FieldOption[]
+  required?: boolean
 }
 
 export interface StatusOption { value: string; label: string }
@@ -150,7 +151,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   }
 
   const updateField = (field: Field<TPayload>, value: string | boolean) => {
-    const nextValue = field.type === 'number' ? Number(value) : value
+    const nextValue = field.type === 'number' && value === '' && field.required === false ? null : field.type === 'number' ? Number(value) : value
     setForm((current) => ({ ...current, [field.key]: nextValue }))
   }
 
@@ -230,11 +231,11 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
                 <label className="block" key={String(field.key)}>
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{field.label}</span>
                   {field.type === 'select' ? (
-                    <select className={sharedClass} value={String(value)} onChange={(event) => updateField(field, event.target.value)} required>
+                    <select className={sharedClass} value={String(value ?? '')} onChange={(event) => updateField(field, event.target.value)} required={field.required !== false}>
                       {field.options?.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                     </select>
                   ) : (
-                    <input className={sharedClass} type={field.type ?? 'text'} value={String(value)} placeholder={field.placeholder} min={field.min} max={field.max} onChange={(event) => updateField(field, event.target.value)} required />
+                    <input className={sharedClass} type={field.type ?? 'text'} value={String(value ?? '')} placeholder={field.placeholder} min={field.min} max={field.max} onChange={(event) => updateField(field, event.target.value)} required={field.required !== false} />
                   )}
                 </label>
               )
