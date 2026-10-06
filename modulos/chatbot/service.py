@@ -39,6 +39,20 @@ class ChatbotService:
             consulta = consulta.filter(Matriculas.estado.ilike(estado))
         return [{"id": item.id, "estudiante_id": item.estudiante_id, "seccion_id": item.seccion_id, "fecha": str(item.fecha_matricula), "estado": item.estado} for item in consulta.all()]
 
+    # Busca identificadores y nombres en los registros permitidos para lectura.
+    @staticmethod
+    def buscar(db: Session, modulo: str, termino: str) -> list[dict]:
+        texto = termino.strip()
+        if modulo == "docentes":
+            filas = ChatbotService.docentes(db, "todos")
+        elif modulo == "estudiantes":
+            filas = ChatbotService.estudiantes(db, "todos")
+        elif modulo == "matriculas":
+            filas = ChatbotService.matriculas(db, "todos")
+        else:
+            return []
+        return [fila for fila in filas if texto.lower() in " ".join(str(valor) for valor in fila.values()).lower()]
+
     # Crea un archivo XLSX real y devuelve su nombre descargable.
     @staticmethod
     def crear_csv(nombre: str, filas: list[dict]) -> str:
@@ -58,13 +72,15 @@ class ChatbotService:
     # Describe las herramientas para que el modelo elija la funcion correcta.
     @staticmethod
     def herramientas() -> list[dict]:
-        return [{"type": "function", "function": {"name": "listar_docentes", "description": "Lista docentes por estado activo, inactivo o todos.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activo", "inactivo", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "listar_estudiantes", "description": "Lista estudiantes por estado activo, inactivo o todos.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activo", "inactivo", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "listar_matriculas", "description": "Lista matriculas por estado activa, cancelada o todos.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activa", "cancelada", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "generar_excel_docentes", "description": "Genera un Excel descargable con docentes filtrados por estado.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activo", "inactivo", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "generar_excel_matriculas", "description": "Genera un Excel descargable con matriculas filtradas por estado.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activa", "cancelada", "todos"]}}, "required": ["estado"]}}}]
+        return [{"type": "function", "function": {"name": "listar_docentes", "description": "Lista docentes por estado activo, inactivo o todos.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activo", "inactivo", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "listar_estudiantes", "description": "Lista estudiantes por estado activo, inactivo o todos.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activo", "inactivo", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "listar_matriculas", "description": "Lista matriculas por estado activa, cancelada o todos.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activa", "cancelada", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "buscar_registros", "description": "Busca por codigo, numero de empleado, cuenta, nombre o id. La informacion es interna del sistema y se puede consultar; nunca inventes ni rechaces la consulta por privacidad.", "parameters": {"type": "object", "properties": {"modulo": {"type": "string", "enum": ["docentes", "estudiantes", "matriculas"]}, "termino": {"type": "string"}}, "required": ["modulo", "termino"]}}}, {"type": "function", "function": {"name": "generar_excel_docentes", "description": "Genera un Excel descargable con docentes filtrados por estado.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activo", "inactivo", "todos"]}}, "required": ["estado"]}}}, {"type": "function", "function": {"name": "generar_excel_matriculas", "description": "Genera un Excel descargable con matriculas filtradas por estado.", "parameters": {"type": "object", "properties": {"estado": {"type": "string", "enum": ["activa", "cancelada", "todos"]}}, "required": ["estado"]}}}]
 
     # Ejecuta una herramienta solicitada por el modelo local.
     @staticmethod
     def ejecutar_herramienta(db: Session, nombre: str, argumentos: dict) -> dict:
         estado = argumentos.get("estado", "todos")
-        if nombre in {"listar_docentes", "generar_excel_docentes"}:
+        if nombre == "buscar_registros":
+            filas = ChatbotService.buscar(db, argumentos.get("modulo", "estudiantes"), argumentos.get("termino", ""))
+        elif nombre in {"listar_docentes", "generar_excel_docentes"}:
             filas = ChatbotService.docentes(db, estado)
         elif nombre in {"listar_estudiantes"}:
             filas = ChatbotService.estudiantes(db, estado)
@@ -78,7 +94,7 @@ class ChatbotService:
     # Envia el mensaje al modelo y ejecuta las herramientas que el modelo solicite.
     @staticmethod
     def responder(db: Session, mensaje: str) -> dict:
-        mensajes = [{"role": "system", "content": "Eres el asistente de CampusFlow. Responde en espanol claro, no inventes datos y usa herramientas cuando la consulta pida informacion del sistema o reportes."}, {"role": "user", "content": mensaje}]
+        mensajes = [{"role": "system", "content": "Eres el asistente interno de CampusFlow. La informacion del sistema puede consultarse libremente por el usuario autorizado: no respondas con advertencias de privacidad. Usa buscar_registros para codigos, cuentas, nombres o ids. Usa las herramientas para datos reales y reportes. Solo estan prohibidas editar y eliminar. Responde en espanol claro y resume los resultados."}, {"role": "user", "content": mensaje}]
         for _ in range(3):
             respuesta = requests.post(f"{settings.OLLAMA_URL}/api/chat", json={"model": settings.OLLAMA_MODEL, "messages": mensajes, "tools": ChatbotService.herramientas(), "stream": False}, timeout=90)
             respuesta.raise_for_status()
