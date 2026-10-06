@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from modulos.aulas.router import router as router_aulas
 from modulos.carreras.router import router as router_carreras
 from modulos.docentes.router import router as router_docentes
@@ -16,18 +16,18 @@ from modulos.carreras.tabla import Carreras
 from modulos.estudiantes.tabla import Estudiantes
 from modulos.aulas.tabla import Aulas
 from modulos.docentes.tabla import Docentes
+from utils.auth import permiso_admin
 
 app = FastAPI()
 
-app.include_router(router_aulas)
-app.include_router(router_docentes)
-app.include_router(router_carreras)
-app.include_router(router_estudiantes)
-app.include_router(router_asignaturas)
-app.include_router(router_periodos)
-app.include_router(router_secciones)
-app.include_router(router_matriculas)
-app.include_router(router_calificaciones)
-app.include_router(router_reportes)
+app.include_router(router_aulas, dependencies=[Depends(permiso_admin)])
+app.include_router(router_docentes, dependencies=[Depends(permiso_admin)])
+app.include_router(router_carreras, dependencies=[Depends(permiso_admin)])
+app.include_router(router_estudiantes, dependencies=[Depends(permiso_admin)])
+app.include_router(router_asignaturas, dependencies=[Depends(permiso_admin)])
+app.include_router(router_periodos, dependencies=[Depends(permiso_admin)])
+app.include_router(router_secciones, dependencies=[Depends(permiso_admin)])
+app.include_router(router_matriculas, dependencies=[Depends(permiso_admin)])
+app.include_router(router_calificaciones, dependencies=[Depends(permiso_admin)])
 app.include_router(router_login)
 eg.directorio(app)
