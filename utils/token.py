@@ -13,6 +13,8 @@ def crear_token(user: str, user_id: int, rol: str) -> str:
         "user": user,
         "user_id": user_id,
         "rol" : rol,
+        "iat": datetime.now(timezone.utc),
+        "tipo": "acceso",
         "exp": expira_en
     }
     

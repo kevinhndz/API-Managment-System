@@ -39,6 +39,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   })
 
   if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem('campusflow.session')
+      localStorage.removeItem('campusflow.user')
+      window.location.assign('/login')
+    }
     const body = (await response.json().catch(() => null)) as { detail?: string } | null
     throw new ApiError(body?.detail ?? 'No se pudo completar la solicitud.', response.status)
   }
