@@ -12,6 +12,7 @@ import type {
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')
 
+
 export async function iniciarSesion(usuario: string, contrasena: string) {
   return request<{ token: string; tipo: string }>('/login/', { method: 'POST', body: JSON.stringify({ usuario, contrasena }) })
 }
@@ -104,11 +105,3 @@ export const periodosApi = createCrudService<Periodo, PeriodoPayload>('/periodos
 export const seccionesApi = createCrudService<Seccion, SeccionPayload>('/secciones')
 export const matriculasApi = createCrudService<Matricula, MatriculaPayload>('/matriculas')
 export const calificacionesApi = createCrudService<Calificacion, CalificacionPayload>('/calificaciones')
-
-export async function enviarMensajeChatbot(mensaje: string) {
-  return request<{ respuesta: string; filas: Record<string, unknown>[]; archivo: string | null }>('/chatbot/mensaje', { method: 'POST', body: JSON.stringify({ mensaje }) })
-}
-
-export function urlReporteChatbot(nombre: string) {
-  return `${API_URL}/chatbot/reportes/${encodeURIComponent(nombre)}`
-}
