@@ -42,4 +42,5 @@ tzdata==2026.4
 urllib3==2.8.0
 uvicorn==0.54.0
 openpyxl==3.1.5
+bcrypt==4.0.1
 ViTest==2.0
