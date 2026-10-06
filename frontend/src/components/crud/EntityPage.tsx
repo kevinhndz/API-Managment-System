@@ -5,7 +5,7 @@ import type { CrudService } from '../../services/api'
 import { useCrudResource } from '../../hooks/useCrudResource'
 import { usePagination } from '../../hooks/usePagination'
 import { Modal } from '../ui/Modal'
-import { MorphingSquare } from '../ui/MorphingSquare'
+import { TableSkeleton } from '../ui/Skeleton'
 import { ActionMenu } from '../ui/ActionMenu'
 
 interface EntityWithId {
@@ -189,7 +189,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {resource.loading ? (
-                <tr><td className="px-5 py-14" colSpan={columns.length + 1}><MorphingSquare message="Cargando registros..." /></td></tr>
+                <tr><td className="px-5 py-10" colSpan={columns.length + 1}><TableSkeleton columns={columns.length} /></td></tr>
               ) : filteredItems.length === 0 ? (
                 <tr><td className="px-5 py-14 text-center text-sm text-slate-400" colSpan={columns.length + 1}>No se encontraron registros.</td></tr>
               ) : (
