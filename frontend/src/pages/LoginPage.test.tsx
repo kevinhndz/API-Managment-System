@@ -9,7 +9,7 @@ import { LoginPage } from './LoginPage'
 describe('LoginPage', () => {
   afterEach(() => localStorage.clear())
 
-  it('permite completar la cuenta de demostración', async () => {
+  it('muestra el formulario de acceso real', async () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter>
@@ -19,8 +19,7 @@ describe('LoginPage', () => {
       </MemoryRouter>,
     )
 
-    await user.click(screen.getByRole('button', { name: 'Completar' }))
-    expect(screen.getByLabelText('Correo electrónico')).toHaveValue('admin@campusflow.edu')
-    expect(screen.getByLabelText('Contraseña')).toHaveValue('Campus2026')
+    expect(screen.getByLabelText('Usuario')).toBeVisible()
+    expect(screen.queryByText('Acceso de demostración')).not.toBeInTheDocument()
   })
 })
