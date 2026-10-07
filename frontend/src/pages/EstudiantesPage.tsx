@@ -3,6 +3,7 @@ import { IdCard } from 'lucide-react'
 
 import { EntityPage, StatusBadge } from '../components/crud/EntityPage'
 import { PersonCarnetDialog, type PersonCarnetData } from '../components/people/PersonCarnetDialog'
+import { FolderFloat } from '../components/ui/FolderFloat'
 import { estudiantesApi } from '../services/api'
 import type { Estudiante, EstudiantePayload } from '../types/api'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
@@ -57,6 +58,37 @@ export function EstudiantesPage() {
             area: labels.carreras[item.carrera_id] ?? `Carrera #${item.carrera_id}`,
           }),
         })}
+        renderActions={(_, handlers) => (
+          <FolderFloat
+            items={[
+              { label: 'Ver carnet', value: 'carnet' },
+              { label: 'Editar', value: 'editar' },
+              { label: 'Eliminar', value: 'eliminar' },
+            ]}
+            label="Acciones"
+            sublabel="3 opciones"
+            trigger="hover"
+            closeOnSelect
+            physics
+            folderColor="#5b0309"
+            frontColor="#8f1721"
+            paperColor="#fff8f4"
+            itemColor="#fff4f2"
+            itemTextColor="#351215"
+            labelColor="#fff8f4"
+            width={92}
+            height={28}
+            spread={104}
+            lift={12}
+            radius={9}
+            className="folder-float--compact"
+            onSelect={(value) => {
+              if (value === 'carnet') handlers.onExtraAction?.()
+              if (value === 'editar') handlers.onEdit()
+              if (value === 'eliminar') handlers.onDelete()
+            }}
+          />
+        )}
       />
       {carnet && <PersonCarnetDialog person={carnet} onClose={closeCarnet} />}
     </>
