@@ -48,6 +48,7 @@ interface EntityPageProps<T extends EntityWithId, TPayload extends object> {
   toPayload: (item: T) => TPayload
   searchableText: (item: T) => string
   statusOptions?: StatusOption[]
+  rowAction?: (item: T) => { label: string; icon: ReactNode; onSelect: () => void } | undefined
 }
 
 export function StatusBadge({ active }: { active: boolean }) {
@@ -71,6 +72,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   toPayload,
   searchableText,
   statusOptions,
+  rowAction,
 }: EntityPageProps<T, TPayload>) {
   const [query, setQuery] = useState('')
   const resource = useCrudResource(service, 10, query)
@@ -198,7 +200,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
                 filteredItems.map((item) => (
                   <tr className="transition hover:bg-slate-50/70 dark:hover:bg-slate-800/40" key={item.id}>
                     {columns.map((column) => <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600 dark:text-slate-300" key={column.label}>{column.render(item)}</td>)}
-                    <td className="px-5 py-4 text-right"><ActionMenu singular={singular} onEdit={() => openEdit(item)} onDelete={() => setPendingDelete(item)} /></td>
+                    <td className="px-5 py-4 text-right"><ActionMenu singular={singular} onEdit={() => openEdit(item)} onDelete={() => setPendingDelete(item)} extraAction={rowAction?.(item)} /></td>
                   </tr>
                 ))
               )}
