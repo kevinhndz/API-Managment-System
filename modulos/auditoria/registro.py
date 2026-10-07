@@ -10,12 +10,16 @@ from utils.token import verificar_token
 usuario_actual: ContextVar[dict | None] = ContextVar("usuario_auditoria", default=None)
 
 
-def identificar_usuario(authorization: str | None) -> dict | None:
-    if not authorization:
-        return None
-
-    esquema, _, token = authorization.partition(" ")
-    if esquema.lower() != "bearer" or not token:
+def identificar_usuario(
+    authorization: str | None, session_cookie: str | None = None
+) -> dict | None:
+    token = session_cookie
+    if authorization:
+        esquema, _, token_autorizacion = authorization.partition(" ")
+        if esquema.lower() != "bearer" or not token_autorizacion:
+            return None
+        token = token_autorizacion
+    if not token:
         return None
 
     try:
