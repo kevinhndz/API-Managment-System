@@ -41,6 +41,7 @@ export function AulasPage() {
         { key: 'capacidad', label: 'Capacidad', type: 'number', min: 20, max: 65 },
         { key: 'activo', label: 'Aula activa', type: 'checkbox' },
       ]}
+      statusOptions={[{ value: 'activo', label: 'Activas' }, { value: 'inactivo', label: 'Inactivas' }]}
     />
   )
 }
