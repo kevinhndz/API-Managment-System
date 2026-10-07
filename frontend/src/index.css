@@ -139,6 +139,35 @@
     .circular-carousel__card-details { transition-duration: 0.01ms; }
   }
 
+  .animated-download-button { position: relative; display: inline-flex; width: 52px; height: 46px; flex: 0 0 auto; align-items: center; overflow: hidden; border: 0; border-radius: 999px; background: #dc2626; color: #fff; cursor: pointer; transition: width 220ms var(--ease-out), background-color 180ms ease, opacity 180ms ease, transform 120ms var(--ease-out); }
+  .animated-download-button__icon { position: absolute; left: 14px; display: grid; width: 24px; height: 24px; place-items: center; transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out); }
+  .animated-download-button__icon svg { width: 22px; height: 22px; stroke-width: 2.2; }
+  .animated-download-button__label { position: absolute; right: 12px; left: 12px; overflow: hidden; color: #fff; font-size: .86rem; font-weight: 700; opacity: 0; text-align: center; text-overflow: ellipsis; transform: translateY(4px); transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out); white-space: nowrap; }
+  .animated-download-button.is-loading { width: 176px; background: #b91c1c; cursor: wait; }
+  .animated-download-button.is-loading .animated-download-button__label { opacity: 1; transform: translateY(0); }
+  .animated-download-button.is-loading .animated-download-button__icon svg { animation: download-button-spin 900ms linear infinite; }
+  .animated-download-button:disabled:not(.is-loading) { cursor: not-allowed; opacity: .5; }
+  .animated-download-button:focus-visible { width: 176px; outline: 3px solid rgb(220 38 38 / .35); outline-offset: 3px; }
+  .animated-download-button:focus-visible:not(.is-loading) .animated-download-button__icon { opacity: 0; transform: scale(.85); }
+  .animated-download-button:active:not(:disabled) { transform: scale(.97); }
+  @keyframes download-button-spin { to { transform: rotate(360deg); } }
+  @media (hover: hover) and (pointer: fine) {
+    .animated-download-button:hover:not(:disabled) { width: 176px; background: #b91c1c; }
+    .animated-download-button:hover:not(:disabled) .animated-download-button__icon { opacity: 0; transform: scale(.85); }
+    .animated-download-button:hover:not(:disabled) .animated-download-button__label,
+    .animated-download-button:focus-visible .animated-download-button__label { opacity: 1; transform: translateY(0); }
+  }
+  @media (hover: none), (pointer: coarse) {
+    .animated-download-button { width: 176px; }
+    .animated-download-button__label { right: 12px; left: 48px; opacity: 1; text-align: left; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animated-download-button,
+    .animated-download-button__label,
+    .animated-download-button__icon { transition-duration: 0.01ms; }
+    .animated-download-button.is-loading .animated-download-button__icon svg { animation: none; }
+  }
+
   .warm-grid {
     background-image: radial-gradient(circle at 18% 10%, rgb(91 3 9 / .05), transparent 24rem), radial-gradient(circle at 86% 52%, rgb(212 154 69 / .06), transparent 26rem);
   }
