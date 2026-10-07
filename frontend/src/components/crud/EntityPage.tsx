@@ -53,7 +53,7 @@ interface EntityPageProps<T extends EntityWithId, TPayload extends object> {
 
 export function StatusBadge({ active }: { active: boolean }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${active ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${active ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-stone-800 dark:text-stone-200'}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
       {active ? 'Activo' : 'Inactivo'}
     </span>
@@ -186,7 +186,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse text-left">
             <thead>
-              <tr className="border-b bg-[#faf7f0]/80 dark:bg-stone-950/50">
+              <tr className="border-b bg-[#faf7f0]/80 dark:bg-[#3b2e2b]">
                 {columns.map((column) => <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400" key={column.label}>{column.label}</th>)}
                 <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">Acciones</th>
               </tr>
