@@ -1,13 +1,18 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ChevronDown, Pencil, Trash2 } from 'lucide-react'
 
 interface ActionMenuProps {
   singular: string
   onEdit: () => void
   onDelete: () => void
+  extraAction?: {
+    label: string
+    icon: ReactNode
+    onSelect: () => void
+  }
 }
 
-export function ActionMenu({ singular, onEdit, onDelete }: ActionMenuProps) {
+export function ActionMenu({ singular, onEdit, onDelete, extraAction }: ActionMenuProps) {
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -38,6 +43,7 @@ export function ActionMenu({ singular, onEdit, onDelete }: ActionMenuProps) {
       <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
     </button>
     {open && <div className="action-menu__popover" role="menu" aria-label={`Acciones de ${singular.toLocaleLowerCase('es')}`}>
+      {extraAction && <button className="action-menu__item" type="button" role="menuitem" onClick={() => choose(extraAction.onSelect)}>{extraAction.icon}{extraAction.label}</button>}
       <button className="action-menu__item action-menu__item--edit" type="button" role="menuitem" onClick={() => choose(onEdit)}><Pencil className="h-4 w-4" />Editar</button>
       <button className="action-menu__item action-menu__item--delete" type="button" role="menuitem" onClick={() => choose(onDelete)}><Trash2 className="h-4 w-4" />Eliminar</button>
     </div>}
