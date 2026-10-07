@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { IdCard } from 'lucide-react'
 
 import { EntityPage, StatusBadge } from '../components/crud/EntityPage'
-import { StudentCarnetDialog } from '../components/students/StudentCarnetDialog'
+import { PersonCarnetDialog, type PersonCarnetData } from '../components/people/PersonCarnetDialog'
 import { estudiantesApi } from '../services/api'
 import type { Estudiante, EstudiantePayload } from '../types/api'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
@@ -11,8 +11,8 @@ const empty: EstudiantePayload = { cuenta: '', nombre: '', correo: '', telefono:
 
 export function EstudiantesPage() {
   const labels = useAcademicLabels()
-  const [carnetStudent, setCarnetStudent] = useState<Estudiante | null>(null)
-  const closeCarnet = useCallback(() => setCarnetStudent(null), [])
+  const [carnet, setCarnet] = useState<PersonCarnetData | null>(null)
+  const closeCarnet = useCallback(() => setCarnet(null), [])
 
   return (
     <>
@@ -45,16 +45,20 @@ export function EstudiantesPage() {
         rowAction={(item) => ({
           label: 'Ver carnet',
           icon: <IdCard className="h-4 w-4" />,
-          onSelect: () => setCarnetStudent(item),
+          onSelect: () => setCarnet({
+            name: item.nombre,
+            code: item.cuenta,
+            codeLabel: 'Número de cuenta',
+            email: item.correo,
+            phone: item.telefono,
+            status: item.estado ? 'Activo' : 'Inactivo',
+            typeLabel: 'Identificación estudiantil',
+            areaLabel: 'Carrera',
+            area: labels.carreras[item.carrera_id] ?? `Carrera #${item.carrera_id}`,
+          }),
         })}
       />
-      {carnetStudent && (
-        <StudentCarnetDialog
-          student={carnetStudent}
-          careerName={labels.carreras[carnetStudent.carrera_id] ?? `Carrera #${carnetStudent.carrera_id}`}
-          onClose={closeCarnet}
-        />
-      )}
+      {carnet && <PersonCarnetDialog person={carnet} onClose={closeCarnet} />}
     </>
   )
 }
