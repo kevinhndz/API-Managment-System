@@ -234,12 +234,14 @@ export function FolderFloat({
   }, [stopPhysics])
 
   useEffect(() => {
-    const query = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const query = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+    if (!query) return undefined
     const update = () => { reduceMotionRef.current = query.matches }
 
     update()
     query.addEventListener('change', update)
     return () => query.removeEventListener('change', update)
+    return undefined
   }, [])
 
   useEffect(() => {
