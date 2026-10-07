@@ -77,7 +77,7 @@ export function EstudiantesPage() {
             itemTextColor="#351215"
             labelColor="#fff8f4"
             width={92}
-            height={34}
+            height={28}
             spread={104}
             lift={12}
             radius={9}

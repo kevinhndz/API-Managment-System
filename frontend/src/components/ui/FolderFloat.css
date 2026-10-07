@@ -84,9 +84,9 @@
   height: 76%;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 2px;
+  gap: 1px;
   box-sizing: border-box;
-  padding: 4px 6px;
+  padding: 2px 5px;
   border-radius: var(--ff-r);
   background: linear-gradient(180deg, color-mix(in srgb, var(--ff-front) 92%, #fff), var(--ff-front) 60%);
   box-shadow: 0 -6px 14px rgb(0 0 0 / 18%);

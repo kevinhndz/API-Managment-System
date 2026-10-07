@@ -202,7 +202,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
                 filteredItems.map((item) => (
                   <tr className="transition hover:bg-slate-50/70 dark:hover:bg-stone-800/60" key={item.id}>
                     {columns.map((column) => <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600 dark:text-slate-300" key={column.label}>{column.render(item)}</td>)}
-                    <td className="relative px-5 py-4 text-right">
+                    <td className="px-5 py-4 text-right">
                       {renderActions
                         ? renderActions(item, {
                             onEdit: () => openEdit(item),
