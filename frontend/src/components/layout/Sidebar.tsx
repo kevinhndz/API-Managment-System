@@ -65,7 +65,7 @@ export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onTogg
               <p className="text-[11px] text-slate-400">Gestión académica</p>
             </div>
           </div>
-          <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden dark:hover:bg-slate-900" type="button" onClick={onClose} aria-label="Cerrar menú">
+          <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden dark:text-stone-300 dark:hover:bg-stone-800" type="button" onClick={onClose} aria-label="Cerrar menú">
             <X className="h-5 w-5" />
           </button>
         </div>

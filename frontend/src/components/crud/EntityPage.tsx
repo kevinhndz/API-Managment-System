@@ -191,14 +191,14 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
                 <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-stone-800">
               {resource.loading ? (
                 <tr><td className="px-5 py-10" colSpan={columns.length + 1}><TableSkeleton columns={columns.length} /></td></tr>
               ) : filteredItems.length === 0 ? (
                 <tr><td className="px-5 py-14 text-center text-sm text-slate-400" colSpan={columns.length + 1}>No se encontraron registros.</td></tr>
               ) : (
                 filteredItems.map((item) => (
-                  <tr className="transition hover:bg-slate-50/70 dark:hover:bg-slate-800/40" key={item.id}>
+                  <tr className="transition hover:bg-slate-50/70 dark:hover:bg-stone-800/60" key={item.id}>
                     {columns.map((column) => <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600 dark:text-slate-300" key={column.label}>{column.render(item)}</td>)}
                     <td className="px-5 py-4 text-right"><ActionMenu singular={singular} onEdit={() => openEdit(item)} onDelete={() => setPendingDelete(item)} extraAction={rowAction?.(item)} /></td>
                   </tr>
@@ -245,7 +245,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
             })}
           </div>
           <div className="flex justify-end gap-3 border-t px-6 py-4">
-            <button className="focus-ring h-10 rounded-xl border px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800" type="button" onClick={() => setFormOpen(false)}>Cancelar</button>
+            <button className="focus-ring h-10 rounded-xl border px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:text-stone-200 dark:hover:bg-stone-800" type="button" onClick={() => setFormOpen(false)}>Cancelar</button>
             <button className="focus-ring h-10 rounded-xl bg-navy-900 px-5 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-60 dark:bg-sage-500" type="submit" disabled={resource.saving}>{resource.saving ? 'Guardando…' : 'Guardar'}</button>
           </div>
         </form>
