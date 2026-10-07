@@ -34,7 +34,7 @@ export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onTogg
         onClick={onClose}
       />
       <aside
-        className={`group fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[#e3e2df] bg-[#f4f3f0] px-4 py-6 shadow-xl transition-[width,transform] duration-300 ease-[var(--ease-drawer)] dark:border-stone-800 dark:bg-[#211f1d] lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${resizing ? 'select-none' : ''} w-64 ${open ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`group fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[#e3e2df] bg-[#f4f3f0] px-4 py-6 shadow-xl transition-[width,transform] duration-300 ease-[var(--ease-drawer)] dark:border-stone-800 dark:bg-[#302624] lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${resizing ? 'select-none' : ''} w-64 ${open ? 'translate-x-0' : '-translate-x-full'}`}
         style={{ '--sidebar-width': `${collapsed ? 88 : width}px` } as React.CSSProperties}
       >
         <div
