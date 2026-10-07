@@ -1,4 +1,4 @@
-import { BookOpen, Building2, GraduationCap, LayoutDashboard, UsersRound, UserRound, BookMarked, CalendarDays, CalendarClock, ClipboardList, Award, type LucideIcon } from 'lucide-react'
+import { BookOpen, Building2, GraduationCap, LayoutDashboard, UsersRound, UserRound, BookMarked, CalendarDays, CalendarClock, ClipboardList, Award, FileDown, History, type LucideIcon } from 'lucide-react'
 
 export interface NavigationItem {
   label: string
@@ -17,6 +17,8 @@ export const navigationItems: NavigationItem[] = [
   { label: 'Secciones', path: '/secciones', icon: CalendarClock },
   { label: 'Matrículas', path: '/matriculas', icon: ClipboardList },
   { label: 'Calificaciones', path: '/calificaciones', icon: Award },
+  { label: 'Reportes', path: '/reportes', icon: FileDown },
+  { label: 'Actividad reciente', path: '/actividad', icon: History },
 ]
 
 export const brandIcon = BookOpen

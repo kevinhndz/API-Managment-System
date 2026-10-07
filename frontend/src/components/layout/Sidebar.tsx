@@ -17,11 +17,12 @@ interface SidebarProps {
 export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onToggle }: SidebarProps) {
   const { logout } = useAuth()
   const [resizing, setResizing] = useState(false)
-  const [groups, setGroups] = useState({ academico: true, oferta: true, operacion: true })
+  const [groups, setGroups] = useState({ academico: true, oferta: true, operacion: true, administracion: true })
   const groupedNavigation = [
     { key: 'academico' as const, label: 'Gestión académica', items: navigationItems.filter((item) => ['/aulas', '/docentes', '/carreras', '/estudiantes'].includes(item.path)) },
     { key: 'oferta' as const, label: 'Oferta y periodos', items: navigationItems.filter((item) => ['/asignaturas', '/periodos', '/secciones'].includes(item.path)) },
     { key: 'operacion' as const, label: 'Operación académica', items: navigationItems.filter((item) => ['/matriculas', '/calificaciones'].includes(item.path)) },
+    { key: 'administracion' as const, label: 'Administración', items: navigationItems.filter((item) => ['/reportes', '/actividad'].includes(item.path)) },
   ]
 
   return (

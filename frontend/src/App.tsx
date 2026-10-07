@@ -15,6 +15,8 @@ const PeriodosPage = lazy(() => import('./pages/PeriodosPage').then((module) => 
 const SeccionesPage = lazy(() => import('./pages/SeccionesPage').then((module) => ({ default: module.SeccionesPage })))
 const MatriculasPage = lazy(() => import('./pages/MatriculasPage').then((module) => ({ default: module.MatriculasPage })))
 const CalificacionesPage = lazy(() => import('./pages/CalificacionesPage').then((module) => ({ default: module.CalificacionesPage })))
+const ReportesPage = lazy(() => import('./pages/ReportesPage').then((module) => ({ default: module.ReportesPage })))
+const ActividadPage = lazy(() => import('./pages/ActividadPage').then((module) => ({ default: module.ActividadPage })))
 
 function PageLoader() {
   return <div className="h-72 animate-pulse rounded-2xl border bg-[#fffdf8] dark:bg-stone-900" aria-label="Cargando página" />
@@ -36,6 +38,8 @@ export function App() {
           <Route path="secciones" element={<Suspense fallback={<PageLoader />}><SeccionesPage /></Suspense>} />
           <Route path="matriculas" element={<Suspense fallback={<PageLoader />}><MatriculasPage /></Suspense>} />
           <Route path="calificaciones" element={<Suspense fallback={<PageLoader />}><CalificacionesPage /></Suspense>} />
+          <Route path="reportes" element={<Suspense fallback={<PageLoader />}><ReportesPage /></Suspense>} />
+          <Route path="actividad" element={<Suspense fallback={<PageLoader />}><ActividadPage /></Suspense>} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
