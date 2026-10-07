@@ -10,7 +10,7 @@ Sistema de gestion academica con una API FastAPI y un panel React con TypeScript
 
 ## Preparar el backend
 
-Desde la raiz del proyecto, crea y activa un entorno virtual, instala las dependencias con `pip install -r requirements-dev.txt` y copia `.env.example` a `.env`. Completa `DATABASE_URL` con la conexion de desarrollo y genera una clave aleatoria para `SECRET_KEY`. Para trabajar localmente, conserva `COOKIE_SECURE=false` y los origenes locales indicados en `FRONTEND_ORIGINS`.
+Desde la raiz del proyecto, crea y activa un entorno virtual, instala las dependencias con `pip install -r requirements-dev.txt` y configura un archivo `.env` local con `DATABASE_URL` y `SECRET_KEY`. No subas ese archivo a GitHub. `FRONTEND_ORIGINS` y `COOKIE_SECURE` usan valores locales predeterminados; configuralos en `.env` cuando necesites cambiarlos.
 
 Aplica las migraciones y arranca la API:
 
