@@ -70,8 +70,8 @@ export function DashboardPage() {
 
       {error && <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{error}</p>}
 
-      <section className="dashboard-reveal glass-card overflow-hidden rounded-[1.5rem]" aria-label="Vista circular de métricas">
-        <CircularCarousel speed={18} items={[
+      <section className="dashboard-reveal glass-card overflow-hidden rounded-[1.5rem]" aria-label="Tarjetas de métricas">
+        <CircularCarousel items={[
           { src: metricImages.classrooms, alt: 'Aulas universitarias', title: 'Aulas', subtitle: `${data.aulas.length} registradas` },
           { src: metricImages.capacity, alt: 'Espacio académico', title: 'Capacidad', subtitle: `${totalCapacity} cupos` },
           { src: metricImages.teachers, alt: 'Docente en clase', title: 'Docentes', subtitle: `${activeTeachers} activos` },

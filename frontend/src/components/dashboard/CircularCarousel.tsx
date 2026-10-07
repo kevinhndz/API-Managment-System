@@ -1,23 +1,35 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
 interface CarouselItem { src: string; alt: string; title: string; subtitle: string }
 
 interface CircularCarouselProps {
   items: CarouselItem[]
-  cardWidth?: number
-  speed?: number
 }
 
-export function CircularCarousel({ items, cardWidth = 170, speed = 14 }: CircularCarouselProps) {
-  const [active, setActive] = useState(0)
-  const radius = useMemo(() => Math.max(cardWidth * 1.5, items.length * cardWidth * 0.32), [cardWidth, items.length])
-  return <div className="circular-carousel" style={{ '--carousel-radius': `${radius}px`, '--carousel-speed': `${speed}s`, '--card-width': `${cardWidth}px` } as React.CSSProperties}>
-    <div className="circular-carousel__stage">
-      {items.map((item, index) => <button key={item.title} type="button" className={`circular-carousel__card ${index === active ? 'is-active' : ''}`} style={{ transform: `rotateY(${index * (360 / items.length)}deg) translateZ(var(--carousel-radius))` }} onClick={() => setActive(index)} aria-label={`Ver ${item.title}`} aria-current={index === active ? 'true' : undefined}>
-        <img src={item.src} alt={item.alt} />
-        <span><strong>{item.title}</strong><small>{item.subtitle}</small></span>
+export function CircularCarousel({ items }: CircularCarouselProps) {
+  const [active, setActive] = useState<number | null>(null)
+  const selected = active === null ? null : items[active]
+
+  return <div className="circular-carousel">
+    <div className="circular-carousel__stage" role="group" aria-label="Métricas del campus">
+      {items.map((item, index) => <button
+        key={item.title}
+        type="button"
+        className={`circular-carousel__card ${index === active ? 'is-active' : ''}`}
+        onClick={() => setActive((current) => current === index ? null : index)}
+        aria-expanded={index === active}
+        aria-controls="detalle-metrica"
+        aria-label={`Ver información de ${item.title}`}
+      >
+        <img src={item.src} alt={item.alt} loading="lazy" />
+        <span><strong>{item.title}</strong></span>
       </button>)}
     </div>
-    <div className="circular-carousel__caption" aria-live="polite"><span>{String(active + 1).padStart(2, '0')}</span><strong>{items[active]?.title}</strong><small>{items[active]?.subtitle}</small></div>
+    <div id="detalle-metrica" className={`circular-carousel__detail ${selected ? 'is-visible' : ''}`} aria-live="polite">
+      {selected ? <>
+        <span className="circular-carousel__count">{String((active ?? 0) + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}</span>
+        <div><strong>{selected.title}</strong><p>{selected.subtitle}</p></div>
+      </> : <p>Selecciona una tarjeta para ver su información.</p>}
+    </div>
   </div>
 }
