@@ -30,6 +30,7 @@ interface Field<TPayload> {
   min?: number
   max?: number
   options?: FieldOption[]
+  valueType?: 'number' | 'text'
   required?: boolean
 }
 
@@ -151,7 +152,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   }
 
   const updateField = (field: Field<TPayload>, value: string | boolean) => {
-    const nextValue = field.type === 'number' && value === '' && field.required === false ? null : field.type === 'number' ? Number(value) : value
+    const nextValue = field.type === 'number' || field.valueType === 'number' ? value === '' && field.required === false ? null : Number(value) : value
     setForm((current) => ({ ...current, [field.key]: nextValue }))
   }
 
