@@ -11,6 +11,8 @@ from modulos.calificaciones.router import router as router_calificaciones
 from modulos.reportes.router import router as router_reportes
 from modulos.login.router import router as router_login
 from modulos.login.tabla import Usuarios
+from modulos.auditoria.router import router as router_auditoria
+from modulos.auditoria.registro import identificar_usuario, usuario_actual
 from core.escuchadores import ExcepcionesGlobales as eg
 from modulos.carreras.tabla import Carreras
 from modulos.estudiantes.tabla import Estudiantes
@@ -19,6 +21,15 @@ from modulos.docentes.tabla import Docentes
 from utils.auth import permiso_admin
 
 app = FastAPI()
+
+
+@app.middleware("http")
+async def contexto_auditoria(request, call_next):
+    contexto = usuario_actual.set(identificar_usuario(request.headers.get("Authorization")))
+    try:
+        return await call_next(request)
+    finally:
+        usuario_actual.reset(contexto)
 
 app.include_router(router_aulas, dependencies=[Depends(permiso_admin)])
 app.include_router(router_docentes, dependencies=[Depends(permiso_admin)])
@@ -30,5 +41,6 @@ app.include_router(router_secciones, dependencies=[Depends(permiso_admin)])
 app.include_router(router_matriculas, dependencies=[Depends(permiso_admin)])
 app.include_router(router_calificaciones, dependencies=[Depends(permiso_admin)])
 app.include_router(router_reportes, dependencies=[Depends(permiso_admin)])
+app.include_router(router_auditoria, dependencies=[Depends(permiso_admin)])
 app.include_router(router_login)
 eg.directorio(app)

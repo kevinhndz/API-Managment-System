@@ -110,3 +110,63 @@ export const periodosApi = createCrudService<Periodo, PeriodoPayload>('/periodos
 export const seccionesApi = createCrudService<Seccion, SeccionPayload>('/secciones')
 export const matriculasApi = createCrudService<Matricula, MatriculaPayload>('/matriculas')
 export const calificacionesApi = createCrudService<Calificacion, CalificacionPayload>('/calificaciones')
+
+export type ReportModule = 'matriculas' | 'secciones' | 'estudiantes' | 'docentes' | 'calificaciones'
+export type ReportFormat = 'xlsx' | 'pdf'
+
+export interface ReportFilters {
+  periodo_id?: number
+  estudiante_id?: number
+  estado?: string
+  carrera_id?: number
+  desde?: string
+  hasta?: string
+}
+
+export interface AuditEvent {
+  id: number
+  usuario: string
+  accion: string
+  modulo: string
+  registro_id: number | null
+  descripcion: string
+  fecha: string
+}
+
+function queryString<T extends object>(filters: T) {
+  const query = new URLSearchParams()
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== '') query.set(key, String(value))
+  })
+  return query.toString()
+}
+
+export async function descargarReporte(modulo: ReportModule, formato: ReportFormat, filtros: ReportFilters) {
+  const token = localStorage.getItem('campusflow.session')
+  const response = await fetch(`${API_URL}/reportes/${modulo}/descargar/${formato}?${queryString(filtros)}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem('campusflow.session')
+      localStorage.removeItem('campusflow.user')
+      window.location.assign('/login')
+    }
+    const error = (await response.json().catch(() => null)) as { detail?: string } | null
+    throw new ApiError(error?.detail ?? 'No se pudo generar el reporte.', response.status)
+  }
+
+  const url = URL.createObjectURL(await response.blob())
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = `reporte_${modulo}.${formato}`
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+export function listarActividad(filtros: { modulo?: string; accion?: string; usuario?: string; desde?: string; hasta?: string } = {}) {
+  return request<AuditEvent[]>(`/auditoria/?${queryString(filtros)}`)
+}

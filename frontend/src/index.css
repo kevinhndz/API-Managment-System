@@ -36,6 +36,7 @@
 @layer components {
   :root {
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
     --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   }
 
@@ -104,22 +105,39 @@
     aside.group:hover > [role='separator'], aside.group > [role='separator']:active { opacity: 1; }
   }
 
-  .circular-carousel { position: relative; min-height: 360px; perspective: 1100px; overflow: hidden; display: grid; place-items: center; isolation: isolate; }
-  .circular-carousel::before { content: ''; position: absolute; width: 55%; aspect-ratio: 1; border-radius: 999px; background: radial-gradient(circle, rgb(125 249 255 / .16), transparent 68%); filter: blur(12px); }
-  .circular-carousel__stage { position: relative; width: var(--carousel-radius); height: 190px; transform-style: preserve-3d; animation: carousel-drift var(--carousel-speed) linear infinite; }
-  .circular-carousel__stage:hover { animation-play-state: paused; }
-  .circular-carousel__card { position: absolute; left: 50%; top: 0; width: var(--card-width); height: 190px; padding: 0; border: 1px solid rgb(255 255 255 / .4); border-radius: 20px; overflow: hidden; background: #171817; color: white; transform-origin: center; backface-visibility: hidden; cursor: pointer; box-shadow: 0 18px 36px rgb(24 18 20 / .28); transition: filter 200ms ease, box-shadow 200ms ease; }
-  .circular-carousel__card img { width: 100%; height: 100%; object-fit: cover; opacity: .86; }
-  .circular-carousel__card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(transparent 28%, rgb(10 10 10 / .92)); }
-  .circular-carousel__card span { position: absolute; z-index: 1; inset: auto 14px 14px; display: grid; text-align: left; }
-  .circular-carousel__card strong { font-size: .9rem; }
-  .circular-carousel__card small { color: rgb(255 255 255 / .7); font-size: .68rem; }
-  .circular-carousel__caption { position: absolute; bottom: 22px; display: flex; align-items: baseline; gap: 10px; color: #1a1c1a; font-size: .8rem; }
-  .dark .circular-carousel__caption { color: white; }
-  .circular-carousel__caption span { color: #7df9ff; font-variant-numeric: tabular-nums; }
-  .circular-carousel__caption small { color: #8a716f; }
-  @keyframes carousel-drift { from { transform: rotateY(0deg); } to { transform: rotateY(-360deg); } }
-  @media (prefers-reduced-motion: reduce) { .circular-carousel__stage { animation: none; } }
+  .circular-carousel { position: relative; min-width: 0; overflow: hidden; padding: 12px 0 20px; }
+  .circular-carousel__controls { position: absolute; z-index: 200; top: 50%; right: clamp(14px, 4vw, 52px); left: clamp(14px, 4vw, 52px); display: flex; align-items: center; justify-content: space-between; transform: translateY(-50%); pointer-events: none; }
+  .circular-carousel__arrow { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid rgb(91 3 9 / .18); border-radius: 999px; background: rgb(255 250 247 / .88); color: #5b0309; box-shadow: 0 8px 24px -14px rgb(24 18 20 / .5); cursor: pointer; pointer-events: auto; transition: transform 180ms var(--ease-out), background-color 180ms ease; }
+  .circular-carousel__arrow svg { width: 20px; height: 20px; }
+  .circular-carousel__position { position: absolute; bottom: 0; left: 50%; color: #8a716f; font-size: .72rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .12em; transform: translateX(-50%); }
+  .circular-carousel__stage { position: relative; height: clamp(300px, 39vw, 430px); overflow: hidden; outline: none; perspective: 1100px; perspective-origin: 50% 48%; touch-action: pan-y; cursor: grab; }
+  .circular-carousel__stage:active,
+  .circular-carousel__stage.is-dragging { cursor: grabbing; }
+  .circular-carousel__stage:focus-visible { outline: 2px solid #5b0309; outline-offset: -4px; border-radius: 20px; }
+  .circular-carousel__card { position: absolute; top: 50%; left: 50%; display: block; width: clamp(190px, 28vw, 340px); aspect-ratio: 1; overflow: hidden; border: 1px solid rgb(255 255 255 / .5); border-radius: 24px; background: #171817; color: #fff; text-align: left; cursor: pointer; backface-visibility: hidden; box-shadow: 0 24px 48px -22px rgb(24 18 20 / .65); transform-style: preserve-3d; transition: transform 240ms var(--ease-in-out), opacity 180ms ease, border-color 180ms ease; user-select: none; }
+  .circular-carousel__stage.is-dragging .circular-carousel__card { transition: none; }
+  .circular-carousel__card img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+  .circular-carousel__shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgb(10 10 10 / .04) 38%, rgb(10 10 10 / .84) 100%); pointer-events: none; }
+  .circular-carousel__card-details { position: absolute; right: 18px; bottom: 18px; left: 18px; z-index: 1; display: grid; gap: 5px; opacity: 0; transform: translateY(10px); transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out); }
+  .circular-carousel__card-details strong { font-size: 1.05rem; letter-spacing: -.02em; }
+  .circular-carousel__card-details > span { color: rgb(255 255 255 / .82); font-size: .82rem; line-height: 1.4; }
+  .circular-carousel__card.is-active { border-color: rgb(255 255 255 / .82); }
+  .circular-carousel__card.is-previewed .circular-carousel__card-details,
+  .circular-carousel__card:focus-visible .circular-carousel__card-details { opacity: 1; transform: translateY(0); }
+  .circular-carousel__card:focus-visible { outline: 3px solid #5b0309; outline-offset: 4px; }
+  .dark .circular-carousel__arrow { border-color: rgb(255 255 255 / .14); background: rgb(43 37 36 / .9); color: #ffc5c5; }
+  .dark .circular-carousel__position { color: #c5aaa7; }
+  .circular-carousel__empty { padding: 48px 20px; color: #806b68; text-align: center; }
+  @media (hover: hover) and (pointer: fine) {
+    .circular-carousel__arrow:hover { background: #fff; transform: scale(1.06); }
+    .dark .circular-carousel__arrow:hover { background: #403635; }
+    .circular-carousel__card:hover .circular-carousel__card-details { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .circular-carousel__arrow,
+    .circular-carousel__card,
+    .circular-carousel__card-details { transition-duration: 0.01ms; }
+  }
 
   .warm-grid {
     background-image: radial-gradient(circle at 18% 10%, rgb(91 3 9 / .05), transparent 24rem), radial-gradient(circle at 86% 52%, rgb(212 154 69 / .06), transparent 26rem);
