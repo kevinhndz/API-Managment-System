@@ -14,7 +14,11 @@ const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')
 
 
 export async function iniciarSesion(usuario: string, contrasena: string) {
-  return request<{ token: string; tipo: string }>('/login/', { method: 'POST', body: JSON.stringify({ usuario, contrasena }) })
+  return request<{ autenticada: boolean }>('/login/sesion', { method: 'POST', body: JSON.stringify({ usuario, contrasena }) })
+}
+
+export async function cerrarSesion() {
+  return request<void>('/login/cerrar', { method: 'POST' })
 }
 
 export class ApiError extends Error {
@@ -28,20 +32,23 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem('campusflow.session')
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   })
 
   if (!response.ok) {
-    if (response.status === 401) {
+    if (response.status === 401 && !path.startsWith('/login/')) {
       localStorage.removeItem('campusflow.session')
       localStorage.removeItem('campusflow.user')
+      await fetch(`${API_URL}/login/cerrar`, {
+        method: 'POST',
+        credentials: 'include',
+      }).catch(() => undefined)
       window.location.assign('/login')
     }
     const body = (await response.json().catch(() => null)) as { detail?: string } | null
@@ -142,15 +149,18 @@ function queryString<T extends object>(filters: T) {
 }
 
 export async function descargarReporte(modulo: ReportModule, formato: ReportFormat, filtros: ReportFilters) {
-  const token = localStorage.getItem('campusflow.session')
   const response = await fetch(`${API_URL}/reportes/${modulo}/descargar/${formato}?${queryString(filtros)}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    credentials: 'include',
   })
 
   if (!response.ok) {
     if (response.status === 401) {
       localStorage.removeItem('campusflow.session')
       localStorage.removeItem('campusflow.user')
+      await fetch(`${API_URL}/login/cerrar`, {
+        method: 'POST',
+        credentials: 'include',
+      }).catch(() => undefined)
       window.location.assign('/login')
     }
     const error = (await response.json().catch(() => null)) as { detail?: string } | null

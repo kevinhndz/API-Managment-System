@@ -21,7 +21,10 @@ describe('aulasApi', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/aulas/?pagina_actual=2&limite=25',
-      expect.objectContaining({ headers: expect.objectContaining({ 'Content-Type': 'application/json' }) }),
+      expect.objectContaining({
+        credentials: 'include',
+        headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+      }),
     )
   })
 

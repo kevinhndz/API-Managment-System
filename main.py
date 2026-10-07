@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from modulos.aulas.router import router as router_aulas
 from modulos.carreras.router import router as router_carreras
 from modulos.docentes.router import router as router_docentes
@@ -19,13 +20,30 @@ from modulos.estudiantes.tabla import Estudiantes
 from modulos.aulas.tabla import Aulas
 from modulos.docentes.tabla import Docentes
 from utils.auth import permiso_admin
+from core.config import settings
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        origen.strip()
+        for origen in settings.FRONTEND_ORIGINS.split(",")
+        if origen.strip()
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+)
 
 
 @app.middleware("http")
 async def contexto_auditoria(request, call_next):
-    contexto = usuario_actual.set(identificar_usuario(request.headers.get("Authorization")))
+    contexto = usuario_actual.set(
+        identificar_usuario(
+            request.headers.get("Authorization"),
+            request.cookies.get("campusflow_session"),
+        )
+    )
     try:
         return await call_next(request)
     finally:

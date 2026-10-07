@@ -1,38 +1,22 @@
-# CampusFlow Frontend
+# Frontend de CampusFlow
 
-Dashboard académico construido con React 18, TypeScript estricto, Tailwind CSS y Recharts.
+Aplicacion de gestion academica construida con React, TypeScript, Vite y Tailwind CSS.
 
-## Inicio local
+## Ejecucion local
 
-```bash
-npm install
-npm run dev
-```
+1. Instala Node.js 22 o una version compatible con Vite 7.
+2. En esta carpeta, instala dependencias con `npm ci`.
+3. Inicia el frontend con `npm run dev`.
 
-Vite inicia en `http://127.0.0.1:5173` y redirige `/api` a `http://127.0.0.1:8000` durante desarrollo.
+Vite sirve la aplicacion en el puerto 5173 y envia las solicitudes de `/api` al backend local en el puerto 8000.
+Para conectar otra API, copia `.env.example` como `.env.local` y configura `VITE_API_URL`.
 
-Para usar otra dirección de API, copia `.env.example` como `.env.local` y cambia `VITE_API_URL`.
+El acceso requiere un usuario activo creado en el backend. No hay credenciales de demostracion configuradas en el frontend. El token de sesion se conserva en una cookie `HttpOnly`, no en `localStorage`.
 
-## Acceso de demostración
-
-- Correo: `admin@campusflow.edu`
-- Contraseña: `Campus2026`
-
-El login es una sesión local de demostración porque el backend actual no expone un endpoint de autenticación. Los CRUD consumen la API real.
-
-## Scripts
+## Validaciones
 
 ```bash
-npm run build
 npm run typecheck
 npm test
-npm run preview
+npm run build
 ```
-
-## Endpoints consumidos
-
-- `/aulas`
-- `/docentes`
-- `/carreras`
-
-Cada módulo utiliza GET paginado, GET por id, POST, PUT, PATCH y DELETE.

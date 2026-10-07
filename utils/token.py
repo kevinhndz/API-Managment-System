@@ -1,7 +1,7 @@
 from core.config import settings as traer
 from jose import jwt, JWTError
 from datetime import datetime, timezone, timedelta
-from core.excepciones import AccesoProhibidoError
+from core.excepciones import CredencialesInvalidasError
 
 LLAVE = traer.SECRET_KEY
 
@@ -27,7 +27,9 @@ def verificar_token(token: str) -> dict:
     
     try:
         data = jwt.decode(token, LLAVE, algorithms=["HS256"])
+        if not all(data.get(clave) for clave in ("user", "user_id", "rol")):
+            raise CredencialesInvalidasError("Sesion invalida")
         return data
     except JWTError:
-        raise AccesoProhibidoError("Sesion Expirada, Intente mas tarde...")
+        raise CredencialesInvalidasError("Sesion expirada o invalida")
         

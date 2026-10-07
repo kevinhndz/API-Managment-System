@@ -12,6 +12,7 @@ from sqlalchemy.pool import StaticPool
 from database.almacen import miClaseBase
 from modulos.auditoria.registro import usuario_actual
 from modulos.auditoria.tabla import EventoAuditoria
+from modulos.login.tabla import Usuarios
 from modulos.aulas.tabla import Aulas
 from modulos.asignaturas.tabla import Asignaturas
 from modulos.carreras.tabla import Carreras
@@ -104,6 +105,11 @@ def test_peticion_autenticada_registra_actividad():
     motor = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     Aulas.__table__.create(motor)
     EventoAuditoria.__table__.create(motor)
+    Usuarios.__table__.create(motor)
+
+    with Session(motor) as db:
+        db.add(Usuarios(id=7, usuario="admin", contrasena="hash", rol="Administrador", activo=True))
+        db.commit()
 
     def base_de_prueba():
         with Session(motor) as db:
