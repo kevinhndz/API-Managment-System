@@ -30,5 +30,6 @@ describe('ActionMenu', () => {
     expect(onEdit).not.toHaveBeenCalled()
     expect(onDelete).not.toHaveBeenCalled()
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /acciones/i })).toHaveFocus()
   })
 })
