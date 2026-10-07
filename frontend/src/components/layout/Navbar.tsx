@@ -17,12 +17,12 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
   const current = navigationItems.find((item) => item.path === pathname) ?? navigationItems[0]
 
   return (
-    <header className="sticky top-0 z-20 flex min-h-[76px] items-center justify-between gap-4 border-b border-[#e3e2df]/80 bg-[#faf9f6]/75 px-4 backdrop-blur-xl dark:border-stone-800/80 dark:bg-[#171817]/80 sm:px-8 lg:px-12">
+    <header className="sticky top-0 z-20 flex min-h-[76px] items-center justify-between gap-4 border-b border-[#e3e2df]/80 bg-[#faf9f6]/75 px-4 backdrop-blur-xl dark:border-stone-800/80 dark:bg-[#261f1d]/88 sm:px-8 lg:px-12">
       <div className="flex min-w-0 items-center gap-3">
         <button className="pressable focus-ring hidden h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#e3e2df] bg-white text-[#5b0309] shadow-sm lg:grid dark:border-stone-700 dark:bg-stone-900 dark:text-rose-200" type="button" onClick={onSidebarToggle} aria-label={sidebarCollapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'} title={sidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'}>
           {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
         </button>
-        <button className="pressable focus-ring grid h-10 w-10 shrink-0 place-items-center rounded-xl border bg-white text-slate-600 shadow-sm lg:hidden dark:bg-slate-900 dark:text-slate-300" type="button" onClick={onMenuClick} aria-label="Abrir menú">
+        <button className="pressable focus-ring grid h-10 w-10 shrink-0 place-items-center rounded-xl border bg-white text-slate-600 shadow-sm lg:hidden dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200" type="button" onClick={onMenuClick} aria-label="Abrir menú">
           <Menu className="h-5 w-5" />
         </button>
         <div className="min-w-0">
@@ -33,7 +33,7 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
 
       <div className="flex items-center gap-3">
         <ThemeToggle />
-        <div className="hidden h-9 w-px bg-slate-200 sm:block dark:bg-slate-800" />
+        <div className="hidden h-9 w-px bg-slate-200 sm:block dark:bg-stone-700" />
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-navy-700 to-sage-500 text-sm font-semibold text-white">AD</span>
           <div className="hidden min-w-0 sm:block">

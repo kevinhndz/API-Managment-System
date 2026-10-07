@@ -53,7 +53,7 @@ interface EntityPageProps<T extends EntityWithId, TPayload extends object> {
 
 export function StatusBadge({ active }: { active: boolean }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${active ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${active ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-stone-800 dark:text-stone-200'}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
       {active ? 'Activo' : 'Inactivo'}
     </span>
@@ -186,19 +186,19 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse text-left">
             <thead>
-              <tr className="border-b bg-[#faf7f0]/80 dark:bg-stone-950/50">
+              <tr className="border-b bg-[#faf7f0]/80 dark:bg-[#3b2e2b]">
                 {columns.map((column) => <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400" key={column.label}>{column.label}</th>)}
                 <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-stone-800">
               {resource.loading ? (
                 <tr><td className="px-5 py-10" colSpan={columns.length + 1}><TableSkeleton columns={columns.length} /></td></tr>
               ) : filteredItems.length === 0 ? (
                 <tr><td className="px-5 py-14 text-center text-sm text-slate-400" colSpan={columns.length + 1}>No se encontraron registros.</td></tr>
               ) : (
                 filteredItems.map((item) => (
-                  <tr className="transition hover:bg-slate-50/70 dark:hover:bg-slate-800/40" key={item.id}>
+                  <tr className="transition hover:bg-slate-50/70 dark:hover:bg-stone-800/60" key={item.id}>
                     {columns.map((column) => <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600 dark:text-slate-300" key={column.label}>{column.render(item)}</td>)}
                     <td className="px-5 py-4 text-right"><ActionMenu singular={singular} onEdit={() => openEdit(item)} onDelete={() => setPendingDelete(item)} extraAction={rowAction?.(item)} /></td>
                   </tr>
@@ -245,7 +245,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
             })}
           </div>
           <div className="flex justify-end gap-3 border-t px-6 py-4">
-            <button className="focus-ring h-10 rounded-xl border px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800" type="button" onClick={() => setFormOpen(false)}>Cancelar</button>
+            <button className="focus-ring h-10 rounded-xl border px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:text-stone-200 dark:hover:bg-stone-800" type="button" onClick={() => setFormOpen(false)}>Cancelar</button>
             <button className="focus-ring h-10 rounded-xl bg-navy-900 px-5 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-60 dark:bg-sage-500" type="submit" disabled={resource.saving}>{resource.saving ? 'Guardando…' : 'Guardar'}</button>
           </div>
         </form>

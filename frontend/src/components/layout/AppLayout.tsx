@@ -11,7 +11,7 @@ export function AppLayout() {
   const [sidebarWidth, setSidebarWidth] = useState(256)
 
   return (
-    <div className="warm-grid relative flex min-h-screen overflow-hidden bg-[#faf9f6] dark:bg-[#171817]">
+    <div className="warm-grid relative flex min-h-screen overflow-hidden bg-[#faf9f6] dark:bg-[#261f1d]">
       <GravityStarsBackground />
       <Sidebar open={sidebarOpen} collapsed={sidebarCollapsed} width={sidebarWidth} onWidthChange={setSidebarWidth} onClose={() => setSidebarOpen(false)} onToggle={() => setSidebarCollapsed((current) => !current)} />
       <div className="relative z-10 min-w-0 flex-1">

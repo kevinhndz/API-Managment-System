@@ -7,7 +7,7 @@ export function ThemeToggle() {
 
   return (
     <button
-      className="focus-ring grid h-10 w-10 place-items-center rounded-xl border bg-[#fffdf8] text-slate-600 shadow-sm transition hover:bg-[#f4ecdf] dark:bg-stone-900 dark:text-slate-300 dark:hover:bg-stone-800"
+      className="focus-ring grid h-10 w-10 place-items-center rounded-xl border bg-[#fffdf8] text-slate-600 shadow-sm transition hover:bg-[#f4ecdf] dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800"
       type="button"
       onClick={toggleTheme}
       aria-label={theme === 'light' ? 'Activar tema oscuro' : 'Activar tema claro'}

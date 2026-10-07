@@ -5,6 +5,12 @@ export default {
   theme: {
     extend: {
       colors: {
+        stone: {
+          700: '#5a4742',
+          800: '#453532',
+          900: '#302624',
+          950: '#211a19'
+        },
         navy: {
         50: '#f3f6fb',
           100: '#eee6d8',

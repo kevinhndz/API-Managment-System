@@ -28,7 +28,7 @@ export function Modal({ open, title, description, onClose, children }: ModalProp
             <h2 className="text-lg font-semibold tracking-tight text-navy-950 dark:text-white" id="modal-title">{title}</h2>
             {description && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>}
           </div>
-          <button className="focus-ring grid h-9 w-9 shrink-0 place-items-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-white" type="button" onClick={onClose} aria-label="Cerrar">
+          <button className="focus-ring grid h-9 w-9 shrink-0 place-items-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-stone-300 dark:hover:bg-stone-800 dark:hover:text-stone-50" type="button" onClick={onClose} aria-label="Cerrar">
             <X className="h-5 w-5" />
           </button>
         </div>
