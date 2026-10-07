@@ -15,6 +15,7 @@ interface ActionMenuProps {
 export function ActionMenu({ singular, onEdit, onDelete, extraAction }: ActionMenuProps) {
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (!open) return undefined
@@ -35,10 +36,11 @@ export function ActionMenu({ singular, onEdit, onDelete, extraAction }: ActionMe
   const choose = (action: () => void) => {
     setOpen(false)
     action()
+    triggerRef.current?.focus()
   }
 
   return <div className="relative inline-block text-left" ref={menuRef}>
-    <button className="focus-ring inline-flex h-9 items-center gap-2 rounded-lg border bg-[#fffdf8] px-3 text-xs font-semibold text-[#574240] shadow-sm transition hover:bg-[#faf7f0] dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800" type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
+    <button ref={triggerRef} className="focus-ring inline-flex h-9 items-center gap-2 rounded-lg border bg-[#fffdf8] px-3 text-xs font-semibold text-[#574240] shadow-sm transition hover:bg-[#faf7f0] dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800" type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
       Acciones
       <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
     </button>

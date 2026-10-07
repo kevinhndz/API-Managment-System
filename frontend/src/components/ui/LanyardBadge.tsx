@@ -103,7 +103,7 @@ export function LanyardBadge({ front, back, cardWidth = 232, height = 610, reduc
     const canvas = canvasRef.current
     const card = cardRef.current
     const context = canvas?.getContext('2d')
-    if (!stage || !canvas || !card || !context) return undefined
+    if (!stage || !canvas || !card) return undefined
 
     const state: SwingState = {
       x: reducedMotion ? 0 : 24,
@@ -150,6 +150,11 @@ export function LanyardBadge({ front, back, cardWidth = 232, height = 610, reduc
       const cardTop = ringY + 23
       const sway = respectReducedMotion ? 0 : Math.sin(elapsed * 0.72) * 2.2
 
+      const angle = clamp(-state.x * 0.0008 - state.velocityX * 0.000025, -0.13, 0.13)
+      card.style.transform = `translate3d(calc(-50% + ${state.x}px), ${cardTop}px, 0) rotate(${angle}rad)`
+      if (faceRef.current) faceRef.current.style.transform = showBackRef.current ? 'rotateY(180deg)' : 'rotateY(0deg)'
+      if (!context) return
+
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
       context.clearRect(0, 0, stageWidth, stageHeight)
       drawStrap(context, centerX - 34, buckleX, buckleY, strapWidth)
@@ -176,9 +181,6 @@ export function LanyardBadge({ front, back, cardWidth = 232, height = 610, reduc
       context.strokeStyle = '#c8b99f'
       context.stroke()
 
-      const angle = clamp(-state.x * 0.0008 - state.velocityX * 0.000025, -0.13, 0.13)
-      card.style.transform = `translate3d(calc(-50% + ${state.x}px), ${cardTop}px, 0) rotate(${angle}rad)`
-      if (faceRef.current) faceRef.current.style.transform = showBackRef.current ? 'rotateY(180deg)' : 'rotateY(0deg)'
     }
 
     const tick = (time: number) => {
@@ -231,8 +233,8 @@ export function LanyardBadge({ front, back, cardWidth = 232, height = 610, reduc
     measure()
     draw()
     frame = requestAnimationFrame(tick)
-    const observer = new ResizeObserver(measure)
-    observer.observe(stage)
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    observer?.observe(stage)
     card.addEventListener('pointerdown', onPointerDown)
     card.addEventListener('pointermove', onPointerMove)
     card.addEventListener('pointerup', onPointerUp)
@@ -241,7 +243,7 @@ export function LanyardBadge({ front, back, cardWidth = 232, height = 610, reduc
 
     return () => {
       cancelAnimationFrame(frame)
-      observer.disconnect()
+      observer?.disconnect()
       card.removeEventListener('pointerdown', onPointerDown)
       card.removeEventListener('pointermove', onPointerMove)
       card.removeEventListener('pointerup', onPointerUp)
@@ -262,7 +264,7 @@ export function LanyardBadge({ front, back, cardWidth = 232, height = 610, reduc
         className="absolute left-1/2 top-0 z-10 cursor-grab outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-[#7b4bd9]"
         style={{ width: cardWidth, height: cardWidth * 1.5, transformOrigin: '50% 0', touchAction: 'none', perspective: 1000 }}
       >
-        <div ref={faceRef} className="relative h-full w-full rounded-[20px] shadow-[0_22px_48px_-18px_rgba(30,5,8,0.55)]" style={{ transform: 'rotateY(0deg)', transformStyle: 'preserve-3d', transition: 'transform 650ms cubic-bezier(0.2, 0.75, 0.2, 1)' }}>
+        <div ref={faceRef} className="relative h-full w-full rounded-[20px] shadow-[0_22px_48px_-18px_rgba(30,5,8,0.55)]" style={{ transform: 'rotateY(0deg)', transformStyle: 'preserve-3d', transition: respectReducedMotion ? 'none' : 'transform 650ms cubic-bezier(0.2, 0.75, 0.2, 1)' }}>
           <div className="absolute inset-0 overflow-hidden rounded-[20px] border border-white/50 bg-[#fffdf8] [backface-visibility:hidden]">{front}</div>
           <div className="absolute inset-0 overflow-hidden rounded-[20px] border border-white/50 bg-[#fffdf8] [backface-visibility:hidden] [transform:rotateY(180deg)]">{back}</div>
         </div>
