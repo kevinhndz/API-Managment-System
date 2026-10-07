@@ -10,6 +10,10 @@ from modulos.matriculas.tabla import Matriculas
 
 class CalificacionesService:
     @staticmethod
+    def _actualizar_estado_matricula(matricula: Matriculas, nota_final: Decimal) -> None:
+        matricula.estado = "APROBADA" if nota_final >= 60 else "REPROBADA"
+
+    @staticmethod
     def crear_service(db: Session, json: Revisar_Json_Crear_Calificacion):
         if repo.check_repository(db, json) is not None:
             raise RecursoDuplicadoError("Ya existe la calificacion")
@@ -27,7 +31,7 @@ class CalificacionesService:
             nota_final=nota,
             observacion=json.observacion,
         )
-        matricula.estado = "APROBADA" if nota >= 60 else "REPROBADA"
+        CalificacionesService._actualizar_estado_matricula(matricula, nota)
         return repo.guardar_calificacion_repository(db, calificacion)
 
     @staticmethod
@@ -58,6 +62,15 @@ class CalificacionesService:
         check.nota_final = (
             json.primer_parcial + json.segundo_parcial + json.tercer_parcial
         ) / 3
+        matricula = (
+            db.query(Matriculas)
+            .filter(Matriculas.id == check.matricula_id)
+            .first()
+        )
+        if matricula is not None:
+            CalificacionesService._actualizar_estado_matricula(
+                matricula, check.nota_final
+            )
         return repo.guardar_calificacion_repository(db, check)
 
     @staticmethod
@@ -76,6 +89,15 @@ class CalificacionesService:
         check.nota_final = (
             check.primer_parcial + check.segundo_parcial + check.tercer_parcial
         ) / 3
+        matricula = (
+            db.query(Matriculas)
+            .filter(Matriculas.id == check.matricula_id)
+            .first()
+        )
+        if matricula is not None:
+            CalificacionesService._actualizar_estado_matricula(
+                matricula, check.nota_final
+            )
         return repo.guardar_calificacion_repository(db, check)
 
     @staticmethod

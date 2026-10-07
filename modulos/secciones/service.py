@@ -1,62 +1,98 @@
 from math import ceil
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from core.excepciones import RecursoDuplicadoError, RecursoNoEncontradoError
 from core.schema import RespuestaPaginada
 from modulos.aulas.tabla import Aulas
+from modulos.asignaturas.tabla import Asignaturas
+from modulos.docentes.tabla import Docentes
+from modulos.matriculas.tabla import Matriculas
+from modulos.periodos.tabla import Periodos
 from modulos.secciones.repository import SeccionRepository as repo
+from modulos.secciones.reglas import convertir_hora, normalizar_dias, normalizar_hora
 from modulos.secciones.schema import *
 from modulos.secciones.tabla import Secciones
 
 
 class SeccionesService:
     @staticmethod
-    def crear_service(db: Session, json: Revisar_Json_Crear_Seccion):
-        check = repo.check_repository(db, json)
-        if check is not None:
+    def _validar_registro(db: Session, valores: dict, excluir_id: int | None = None) -> None:
+        codigo_existente = db.query(Secciones).filter(
+            Secciones.codigo == valores["codigo"],
+            Secciones.id != excluir_id if excluir_id is not None else True,
+        ).first()
+        if codigo_existente is not None:
             raise RecursoDuplicadoError("Ya existe esta seccion")
-        aula = db.query(Aulas).filter(Aulas.id == json.aula_id).first()
-        if aula is None:
-            raise RecursoNoEncontradoError("No existe esta aula")
-        if json.cupo_maximo > aula.capacidad:
+
+        referencias = (
+            (Asignaturas, valores["asignatura_id"], "No existe esta asignatura"),
+            (Docentes, valores["docente_id"], "No existe este docente"),
+            (Periodos, valores["periodo_id"], "No existe este periodo"),
+            (Aulas, valores["aula_id"], "No existe esta aula"),
+        )
+        for modelo, referencia_id, mensaje in referencias:
+            referencia = (
+                db.query(modelo)
+                .filter(modelo.id == referencia_id)
+                .with_for_update()
+                .first()
+            )
+            if referencia is None:
+                raise RecursoNoEncontradoError(mensaje)
+
+        aula = db.query(Aulas).filter(Aulas.id == valores["aula_id"]).first()
+        if valores["cupo_maximo"] > aula.capacidad:
             raise RecursoDuplicadoError("El cupo supera la capacidad del aula")
-        choque = (
-            db.query(Secciones)
-            .filter(
-                Secciones.periodo_id == json.periodo_id,
-                Secciones.docente_id == json.docente_id,
-                Secciones.dias == json.dias,
-                Secciones.hora_inicio < json.hora_fin,
-                Secciones.hora_fin > json.hora_inicio,
+
+        if excluir_id is not None:
+            ocupados = db.query(Matriculas).filter(
+                Matriculas.seccion_id == excluir_id,
+                Matriculas.estado == "ACTIVA",
+            ).count()
+            if valores["cupo_maximo"] < ocupados:
+                raise RecursoDuplicadoError(
+                    "El cupo no puede ser menor que las matriculas activas existentes"
+                )
+
+        inicio = convertir_hora(valores["hora_inicio"])
+        fin = convertir_hora(valores["hora_fin"])
+        if fin <= inicio:
+            raise RecursoDuplicadoError(
+                "La hora de cierre debe ser posterior a la hora de inicio"
             )
-            .first()
-        )
-        if choque is not None:
-            raise RecursoDuplicadoError("El docente ya tiene choque de horario")
-        choque = (
-            db.query(Secciones)
-            .filter(
-                Secciones.periodo_id == json.periodo_id,
-                Secciones.aula_id == json.aula_id,
-                Secciones.dias == json.dias,
-                Secciones.hora_inicio < json.hora_fin,
-                Secciones.hora_fin > json.hora_inicio,
-            )
-            .first()
-        )
-        if choque is not None:
-            raise RecursoDuplicadoError("El aula ya tiene choque de horario")
-        seccion = Secciones(
-            codigo=json.codigo,
-            asignatura_id=json.asignatura_id,
-            docente_id=json.docente_id,
-            periodo_id=json.periodo_id,
-            aula_id=json.aula_id,
-            dias=json.dias,
-            hora_inicio=json.hora_inicio,
-            hora_fin=json.hora_fin,
-            cupo_maximo=json.cupo_maximo,
-            estado=json.estado,
-        )
+
+        dias = normalizar_dias(valores["dias"])
+        conflictos = db.query(Secciones).filter(
+            Secciones.periodo_id == valores["periodo_id"],
+            or_(
+                Secciones.docente_id == valores["docente_id"],
+                Secciones.aula_id == valores["aula_id"],
+            ),
+            Secciones.id != excluir_id if excluir_id is not None else True,
+        ).all()
+
+        for existente in conflictos:
+            if not dias.intersection(normalizar_dias(existente.dias)):
+                continue
+
+            inicio_existente = convertir_hora(existente.hora_inicio)
+            fin_existente = convertir_hora(existente.hora_fin)
+            hay_traslape = inicio < fin_existente and fin > inicio_existente
+            if not hay_traslape:
+                continue
+
+            if existente.docente_id == valores["docente_id"]:
+                raise RecursoDuplicadoError("El docente ya tiene choque de horario")
+            if existente.aula_id == valores["aula_id"]:
+                raise RecursoDuplicadoError("El aula ya tiene choque de horario")
+
+    @staticmethod
+    def crear_service(db: Session, json: Revisar_Json_Crear_Seccion):
+        valores = json.model_dump()
+        valores["hora_inicio"] = normalizar_hora(valores["hora_inicio"])
+        valores["hora_fin"] = normalizar_hora(valores["hora_fin"])
+        SeccionesService._validar_registro(db, valores)
+        seccion = Secciones(**valores)
         return repo.guardar_seccion_repository(db, seccion)
 
     @staticmethod
@@ -80,24 +116,12 @@ class SeccionesService:
     @staticmethod
     def editar_service(db: Session, id: int, json: Revisar_Json_Editar_Seccion):
         check = SeccionesService.buscar_service(db, id)
-        repo_check = repo.check_repository(db, json)
-        if repo_check is not None and repo_check.id != id:
-            raise RecursoDuplicadoError("Ya existe esta seccion")
-        aula = db.query(Aulas).filter(Aulas.id == json.aula_id).first()
-        if aula is None:
-            raise RecursoNoEncontradoError("No existe esta aula")
-        if json.cupo_maximo > aula.capacidad:
-            raise RecursoDuplicadoError("El cupo supera la capacidad del aula")
-        check.codigo = json.codigo
-        check.asignatura_id = json.asignatura_id
-        check.docente_id = json.docente_id
-        check.periodo_id = json.periodo_id
-        check.aula_id = json.aula_id
-        check.dias = json.dias
-        check.hora_inicio = json.hora_inicio
-        check.hora_fin = json.hora_fin
-        check.cupo_maximo = json.cupo_maximo
-        check.estado = json.estado
+        valores = json.model_dump()
+        valores["hora_inicio"] = normalizar_hora(valores["hora_inicio"])
+        valores["hora_fin"] = normalizar_hora(valores["hora_fin"])
+        SeccionesService._validar_registro(db, valores, excluir_id=id)
+        for nombre, valor in valores.items():
+            setattr(check, nombre, valor)
         return repo.guardar_seccion_repository(db, check)
 
     @staticmethod
@@ -105,26 +129,17 @@ class SeccionesService:
         db: Session, id: int, json: Editar_Parcialmente_Seccion
     ):
         check = SeccionesService.buscar_service(db, id)
-        if json.codigo is not None:
-            check.codigo = json.codigo
-        if json.asignatura_id is not None:
-            check.asignatura_id = json.asignatura_id
-        if json.docente_id is not None:
-            check.docente_id = json.docente_id
-        if json.periodo_id is not None:
-            check.periodo_id = json.periodo_id
-        if json.aula_id is not None:
-            check.aula_id = json.aula_id
-        if json.dias is not None:
-            check.dias = json.dias
-        if json.hora_inicio is not None:
-            check.hora_inicio = json.hora_inicio
-        if json.hora_fin is not None:
-            check.hora_fin = json.hora_fin
-        if json.cupo_maximo is not None:
-            check.cupo_maximo = json.cupo_maximo
-        if json.estado is not None:
-            check.estado = json.estado
+        cambios = json.model_dump(exclude_unset=True)
+        valores = {
+            nombre: getattr(check, nombre)
+            for nombre in Revisar_Json_Editar_Seccion.model_fields
+        }
+        valores.update(cambios)
+        valores["hora_inicio"] = normalizar_hora(valores["hora_inicio"])
+        valores["hora_fin"] = normalizar_hora(valores["hora_fin"])
+        SeccionesService._validar_registro(db, valores, excluir_id=id)
+        for nombre, valor in cambios.items():
+            setattr(check, nombre, valores[nombre])
         return repo.guardar_seccion_repository(db, check)
 
     @staticmethod
