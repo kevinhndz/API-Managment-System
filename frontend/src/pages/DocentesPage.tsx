@@ -34,6 +34,7 @@ export function DocentesPage() {
         { key: 'correo', label: 'Correo electrónico', type: 'email', placeholder: 'docente@campus.edu' },
         { key: 'estado', label: 'Docente activo', type: 'checkbox' },
       ]}
+      statusOptions={[{ value: 'activo', label: 'Activos' }, { value: 'inactivo', label: 'Inactivos' }]}
     />
   )
 }

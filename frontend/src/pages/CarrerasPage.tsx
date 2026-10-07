@@ -32,6 +32,7 @@ export function CarrerasPage() {
         { key: 'duracion_anios', label: 'Duración en años', type: 'number', min: 1, max: 10 },
         { key: 'activo', label: 'Carrera activa', type: 'checkbox' },
       ]}
+      statusOptions={[{ value: 'activo', label: 'Activas' }, { value: 'inactivo', label: 'Inactivas' }]}
     />
   )
 }
