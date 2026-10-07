@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { FileDown } from 'lucide-react'
 
+import { AnimatedDownloadButton } from '../components/ui/AnimatedDownloadButton'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
 import { descargarReporte, type ReportFilters, type ReportFormat, type ReportModule } from '../services/api'
 
@@ -97,9 +97,15 @@ export function ReportesPage() {
       {error && <p className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p>}
 
       <div className="mt-7 flex flex-wrap gap-3 border-t pt-5">
-        {(['xlsx', 'pdf'] as const).map((formato) => <button key={formato} type="button" onClick={() => void descargar(formato)} disabled={descargando !== null} className="focus-ring inline-flex h-11 items-center gap-2 rounded-xl bg-navy-900 px-5 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-50 dark:bg-sage-500">
-          <FileDown className="h-4 w-4" />{descargando === formato ? 'Generando…' : `Descargar ${formato === 'xlsx' ? 'Excel' : 'PDF'}`}
-        </button>)}
+        {(['xlsx', 'pdf'] as const).map((formato) => (
+          <AnimatedDownloadButton
+            key={formato}
+            label={formato === 'xlsx' ? 'Excel' : 'PDF'}
+            loading={descargando === formato}
+            disabled={descargando !== null}
+            onClick={() => void descargar(formato)}
+          />
+        ))}
       </div>
     </section>
   </div>
