@@ -33,7 +33,7 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
 
       <div className="flex items-center gap-3">
         <ThemeToggle />
-        <div className="hidden h-9 w-px bg-slate-200 sm:block dark:bg-slate-800" />
+        <div className="hidden h-9 w-px bg-slate-200 sm:block dark:bg-stone-700" />
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-navy-700 to-sage-500 text-sm font-semibold text-white">AD</span>
           <div className="hidden min-w-0 sm:block">

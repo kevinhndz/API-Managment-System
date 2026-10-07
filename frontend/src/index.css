@@ -120,6 +120,7 @@
   .circular-carousel__stage.is-dragging { cursor: grabbing; }
   .circular-carousel__stage:focus-visible { outline: 2px solid #5b0309; outline-offset: -4px; border-radius: 20px; }
   .circular-carousel__card { position: absolute; top: 50%; left: 50%; display: block; width: clamp(190px, 28vw, 340px); aspect-ratio: 1; overflow: hidden; border: 1px solid rgb(255 255 255 / .5); border-radius: 24px; background: #171817; color: #fff; text-align: left; cursor: pointer; backface-visibility: hidden; box-shadow: 0 24px 48px -22px rgb(24 18 20 / .65); transform-style: preserve-3d; transition: transform 240ms var(--ease-in-out), opacity 180ms ease, border-color 180ms ease; user-select: none; }
+  .dark .circular-carousel__card { border-color: rgb(241 215 195 / .2); background: #302624; }
   .circular-carousel__stage.is-dragging .circular-carousel__card { transition: none; }
   .circular-carousel__card img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
   .circular-carousel__shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgb(10 10 10 / .04) 38%, rgb(10 10 10 / .84) 100%); pointer-events: none; }
