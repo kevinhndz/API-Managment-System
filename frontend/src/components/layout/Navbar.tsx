@@ -18,8 +18,29 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
+  const [greetingIndex, setGreetingIndex] = useState(0)
   const accountMenuRef = useRef<HTMLDivElement>(null)
   const current = navigationItems.find((item) => item.path === pathname) ?? navigationItems[0]
+  const firstName = user?.name?.trim().split(/\s+/)[0] || 'bienvenido'
+  const greetingCount = 3
+  const dashboardGreetings = [
+    { title: `¡Hola, ${firstName}!`, subtitle: 'Bienvenido al panel de control académico.' },
+    { title: '¿Qué hay para hoy?', subtitle: 'Consulta la ocupación y actividad de tu campus.' },
+    { title: 'Supervisa tu campus', subtitle: 'Infraestructura, cupos y métricas del ciclo activo.' },
+  ]
+
+  useEffect(() => {
+    if (pathname !== '/') {
+      setGreetingIndex(0)
+      return
+    }
+
+    const interval = window.setInterval(() => {
+      setGreetingIndex((index) => (index + 1) % greetingCount)
+    }, 4200)
+
+    return () => window.clearInterval(interval)
+  }, [pathname, greetingCount])
 
   useEffect(() => {
     if (!accountMenuOpen) return
@@ -40,7 +61,7 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
   }, [accountMenuOpen])
 
   return (
-    <header className="sticky top-0 z-20 flex min-h-[76px] items-center justify-between gap-4 border-b border-[#e3e2df]/80 bg-[#faf9f6]/75 px-4 backdrop-blur-xl dark:border-stone-800/80 dark:bg-[#261f1d]/88 sm:px-8 lg:px-12">
+    <header className={`sticky top-0 z-20 flex min-h-[76px] items-center justify-between gap-4 border-b px-4 backdrop-blur-xl sm:px-8 lg:px-12 ${pathname === '/' ? 'border-[#e3e8ef]/80 bg-[#eef2f6]/90 dark:border-white/10 dark:bg-[#191625]/90' : 'border-[#e3e2df]/80 bg-[#faf9f6]/75 dark:border-stone-800/80 dark:bg-[#261f1d]/88'}`}>
       <div className="flex min-w-0 items-center gap-3">
         <button className="pressable focus-ring hidden h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#e3e2df] bg-white text-[#5b0309] shadow-sm lg:grid dark:border-stone-700 dark:bg-stone-900 dark:text-rose-200" type="button" onClick={onSidebarToggle} aria-label={sidebarCollapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'} title={sidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'}>
           {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
@@ -48,10 +69,17 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
         <button className="pressable focus-ring grid h-10 w-10 shrink-0 place-items-center rounded-xl border bg-white text-slate-600 shadow-sm lg:hidden dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200" type="button" onClick={onMenuClick} aria-label="Abrir menú">
           <Menu className="h-5 w-5" />
         </button>
-        <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a716f]">CampusFlow / espacio de trabajo</p>
-          <h1 className="mt-1 truncate text-xl font-semibold tracking-[-0.03em] text-[#1a1c1a] dark:text-white">{current.label}</h1>
-        </div>
+        {pathname === '/' ? (
+          <div className="min-w-0" aria-live="polite" aria-atomic="true">
+            <h1 key={greetingIndex} className="dashboard-greeting-text truncate text-base font-bold tracking-[-0.025em] text-[#121926] dark:text-white sm:text-lg">{dashboardGreetings[greetingIndex].title}</h1>
+            <p className="truncate text-[11px] text-[#697586] dark:text-stone-300 sm:text-xs">{dashboardGreetings[greetingIndex].subtitle}</p>
+          </div>
+        ) : (
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a716f]">CampusFlow / espacio de trabajo</p>
+            <h1 className="mt-1 truncate text-xl font-semibold tracking-[-0.03em] text-[#1a1c1a] dark:text-white">{current.label}</h1>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-3">
