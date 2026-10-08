@@ -1,5 +1,8 @@
 .berry-primary-metric{background:linear-gradient(135deg,#5e35b1,#4527a0)}
 .berry-secondary-metric{background:#2196f3}
 .berry-mini-metric{transition:transform 180ms cubic-bezier(.23,1,.32,1),box-shadow 180ms ease}
+.metric-digit{display:inline-block;width:.62em;height:1.1em;overflow:hidden;vertical-align:bottom}
+.metric-digit-strip{display:flex;flex-direction:column;align-items:center;transition:transform 900ms cubic-bezier(.23,1,.32,1)}
+.metric-digit-strip>span{display:block;height:1.1em;line-height:1.1em}
 @media (hover:hover) and (pointer:fine){.berry-mini-metric:hover{transform:translateY(-2px);box-shadow:0 8px 22px -14px rgba(32,40,45,.22)}}
-@media (prefers-reduced-motion:reduce){.berry-mini-metric{transition:none}}
+@media (prefers-reduced-motion:reduce){.berry-mini-metric,.metric-digit-strip{transition:none}}
