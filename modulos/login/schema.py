@@ -70,10 +70,5 @@ class UsuarioResponse(BaseModel):
     activo: bool
 
 
-class TokenResponse(BaseModel):
-    token: str
-    tipo: str = "bearer"
-
-
 class SesionResponse(BaseModel):
     autenticada: bool = True
