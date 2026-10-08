@@ -128,8 +128,8 @@ export function LoginPage() {
             </form>
 
             <div className="mt-5 flex flex-wrap justify-between gap-3 text-sm">
-              <Link className="text-[#8f252b] hover:underline dark:text-rose-200" to="/recuperar-contrasena">Olvide mi contrasena</Link>
-              <Link className="font-semibold text-[#5b0309] hover:underline dark:text-rose-200" to="/solicitar-cuenta">Solicitar una cuenta</Link>
+              <Link className="text-[#8f252b] hover:underline dark:text-violet-200" to="/recuperar-contrasena">Olvide mi contrasena</Link>
+              <Link className="font-semibold text-[#5b0309] hover:underline dark:text-violet-200" to="/solicitar-cuenta">Solicitar una cuenta</Link>
             </div>
 
           </div>

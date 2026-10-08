@@ -21,7 +21,7 @@ const estados: Record<ReportModule, Array<{ value: string; label: string }>> = {
   calificaciones: [],
 }
 
-const fieldClass = 'focus-ring mt-2 h-11 w-full rounded-xl border bg-[#faf7f0] px-3 text-sm dark:bg-stone-950'
+const fieldClass = 'focus-ring mt-2 h-11 w-full rounded-xl border bg-[#faf7f0] px-3 text-sm dark:border-[#39334b] dark:bg-[#191625]'
 
 export function ReportesPage() {
   const labels = useAcademicLabels()
@@ -60,7 +60,7 @@ export function ReportesPage() {
       <p className="mt-2 text-sm text-slate-500">{esDocente ? 'Descarga las calificaciones de tus secciones asignadas.' : 'Selecciona los datos y aplica filtros antes de descargar.'}</p>
     </header>
 
-    <section className="rounded-2xl border bg-[#fffdf8] p-6 shadow-panel dark:bg-stone-900">
+    <section className="rounded-2xl border bg-[#fffdf8] p-6 shadow-panel dark:border-[#39334b] dark:bg-[#242033]">
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         <label className="text-sm font-medium">Módulo
           <select className={fieldClass} value={moduloActivo} onChange={(event) => { setModulo(event.target.value as ReportModule); setFiltros({}); setError('') }}>

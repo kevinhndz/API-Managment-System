@@ -127,7 +127,7 @@ export function SolicitudesCuentaPage() {
         <button
           type="button"
           onClick={() => { setCargando(true); void cargar() }}
-          className="inline-flex h-10 items-center gap-2 rounded-xl border bg-white px-4 text-sm font-semibold hover:bg-[#faf4f1] dark:bg-[#302624] dark:hover:bg-stone-800"
+          className="inline-flex h-10 items-center gap-2 rounded-xl border bg-white px-4 text-sm font-semibold hover:bg-[#faf4f1] dark:border-[#39334b] dark:bg-[#242033] dark:hover:bg-[#302a43]"
         >
           <RefreshCw className="h-4 w-4" /> Actualizar
         </button>
@@ -136,7 +136,7 @@ export function SolicitudesCuentaPage() {
       {error && <p className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200" role="alert">{error}</p>}
 
       {cargando ? (
-        <div className="mt-7 h-40 animate-pulse rounded-3xl bg-white/70 dark:bg-stone-900" aria-label="Cargando solicitudes" />
+        <div className="mt-7 h-40 animate-pulse rounded-3xl bg-white/70 dark:bg-[#242033]" aria-label="Cargando solicitudes" />
       ) : solicitudes.length === 0 ? (
         <div className="mt-7 rounded-3xl border border-dashed p-10 text-center text-sm text-slate-500">No hay solicitudes por revisar.</div>
       ) : (
@@ -147,7 +147,7 @@ export function SolicitudesCuentaPage() {
             const docenteNuevo = datosNuevos[solicitud.id] ?? datosDocenteVacios
 
             return (
-              <article key={solicitud.id} className="rounded-3xl border border-[#ead7d7] bg-white/85 p-5 shadow-sm dark:border-stone-700 dark:bg-[#302624]">
+              <article key={solicitud.id} className="rounded-3xl border border-[#ead7d7] bg-white/85 p-5 shadow-sm dark:border-[#39334b] dark:bg-[#242033]">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -165,7 +165,7 @@ export function SolicitudesCuentaPage() {
                       <label className="sr-only" htmlFor={`rol-${solicitud.id}`}>Rol de la cuenta</label>
                       <select
                         id={`rol-${solicitud.id}`}
-                        className="h-10 rounded-xl border bg-white px-3 text-sm dark:bg-[#211a19]"
+                        className="h-10 rounded-xl border bg-white px-3 text-sm dark:border-[#39334b] dark:bg-[#191625]"
                         value={rol}
                         onChange={(event) => setRoles((actuales) => ({ ...actuales, [solicitud.id]: event.target.value as RolCuenta }))}
                       >
@@ -193,14 +193,14 @@ export function SolicitudesCuentaPage() {
                 </div>
 
                 {solicitud.estado === 'PENDIENTE' && rol === 'Docente' && (
-                  <div className="mt-5 border-t border-[#ead7d7] pt-4 dark:border-stone-700">
+                  <div className="mt-5 border-t border-[#ead7d7] pt-4 dark:border-[#39334b]">
                     <p className="text-sm font-medium">Vinculacion institucional</p>
                     <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={`Como vincular a ${solicitud.nombre_completo}`}>
                       <button
                         type="button"
                         aria-pressed={modo === 'existente'}
                         onClick={() => setModosDocente((actuales) => ({ ...actuales, [solicitud.id]: 'existente' }))}
-                        className={`inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-sm font-medium ${modo === 'existente' ? 'border-[#65000b] bg-[#65000b] text-white' : 'bg-white hover:bg-[#faf4f1] dark:bg-[#211a19]'}`}
+                        className={`inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-sm font-medium ${modo === 'existente' ? 'border-[#65000b] bg-[#65000b] text-white dark:border-[#5e35b1] dark:bg-[#5e35b1]' : 'bg-white hover:bg-[#faf4f1] dark:border-[#39334b] dark:bg-[#191625] dark:hover:bg-[#302a43]'}`}
                       >
                         <UsersRound className="h-4 w-4" /> Ya existe en Docentes
                       </button>
@@ -208,7 +208,7 @@ export function SolicitudesCuentaPage() {
                         type="button"
                         aria-pressed={modo === 'nuevo'}
                         onClick={() => setModosDocente((actuales) => ({ ...actuales, [solicitud.id]: 'nuevo' }))}
-                        className={`inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-sm font-medium ${modo === 'nuevo' ? 'border-[#65000b] bg-[#65000b] text-white' : 'bg-white hover:bg-[#faf4f1] dark:bg-[#211a19]'}`}
+                        className={`inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-sm font-medium ${modo === 'nuevo' ? 'border-[#65000b] bg-[#65000b] text-white dark:border-[#5e35b1] dark:bg-[#5e35b1]' : 'bg-white hover:bg-[#faf4f1] dark:border-[#39334b] dark:bg-[#191625] dark:hover:bg-[#302a43]'}`}
                       >
                         <UserPlus className="h-4 w-4" /> Es un nuevo ingreso
                       </button>
@@ -221,7 +221,7 @@ export function SolicitudesCuentaPage() {
                         </label>
                         <select
                           id={`docente-${solicitud.id}`}
-                          className="h-10 w-full rounded-xl border bg-white px-3 text-sm dark:bg-[#211a19]"
+                          className="h-10 w-full rounded-xl border bg-white px-3 text-sm dark:border-[#39334b] dark:bg-[#191625]"
                           value={docentesSeleccionados[solicitud.id] ?? ''}
                           onChange={(event) => setDocentesSeleccionados((actuales) => ({ ...actuales, [solicitud.id]: Number(event.target.value) }))}
                         >
@@ -236,7 +236,7 @@ export function SolicitudesCuentaPage() {
                         <label className="text-xs font-medium text-slate-600 dark:text-stone-300">
                           Numero de empleado
                           <input
-                            className="mt-1 h-10 w-full rounded-xl border bg-white px-3 text-sm dark:bg-[#211a19]"
+                            className="mt-1 h-10 w-full rounded-xl border bg-white px-3 text-sm dark:border-[#39334b] dark:bg-[#191625]"
                             placeholder="Ej. DOC-101"
                             value={docenteNuevo.numero_empleado}
                             onChange={(event) => actualizarDatoDocente(solicitud.id, 'numero_empleado', event.target.value)}
@@ -245,7 +245,7 @@ export function SolicitudesCuentaPage() {
                         <label className="text-xs font-medium text-slate-600 dark:text-stone-300">
                           Nombres
                           <input
-                            className="mt-1 h-10 w-full rounded-xl border bg-white px-3 text-sm dark:bg-[#211a19]"
+                            className="mt-1 h-10 w-full rounded-xl border bg-white px-3 text-sm dark:border-[#39334b] dark:bg-[#191625]"
                             value={docenteNuevo.nombres}
                             onChange={(event) => actualizarDatoDocente(solicitud.id, 'nombres', event.target.value)}
                           />
@@ -253,7 +253,7 @@ export function SolicitudesCuentaPage() {
                         <label className="text-xs font-medium text-slate-600 dark:text-stone-300">
                           Apellidos
                           <input
-                            className="mt-1 h-10 w-full rounded-xl border bg-white px-3 text-sm dark:bg-[#211a19]"
+                            className="mt-1 h-10 w-full rounded-xl border bg-white px-3 text-sm dark:border-[#39334b] dark:bg-[#191625]"
                             value={docenteNuevo.apellidos}
                             onChange={(event) => actualizarDatoDocente(solicitud.id, 'apellidos', event.target.value)}
                           />

@@ -269,7 +269,7 @@ export function LanyardBadge({ front, back, cardWidth = 232, height = 610, reduc
           <div className="absolute inset-0 overflow-hidden rounded-[20px] border border-white/50 bg-[#fffdf8] [backface-visibility:hidden] [transform:rotateY(180deg)]">{back}</div>
         </div>
       </div>
-      <p className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/60 bg-white/75 px-3 py-1 text-[11px] font-medium text-slate-600 shadow-sm backdrop-blur dark:border-stone-700 dark:bg-stone-900/80 dark:text-stone-200">
+      <p className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/60 bg-white/75 px-3 py-1 text-[11px] font-medium text-slate-600 shadow-sm backdrop-blur dark:border-[#39334b] dark:bg-[#242033]/90 dark:text-stone-200">
         Arrastra para mover · Toca para voltear
       </p>
     </section>

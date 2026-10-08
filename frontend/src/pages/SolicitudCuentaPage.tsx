@@ -34,10 +34,10 @@ export function SolicitudCuentaPage() {
     }
   }
 
-  return <main className="grid min-h-screen place-items-center bg-[#faf4f1] px-4 py-10 dark:bg-[#261f1d]">
-    <section className="w-full max-w-lg rounded-3xl border border-[#ead7d7] bg-white p-7 shadow-xl dark:border-stone-700 dark:bg-[#302624] sm:p-9">
+  return <main className="grid min-h-screen place-items-center bg-[#faf4f1] px-4 py-10 dark:bg-[#191625]">
+    <section className="w-full max-w-lg rounded-3xl border border-[#ead7d7] bg-white p-7 shadow-xl dark:border-[#39334b] dark:bg-[#242033] sm:p-9">
       <Link className="mb-7 inline-flex items-center gap-2 text-sm text-[#6c5552] hover:text-[#5b0309] dark:text-stone-300" to="/login"><ArrowLeft className="h-4 w-4" /> Volver al acceso</Link>
-      <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f7e4e4] text-[#5b0309] dark:bg-red-950/40 dark:text-rose-200"><UserPlus /></div>
+      <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f7e4e4] text-[#5b0309] dark:bg-[#5e35b1]/20 dark:text-violet-200"><UserPlus /></div>
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#9a5e5e]">Acceso al campus</p>
       <h1 className="mt-2 text-3xl font-semibold text-[#261b1a] dark:text-white">Solicitar una cuenta</h1>
       <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-stone-300">Un administrador revisara tu solicitud y definira el acceso adecuado. No puedes asignarte un rol desde este formulario.</p>
@@ -48,7 +48,7 @@ export function SolicitudCuentaPage() {
         <label className="block text-sm font-medium">Usuario<input className="mt-1.5 h-11 w-full rounded-xl border bg-transparent px-3" name="usuario" autoComplete="username" minLength={3} maxLength={80} required /></label>
         <PasswordInput id="solicitud-contrasena" label="Contraseña" name="contrasena" value={contrasena} onChange={setContrasena} minLength={12} maxLength={72} />
         {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200" role="alert">{error}</p>}
-        <button className="h-11 w-full rounded-xl bg-[#5b0309] px-4 text-sm font-semibold text-white transition hover:bg-[#76131a] disabled:opacity-60" disabled={sending}>{sending ? 'Enviando solicitud...' : 'Enviar solicitud'}</button>
+        <button className="h-11 w-full rounded-xl bg-[#5b0309] px-4 text-sm font-semibold text-white transition hover:bg-[#76131a] disabled:opacity-60 dark:bg-[#5e35b1] dark:hover:bg-[#7048c6]" disabled={sending}>{sending ? 'Enviando solicitud...' : 'Enviar solicitud'}</button>
       </form>}
     </section>
   </main>
