@@ -5,7 +5,7 @@ from core.excepciones import CredencialesInvalidasError
 
 LLAVE = traer.SECRET_KEY
 
-def crear_token(user: str, user_id: int, rol: str) -> str:
+def crear_token(user: str, user_id: int, rol: str, version_token: int = 0) -> str:
     
     expira_en = datetime.now(timezone.utc) + timedelta(minutes = 30)
     
@@ -13,6 +13,7 @@ def crear_token(user: str, user_id: int, rol: str) -> str:
         "user": user,
         "user_id": user_id,
         "rol" : rol,
+        "version_token": version_token,
         "iat": datetime.now(timezone.utc),
         "tipo": "acceso",
         "exp": expira_en

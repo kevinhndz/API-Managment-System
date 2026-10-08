@@ -14,6 +14,7 @@ class LoginService:
             raise RecursoDuplicadoError("Ya existe este usuario")
         usuario = Usuarios(
             usuario=json.usuario,
+            correo=str(json.correo).casefold() if json.correo else None,
             contrasena=encriptar_contrasena(json.contrasena),
             rol=json.rol,
             docente_id=json.docente_id,
@@ -30,4 +31,4 @@ class LoginService:
             or not verificar_contrasena(json.contrasena, usuario.contrasena)
         ):
             raise CredencialesInvalidasError("Usuario o contraseña incorrectos")
-        return crear_token(usuario.usuario, usuario.id, usuario.rol)
+        return crear_token(usuario.usuario, usuario.id, usuario.rol, usuario.version_token)
