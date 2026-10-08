@@ -61,12 +61,38 @@ def aprobar_solicitud(
     if duplicada:
         raise RecursoDuplicadoError("Ya existe una cuenta con esos datos.")
 
-    if datos.docente_id is not None and db.query(Docentes.id).filter(
-        Docentes.id == datos.docente_id,
+    docente_id = datos.docente_id
+    if datos.docente_nuevo is not None:
+        correo_docente_existente = db.query(Docentes.id).filter(
+            func.lower(Docentes.correo) == solicitud.correo.casefold(),
+        ).first()
+        numero_empleado_existente = db.query(Docentes.id).filter(
+            func.lower(Docentes.numero_empleado)
+            == datos.docente_nuevo.numero_empleado.strip().casefold(),
+        ).first()
+        if correo_docente_existente or numero_empleado_existente:
+            raise RecursoDuplicadoError(
+                "Ya existe un docente con ese correo o numero de empleado."
+            )
+
+        docente = Docentes(
+            numero_empleado=datos.docente_nuevo.numero_empleado.strip(),
+            nombres=datos.docente_nuevo.nombres.strip(),
+            apellidos=datos.docente_nuevo.apellidos.strip(),
+            correo=solicitud.correo,
+            especialidad="",
+            estado=True,
+        )
+        db.add(docente)
+        db.flush()
+        docente_id = docente.id
+
+    if docente_id is not None and db.query(Docentes.id).filter(
+        Docentes.id == docente_id,
     ).first() is None:
         raise RecursoNoEncontradoError("No se encontro el docente indicado.")
-    if datos.docente_id is not None and db.query(Usuarios.id).filter(
-        Usuarios.docente_id == datos.docente_id,
+    if docente_id is not None and db.query(Usuarios.id).filter(
+        Usuarios.docente_id == docente_id,
     ).first() is not None:
         raise RecursoDuplicadoError("Ese docente ya tiene una cuenta vinculada.")
 
@@ -75,7 +101,7 @@ def aprobar_solicitud(
         correo=solicitud.correo,
         contrasena=solicitud.contrasena_hash,
         rol=datos.rol,
-        docente_id=datos.docente_id,
+        docente_id=docente_id,
         activo=True,
     ))
     solicitud.estado = "APROBADA"

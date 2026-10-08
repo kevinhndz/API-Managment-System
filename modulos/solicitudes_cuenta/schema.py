@@ -29,14 +29,22 @@ class SolicitudCuentaResponse(BaseModel):
     created_at: datetime
 
 
+class DocenteNuevoSolicitud(BaseModel):
+    numero_empleado: str = Field(min_length=1, max_length=20)
+    nombres: str = Field(min_length=1, max_length=100)
+    apellidos: str = Field(min_length=1, max_length=100)
+
+
 class AprobarSolicitudCuenta(BaseModel):
     rol: Literal["Docente", "Administrador"]
     docente_id: int | None = None
+    docente_nuevo: DocenteNuevoSolicitud | None = None
 
     @model_validator(mode="after")
     def validar_vinculo_docente(self):
-        if self.rol == "Docente" and self.docente_id is None:
-            raise ValueError("Para aprobar una cuenta docente, selecciona su registro institucional.")
-        if self.rol == "Administrador" and self.docente_id is not None:
+        if self.rol == "Docente":
+            if (self.docente_id is None) == (self.docente_nuevo is None):
+                raise ValueError("Vincula un docente existente o completa los datos del nuevo docente.")
+        elif self.docente_id is not None or self.docente_nuevo is not None:
             raise ValueError("Una cuenta administradora no debe vincularse como docente.")
         return self

@@ -50,6 +50,18 @@ export interface SolicitudCuenta {
   created_at: string
 }
 
+export interface NuevoDocenteSolicitud {
+  numero_empleado: string
+  nombres: string
+  apellidos: string
+}
+
+export interface RevisionSolicitudCuenta {
+  rol: 'Docente' | 'Administrador'
+  docente_id?: number
+  docente_nuevo?: NuevoDocenteSolicitud
+}
+
 export function solicitarCuenta(datos: { nombre_completo: string; correo: string; usuario: string; contrasena: string }) {
   return request<{ detail: string }>('/solicitudes-cuenta/', {
     method: 'POST',
@@ -61,10 +73,14 @@ export function listarSolicitudesCuenta() {
   return request<SolicitudCuenta[]>('/solicitudes-cuenta/')
 }
 
-export function revisarSolicitudCuenta(id: number, decision: 'aprobar' | 'rechazar', rol?: 'Docente' | 'Administrador', docente_id?: number) {
+export function revisarSolicitudCuenta(
+  id: number,
+  decision: 'aprobar' | 'rechazar',
+  revision?: RevisionSolicitudCuenta,
+) {
   return request<SolicitudCuenta>(`/solicitudes-cuenta/${id}/${decision}`, {
     method: 'POST',
-    body: decision === 'aprobar' ? JSON.stringify({ rol, docente_id: rol === 'Docente' ? docente_id : null }) : undefined,
+    body: decision === 'aprobar' ? JSON.stringify(revision) : undefined,
   })
 }
 

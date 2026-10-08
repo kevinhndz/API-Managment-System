@@ -83,6 +83,52 @@ def test_solicitud_publica_requiere_aprobacion_y_el_admin_asigna_el_rol():
         motor.dispose()
 
 
+def test_aprobar_new_hire_crea_docente_y_vincula_la_cuenta_en_una_operacion():
+    cliente, motor = _cliente_con_bd_en_memoria()
+    with Session(motor) as db:
+        db.add(Usuarios(id=18, usuario="admin-new-hire", contrasena="hash", rol="Administrador", activo=True))
+        db.commit()
+    cliente.cookies.set("campusflow_session", crear_token("admin-new-hire", 18, "Administrador"))
+
+    try:
+        solicitud = cliente.post("/solicitudes-cuenta/", json={
+            "nombre_completo": "Ana Maria Nueva",
+            "correo": "ana.nueva@uphn.edu",
+            "usuario": "ana.nueva",
+            "contrasena": "clave-segura-de-prueba",
+        })
+        assert solicitud.status_code == 202
+        solicitud_id = cliente.get("/solicitudes-cuenta/").json()[0]["id"]
+
+        aprobada = cliente.post(
+            f"/solicitudes-cuenta/{solicitud_id}/aprobar",
+            json={
+                "rol": "Docente",
+                "docente_nuevo": {
+                    "numero_empleado": "DOC-NEW-001",
+                    "nombres": "Ana Maria",
+                    "apellidos": "Nueva",
+                },
+            },
+        )
+
+        assert aprobada.status_code == 200, aprobada.text
+        with Session(motor) as db:
+            docente = db.query(Docentes).filter_by(numero_empleado="DOC-NEW-001").one()
+            usuario = db.query(Usuarios).filter_by(usuario="ana.nueva").one()
+            solicitud_aprobada = db.query(SolicitudesCuenta).filter_by(id=solicitud_id).one()
+            assert docente.correo == "ana.nueva@uphn.edu"
+            assert docente.nombres == "Ana Maria"
+            assert docente.apellidos == "Nueva"
+            assert usuario.docente_id == docente.id
+            assert solicitud_aprobada.estado == "APROBADA"
+            assert solicitud_aprobada.contrasena_hash == ""
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
 def test_recuperacion_cambia_clave_usa_token_una_vez_e_invalida_sesion(monkeypatch):
     cliente, motor = _cliente_con_bd_en_memoria()
     correo_enviado = {}
