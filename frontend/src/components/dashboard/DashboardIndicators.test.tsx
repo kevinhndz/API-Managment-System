@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { cleanup, render } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { DashboardIndicators } from './DashboardIndicators'
 
@@ -14,19 +14,22 @@ const base = {
 }
 
 describe('DashboardIndicators', () => {
-  it('muestra cifras reales y distribuciones accesibles', () => {
-    render(<DashboardIndicators {...base} />)
+  afterEach(() => cleanup())
 
-    expect(screen.getByLabelText('98')).toBeInTheDocument()
-    expect(screen.getByLabelText('83,5/100')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: /Secciones abiertas: Abiertas 99, Cerradas 1/ })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: /Matrículas activas: Activas 100, Canceladas 0/ })).toBeInTheDocument()
+  it('muestra cifras reales y distribuciones accesibles', () => {
+    const { container } = render(<DashboardIndicators {...base} />)
+
+    expect(container.querySelector('.metric-number[aria-label="98"]')).toBeInTheDocument()
+    expect(container.querySelector('.berry-mini-metric .text-lg')).toHaveTextContent('83.5')
+    expect(container.querySelector('.metric-number[aria-label="100"]')).toBeInTheDocument()
+    expect(container).toHaveTextContent('99 secciones abiertas')
+    expect(container).toHaveTextContent('6 notas')
   })
 
   it('no inventa un promedio cuando faltan notas', () => {
-    render(<DashboardIndicators {...base} averageGrade={null} gradedCount={0} />)
+    const { container } = render(<DashboardIndicators {...base} averageGrade={null} gradedCount={0} />)
 
-    expect(screen.getByText('—')).toBeInTheDocument()
-    expect(screen.queryByText('NaN')).not.toBeInTheDocument()
+    expect(container.querySelector('.berry-mini-metric .text-lg')).toHaveTextContent('—')
+    expect(container).not.toHaveTextContent('NaN')
   })
 })

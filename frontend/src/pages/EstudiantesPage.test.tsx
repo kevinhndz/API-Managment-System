@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ThemeProvider } from '../contexts/ThemeContext'
 
 const { listarEstudiantes } = vi.hoisted(() => ({
   listarEstudiantes: vi.fn(),
@@ -62,7 +63,7 @@ describe('EstudiantesPage', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null)
     vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }))
 
-    render(<EstudiantesPage />)
+    render(<ThemeProvider><EstudiantesPage /></ThemeProvider>)
     await waitFor(() => expect(screen.getByText('2026-0001')).toBeInTheDocument())
 
     const trigger = screen.getByRole('button', { name: 'Acciones' })
