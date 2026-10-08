@@ -38,7 +38,7 @@ export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onTogg
         onClick={onClose}
       />
       <aside
-        className={`group fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[#e3e2df] bg-[#f4f3f0] px-4 py-6 shadow-xl transition-[width,transform] duration-300 ease-[var(--ease-drawer)] dark:border-stone-800 dark:bg-[#302624] lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${resizing ? 'select-none' : ''} w-64 ${open ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`group fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[#e3e8ef] bg-white px-4 py-6 shadow-xl transition-[width,transform] duration-300 ease-[var(--ease-drawer)] dark:border-white/10 dark:bg-[#211e2b] lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${resizing ? 'select-none' : ''} w-64 ${open ? 'translate-x-0' : '-translate-x-full'}`}
         style={{ '--sidebar-width': `${collapsed ? 88 : width}px` } as React.CSSProperties}
       >
         <div
@@ -61,11 +61,11 @@ export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onTogg
         />
         <div className={`flex items-center px-2 ${collapsed ? 'lg:justify-center' : 'justify-between'}`}>
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-navy-900 text-white dark:bg-sage-500">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#ede7f6] text-[#5e35b1] dark:bg-[#5e35b1]/20 dark:text-violet-200">
               <BrandIcon className="h-5 w-5" />
             </span>
             <div className={collapsed ? 'lg:hidden' : ''}>
-              <p className="font-semibold tracking-[-0.03em] text-[#5b0309] dark:text-rose-200">CampusFlow</p>
+              <p className="font-semibold tracking-[-0.03em] text-[#5e35b1] dark:text-violet-200">CampusFlow</p>
               <p className="text-[11px] text-slate-400">Gestión académica</p>
             </div>
           </div>
@@ -74,7 +74,7 @@ export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onTogg
           </button>
         </div>
 
-        <button className="focus-ring absolute -right-3 top-24 z-10 hidden h-7 w-7 place-items-center rounded-full border border-[#dedbd6] bg-[#faf9f6] text-[#5b0309] shadow-sm transition hover:scale-105 lg:grid dark:border-stone-700 dark:bg-stone-800 dark:text-rose-200" type="button" onClick={onToggle} aria-label={collapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'} title={collapsed ? 'Expandir menú' : 'Colapsar menú'}>
+        <button className="focus-ring absolute -right-3 top-24 z-10 hidden h-7 w-7 place-items-center rounded-full border border-[#e3e8ef] bg-white text-[#5e35b1] shadow-sm transition hover:scale-105 lg:grid dark:border-white/10 dark:bg-[#211e2b] dark:text-violet-200" type="button" onClick={onToggle} aria-label={collapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'} title={collapsed ? 'Expandir menú' : 'Colapsar menú'}>
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
 
@@ -88,8 +88,8 @@ export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onTogg
               className={({ isActive }) =>
                 `focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${collapsed ? 'lg:justify-center lg:px-2' : ''} ${
                   isActive
-                    ? 'bg-[#5b0309] text-white shadow-sm dark:bg-[#7a1c1c]'
-                    : 'text-[#574240] hover:bg-[#e9e8e5] hover:text-[#5b0309] dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-white'
+                    ? 'bg-[#ede7f6] text-[#5e35b1] shadow-sm dark:bg-[#5e35b1]/25 dark:text-violet-100'
+                    : 'text-[#697586] hover:bg-[#f4f0fa] hover:text-[#5e35b1] dark:text-stone-400 dark:hover:bg-white/5 dark:hover:text-violet-100'
                 }`
               }
             >
@@ -98,10 +98,10 @@ export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onTogg
             </NavLink>
           ))}
           {groupedNavigation.map((group) => <section className="mt-5" key={group.key}>
-            <button className={`focus-ring mb-2 flex w-full items-center justify-between rounded-lg px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8a716f] hover:bg-[#e9e8e5] dark:hover:bg-stone-800 ${collapsed ? 'lg:justify-center' : ''}`} type="button" onClick={() => setGroups((current) => ({ ...current, [group.key]: !current[group.key] }))} aria-expanded={collapsed ? undefined : groups[group.key]} title={group.label}>
+            <button className={`focus-ring mb-2 flex w-full items-center justify-between rounded-lg px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#697586] hover:bg-[#f4f0fa] dark:hover:bg-white/5 ${collapsed ? 'lg:justify-center' : ''}`} type="button" onClick={() => setGroups((current) => ({ ...current, [group.key]: !current[group.key] }))} aria-expanded={collapsed ? undefined : groups[group.key]} title={group.label}>
               <span className={collapsed ? 'lg:hidden' : ''}>{group.label}</span><ChevronDown className={`${collapsed ? 'lg:hidden' : ''} h-3.5 w-3.5 transition-transform ${groups[group.key] ? '' : '-rotate-90'}`} />
             </button>
-            {groups[group.key] && <div className="space-y-1.5">{group.items.map(({ label, path, icon: Icon }) => <NavLink key={path} to={path} onClick={onClose} className={({ isActive }) => `focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${collapsed ? 'lg:justify-center lg:px-2' : ''} ${isActive ? 'bg-[#5b0309] text-white shadow-sm dark:bg-[#7a1c1c]' : 'text-[#574240] hover:bg-[#e9e8e5] hover:text-[#5b0309] dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-white'}`}><Icon className="h-[18px] w-[18px]" /><span className={collapsed ? 'lg:hidden' : ''}>{label}</span></NavLink>)}</div>}
+            {groups[group.key] && <div className="space-y-1.5">{group.items.map(({ label, path, icon: Icon }) => <NavLink key={path} to={path} onClick={onClose} className={({ isActive }) => `focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${collapsed ? 'lg:justify-center lg:px-2' : ''} ${isActive ? 'bg-[#ede7f6] text-[#5e35b1] shadow-sm dark:bg-[#5e35b1]/25 dark:text-violet-100' : 'text-[#697586] hover:bg-[#f4f0fa] hover:text-[#5e35b1] dark:text-stone-400 dark:hover:bg-white/5 dark:hover:text-violet-100'}`}><Icon className="h-[18px] w-[18px]" /><span className={collapsed ? 'lg:hidden' : ''}>{label}</span></NavLink>)}</div>}
           </section>)}
         </nav>
 
