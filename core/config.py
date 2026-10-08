@@ -6,6 +6,12 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     FRONTEND_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
     COOKIE_SECURE: bool = False
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""
+    SMTP_STARTTLS: bool = True
 
     # Configuracion de Pydantic para indicarle que lea el archivo .env automaticamente
     model_config = SettingsConfigDict(

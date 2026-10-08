@@ -23,6 +23,10 @@ vi.mock('../hooks/useAcademicLabels', () => ({
   }),
 }))
 
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({ user: { name: 'Admin de prueba', email: '', role: 'Administrador' } }),
+}))
+
 import { EstudiantesPage } from './EstudiantesPage'
 
 afterEach(() => {

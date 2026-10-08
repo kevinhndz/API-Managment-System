@@ -48,6 +48,9 @@ interface EntityPageProps<T extends EntityWithId, TPayload extends object> {
   toPayload: (item: T) => TPayload
   searchableText: (item: T) => string
   statusOptions?: StatusOption[]
+  canCreate?: boolean
+  canEdit?: boolean
+  canDelete?: boolean
   rowAction?: (item: T) => { label: string; icon: ReactNode; onSelect: () => void } | undefined
   renderActions?: (item: T, handlers: { onEdit: () => void; onDelete: () => void; onExtraAction?: () => void }) => ReactNode
 }
@@ -73,6 +76,9 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   toPayload,
   searchableText,
   statusOptions,
+  canCreate = true,
+  canEdit = true,
+  canDelete = true,
   rowAction,
   renderActions,
 }: EntityPageProps<T, TPayload>) {
@@ -168,10 +174,10 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
           <h2 className="mt-1 text-2xl font-semibold tracking-tight text-navy-950 dark:text-white">{title}</h2>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{description}</p>
         </div>
-        <button className="focus-ring flex h-11 items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 text-sm font-semibold text-white transition hover:bg-navy-800 dark:bg-sage-500 dark:hover:bg-sage-600" type="button" onClick={openCreate}>
+        {canCreate && <button className="focus-ring flex h-11 items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 text-sm font-semibold text-white transition hover:bg-navy-800 dark:bg-sage-500 dark:hover:bg-sage-600" type="button" onClick={openCreate}>
           <Plus className="h-4 w-4" />
           {newLabel}
-        </button>
+        </button>}
       </header>
 
       <section className="overflow-hidden rounded-2xl border bg-[#fffdf8] shadow-panel dark:bg-stone-900">
@@ -209,7 +215,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
                             onDelete: () => setPendingDelete(item),
                             onExtraAction: rowAction?.(item)?.onSelect,
                           })
-                        : <ActionMenu singular={singular} onEdit={() => openEdit(item)} onDelete={() => setPendingDelete(item)} extraAction={rowAction?.(item)} />}
+                        : <ActionMenu singular={singular} onEdit={() => openEdit(item)} onDelete={() => setPendingDelete(item)} canEdit={canEdit} canDelete={canDelete} extraAction={rowAction?.(item)} />}
                     </td>
                   </tr>
                 ))

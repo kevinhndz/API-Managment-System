@@ -26,6 +26,7 @@ from modulos.matriculas.tabla import Matriculas
 from modulos.calificaciones.tabla import Calificaciones
 from modulos.login.tabla import Usuarios
 from modulos.auditoria.tabla import EventoAuditoria
+from modulos.solicitudes_cuenta.tabla import SolicitudesCuenta, SolicitudesRecuperacion
 
 # Configuracion de Alembic
 config = context.config

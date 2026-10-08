@@ -5,6 +5,8 @@ interface ActionMenuProps {
   singular: string
   onEdit: () => void
   onDelete: () => void
+  canEdit?: boolean
+  canDelete?: boolean
   extraAction?: {
     label: string
     icon: ReactNode
@@ -12,7 +14,7 @@ interface ActionMenuProps {
   }
 }
 
-export function ActionMenu({ singular, onEdit, onDelete, extraAction }: ActionMenuProps) {
+export function ActionMenu({ singular, onEdit, onDelete, canEdit = true, canDelete = true, extraAction }: ActionMenuProps) {
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -46,8 +48,8 @@ export function ActionMenu({ singular, onEdit, onDelete, extraAction }: ActionMe
     </button>
     {open && <div className="action-menu__popover" role="menu" aria-label={`Acciones de ${singular.toLocaleLowerCase('es')}`}>
       {extraAction && <button className="action-menu__item" type="button" role="menuitem" onClick={() => choose(extraAction.onSelect)}>{extraAction.icon}{extraAction.label}</button>}
-      <button className="action-menu__item action-menu__item--edit" type="button" role="menuitem" onClick={() => choose(onEdit)}><Pencil className="h-4 w-4" />Editar</button>
-      <button className="action-menu__item action-menu__item--delete" type="button" role="menuitem" onClick={() => choose(onDelete)}><Trash2 className="h-4 w-4" />Eliminar</button>
+      {canEdit && <button className="action-menu__item action-menu__item--edit" type="button" role="menuitem" onClick={() => choose(onEdit)}><Pencil className="h-4 w-4" />Editar</button>}
+      {canDelete && <button className="action-menu__item action-menu__item--delete" type="button" role="menuitem" onClick={() => choose(onDelete)}><Trash2 className="h-4 w-4" />Eliminar</button>}
     </div>}
   </div>
 }

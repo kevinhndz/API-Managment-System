@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from './AuthContext'
 vi.mock('../services/api', () => ({
   iniciarSesion: vi.fn().mockResolvedValue({ autenticada: true }),
   cerrarSesion: vi.fn().mockResolvedValue(undefined),
+  obtenerSesionActual: vi.fn().mockResolvedValue({ usuario: 'usuario-prueba', correo: null, rol: 'Administrador' }),
 }))
 
 const wrapper = ({ children }: PropsWithChildren) => <AuthProvider>{children}</AuthProvider>

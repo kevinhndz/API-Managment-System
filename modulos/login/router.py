@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 from core.config import settings
 from database.almacen import abrir_puerta_bd
 from utils.auth import permiso_admin
-from modulos.login.schema import LoginRequest, Revisar_Json_Crear_Usuario, SesionResponse, UsuarioResponse
+from modulos.login.schema import LoginRequest, Revisar_Json_Crear_Usuario, RestablecerContrasena, SesionResponse, SesionUsuarioResponse, SolicitarRecuperacion, SolicitarRecuperacionResponse, UsuarioResponse
 from modulos.login.service import LoginService as s
+from modulos.login.recuperacion import confirmar_recuperacion, solicitar_recuperacion
+from modulos.login.tabla import Usuarios
+from utils.auth import el_vigilante
 
 router = APIRouter(prefix="/login", tags=["Login"])
 
@@ -41,6 +44,40 @@ def cerrar_sesion(response: Response):
         samesite="lax",
         path="/",
     )
+
+
+@router.get("/actual", response_model=SesionUsuarioResponse)
+def obtener_sesion_actual(
+    usuario: dict = Depends(el_vigilante),
+    db: Session = Depends(abrir_puerta_bd),
+):
+    registro = db.query(Usuarios).filter(Usuarios.id == usuario["user_id"]).first()
+    return SesionUsuarioResponse(
+        usuario=registro.usuario,
+        correo=registro.correo,
+        rol=registro.rol,
+    )
+
+
+@router.post("/recuperacion", response_model=SolicitarRecuperacionResponse, status_code=status.HTTP_202_ACCEPTED)
+def solicitar_cambio_contrasena(
+    json: SolicitarRecuperacion,
+    db: Session = Depends(abrir_puerta_bd),
+):
+    try:
+        solicitar_recuperacion(db, str(json.correo))
+    except RuntimeError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    return {"detail": "Si existe una cuenta con ese correo, recibira instrucciones."}
+
+
+@router.post("/recuperacion/confirmar")
+def confirmar_cambio_contrasena(
+    json: RestablecerContrasena,
+    db: Session = Depends(abrir_puerta_bd),
+):
+    confirmar_recuperacion(db, json.token, json.contrasena)
+    return {"detail": "La contrasena se actualizo correctamente."}
 
 
 @router.post("/usuarios", response_model=UsuarioResponse)

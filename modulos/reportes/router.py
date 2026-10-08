@@ -9,6 +9,8 @@ from modulos.reportes.schema import ReporteMatriculaItem, ReporteSeccionItem
 from modulos.reportes.repository import ReportesRepository as repo
 from modulos.reportes.exportadores import exportar_excel, exportar_pdf
 from modulos.auditoria.registro import registrar_evento
+from core.excepciones import AccesoProhibidoError
+from utils.auth import permiso_admin, permiso_usuario
 
 router = APIRouter(prefix="/reportes", tags=["Reportes"])
 
@@ -22,6 +24,7 @@ def reporte_matriculas(
     desde: date | None = Query(None),
     hasta: date | None = Query(None),
     db: Session = Depends(abrir_puerta_bd),
+    administrador: dict = Depends(permiso_admin),
 ):
     return s.reporte_matriculas_service(db, periodo_id, estudiante_id, estado, carrera_id, desde, hasta)
 
@@ -32,6 +35,7 @@ def reporte_secciones(
     estado: str | None = Query(None),
     carrera_id: int | None = Query(None),
     db: Session = Depends(abrir_puerta_bd),
+    administrador: dict = Depends(permiso_admin),
 ):
     return s.reporte_secciones_service(db, periodo_id, estado, carrera_id)
 
@@ -47,7 +51,12 @@ def descargar_reporte(
     desde: date | None = None,
     hasta: date | None = None,
     db: Session = Depends(abrir_puerta_bd),
+    usuario: dict = Depends(permiso_usuario),
 ):
+    es_docente = usuario["rol"].casefold() == "docente"
+    if es_docente and modulo != "calificaciones":
+        raise AccesoProhibidoError("Los docentes solo pueden descargar reportes de sus calificaciones")
+
     if desde and hasta and desde > hasta:
         from fastapi import HTTPException
         raise HTTPException(status_code=422, detail="La fecha inicial no puede superar la fecha final")
@@ -61,7 +70,8 @@ def descargar_reporte(
     elif modulo == "docentes":
         registros = repo.docentes_repository(db, estado)
     else:
-        registros = repo.calificaciones_repository(db, periodo_id, carrera_id)
+        docente_id = usuario["docente_id"] if es_docente else None
+        registros = repo.calificaciones_repository(db, periodo_id, carrera_id, docente_id)
 
     respuesta = exportar_excel(modulo, registros) if formato == "xlsx" else exportar_pdf(modulo, registros)
     registrar_evento(db, "EXPORTAR", modulo, f"Descargo reporte {formato.upper()} de {modulo} con {len(registros)} registros")

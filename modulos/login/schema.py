@@ -1,5 +1,5 @@
 from typing import Literal, Optional
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 def validar_contrasena_nueva(valor: str) -> str:
@@ -23,6 +23,7 @@ def normalizar_rol(valor: str) -> str:
 class Revisar_Json_Crear_Usuario(BaseModel):
     usuario: str = Field(min_length=3, max_length=80)
     contrasena: str = Field(min_length=12, max_length=72)
+    correo: Optional[EmailStr] = None
     rol: Literal["Docente", "Administrador", "Admin"] = "Docente"
     docente_id: Optional[int] = None
     activo: bool = True
@@ -66,9 +67,34 @@ class UsuarioResponse(BaseModel):
     id: int
     usuario: str
     rol: str
+    correo: Optional[EmailStr]
     docente_id: Optional[int]
     activo: bool
 
 
 class SesionResponse(BaseModel):
     autenticada: bool = True
+
+
+class SolicitarRecuperacionResponse(BaseModel):
+    detail: str
+
+
+class SesionUsuarioResponse(BaseModel):
+    usuario: str
+    correo: Optional[EmailStr]
+    rol: str
+
+
+class SolicitarRecuperacion(BaseModel):
+    correo: EmailStr
+
+
+class RestablecerContrasena(BaseModel):
+    token: str = Field(min_length=20, max_length=200)
+    contrasena: str = Field(min_length=12, max_length=72)
+
+    @field_validator("contrasena")
+    @classmethod
+    def validar_longitud_bcrypt(cls, valor: str) -> str:
+        return validar_contrasena_nueva(valor)

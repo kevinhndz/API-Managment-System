@@ -16,6 +16,8 @@ def test_login_web_tiene_una_sola_ruta_de_inicio_de_sesion():
     assert '/login/sesion' in rutas
     assert 'post' in rutas['/login/sesion']
     assert '/login/' not in rutas
+    assert '/login/actual' in rutas
+    assert '/solicitudes-cuenta/' in rutas
 
 
 def test_modulos_crud_exponen_operaciones_principales():
