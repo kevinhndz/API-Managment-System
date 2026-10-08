@@ -19,7 +19,7 @@ export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onTogg
   const esAdministrador = ['admin', 'administrador'].includes(user?.role.toLocaleLowerCase('es') ?? '')
   const itemsPermitidos = esAdministrador
     ? navigationItems
-    : navigationItems.filter((item) => ['/estudiantes', '/calificaciones'].includes(item.path))
+    : navigationItems.filter((item) => ['/estudiantes', '/calificaciones', '/reportes'].includes(item.path))
   const [resizing, setResizing] = useState(false)
   const [groups, setGroups] = useState({ academico: true, oferta: true, operacion: true, administracion: true })
   const groupedNavigation = [

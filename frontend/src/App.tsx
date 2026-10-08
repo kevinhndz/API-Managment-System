@@ -48,6 +48,7 @@ export function App() {
           <Route index element={<HomeRoute />} />
           <Route path="estudiantes" element={<Suspense fallback={<PageLoader />}><EstudiantesPage /></Suspense>} />
           <Route path="calificaciones" element={<Suspense fallback={<PageLoader />}><CalificacionesPage /></Suspense>} />
+          <Route path="reportes" element={<Suspense fallback={<PageLoader />}><ReportesPage /></Suspense>} />
           <Route path="configuracion" element={<ConfiguracionPage />} />
           <Route element={<AdministratorRoute />}>
             <Route path="aulas" element={<Suspense fallback={<PageLoader />}><AulasPage /></Suspense>} />
@@ -57,7 +58,6 @@ export function App() {
             <Route path="periodos" element={<Suspense fallback={<PageLoader />}><PeriodosPage /></Suspense>} />
             <Route path="secciones" element={<Suspense fallback={<PageLoader />}><SeccionesPage /></Suspense>} />
             <Route path="matriculas" element={<Suspense fallback={<PageLoader />}><MatriculasPage /></Suspense>} />
-            <Route path="reportes" element={<Suspense fallback={<PageLoader />}><ReportesPage /></Suspense>} />
             <Route path="actividad" element={<Suspense fallback={<PageLoader />}><ActividadPage /></Suspense>} />
             <Route path="configuracion/solicitudes" element={<Suspense fallback={<PageLoader />}><SolicitudesCuentaPage /></Suspense>} />
           </Route>

@@ -33,8 +33,7 @@ def listar_estudiantes(
     db: Session = Depends(abrir_puerta_bd),
     usuario: dict = Depends(permiso_usuario),
 ):
-    docente_id = None if usuario["rol"].casefold() in {"admin", "administrador"} else usuario["docente_id"]
-    return s.listar_service(db, pagina_actual, limite, docente_id)
+    return s.listar_service(db, pagina_actual, limite)
 
 
 @router.get("/{id}", response_model=EstudianteResponse)
@@ -43,8 +42,7 @@ def buscar_estudiante(
     db: Session = Depends(abrir_puerta_bd),
     usuario: dict = Depends(permiso_usuario),
 ):
-    docente_id = None if usuario["rol"].casefold() in {"admin", "administrador"} else usuario["docente_id"]
-    return s.buscar_service(db, id, docente_id)
+    return s.buscar_service(db, id)
 
 
 @router.put("/{id}", response_model=EstudianteResponse)
@@ -54,8 +52,7 @@ def editar_estudiante(
     db: Session = Depends(abrir_puerta_bd),
     usuario: dict = Depends(permiso_usuario),
 ):
-    docente_id = None if usuario["rol"].casefold() in {"admin", "administrador"} else usuario["docente_id"]
-    return s.editar_service(db, id, json, docente_id)
+    return s.editar_service(db, id, json)
 
 
 @router.patch("/{id}", response_model=EstudianteResponse)
@@ -65,8 +62,7 @@ def editar_parcialmente_estudiante(
     db: Session = Depends(abrir_puerta_bd),
     usuario: dict = Depends(permiso_usuario),
 ):
-    docente_id = None if usuario["rol"].casefold() in {"admin", "administrador"} else usuario["docente_id"]
-    return s.editar_parcialmente_service(db, id, json, docente_id)
+    return s.editar_parcialmente_service(db, id, json)
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)

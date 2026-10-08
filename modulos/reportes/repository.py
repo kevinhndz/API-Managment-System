@@ -110,7 +110,7 @@ class ReportesRepository:
         return query.all()
 
     @staticmethod
-    def calificaciones_repository(db: Session, periodo_id=None, carrera_id=None):
+    def calificaciones_repository(db: Session, periodo_id=None, carrera_id=None, docente_id=None):
         query = db.query(
             Estudiantes.cuenta,
             Estudiantes.nombre.label("estudiante"),
@@ -126,4 +126,6 @@ class ReportesRepository:
             query = query.filter(Secciones.periodo_id == periodo_id)
         if carrera_id is not None:
             query = query.filter(Estudiantes.carrera_id == carrera_id)
+        if docente_id is not None:
+            query = query.filter(Secciones.docente_id == docente_id)
         return query.all()

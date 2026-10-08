@@ -14,6 +14,7 @@ from modulos.auditoria.registro import usuario_actual
 from modulos.auditoria.tabla import EventoAuditoria
 from modulos.login.tabla import Usuarios
 from modulos.aulas.tabla import Aulas
+from modulos.calificaciones.tabla import Calificaciones
 from modulos.asignaturas.tabla import Asignaturas
 from modulos.carreras.tabla import Carreras
 from modulos.docentes.tabla import Docentes
@@ -99,6 +100,90 @@ def test_filtros_de_matriculas_y_secciones():
         assert ReportesRepository.secciones_repository(db, estado="ABIERTA") == []
 
     motor.dispose()
+
+
+def test_docente_consulta_y_edita_estudiantes_y_descarga_solo_sus_calificaciones():
+    motor = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    miClaseBase.metadata.create_all(motor)
+
+    with Session(motor) as db:
+        carrera = Carreras(codigo="C-DOC", nombre="Carrera docente", duracion_anios=4, activo=True)
+        docente = Docentes(numero_empleado="DOC-DUE", nombres="Ana", apellidos="Docente", correo="ana.docente@example.com", especialidad="", estado=True)
+        otro_docente = Docentes(numero_empleado="DOC-OTRO", nombres="Luis", apellidos="Docente", correo="luis.docente@example.com", especialidad="", estado=True)
+        aula = Aulas(codigo="A-DOC", edificio="Edificio Norte", capacidad=30, activo=True)
+        periodo = Periodos(anio=2026, numero=2, fecha_inicio=date(2026, 6, 1), fecha_fin=date(2026, 10, 31), activo=True)
+        db.add_all([carrera, docente, otro_docente, aula, periodo])
+        db.flush()
+
+        estudiante = Estudiantes(cuenta="2026-5001", nombre="Karen Hernandez", correo="karen@example.com", fechaNacimiento=date(2002, 4, 3), carrera_id=carrera.id, estado=True)
+        otro_estudiante = Estudiantes(cuenta="2026-5002", nombre="Mario Lopez", correo="mario@example.com", fechaNacimiento=date(2001, 3, 2), carrera_id=carrera.id, estado=True)
+        asignatura = Asignaturas(codigo="MAT-DOC", nombre="Matematicas", unidades_valorativas=4, carrera_id=carrera.id, activo=True)
+        db.add_all([estudiante, otro_estudiante, asignatura])
+        db.flush()
+
+        seccion = Secciones(codigo="MAT-DOC-A", asignatura_id=asignatura.id, docente_id=docente.id, periodo_id=periodo.id, aula_id=aula.id, dias="LUN", hora_inicio="08:00", hora_fin="10:00", cupo_maximo=30, estado="ABIERTA")
+        otra_seccion = Secciones(codigo="MAT-DOC-B", asignatura_id=asignatura.id, docente_id=otro_docente.id, periodo_id=periodo.id, aula_id=aula.id, dias="MAR", hora_inicio="10:00", hora_fin="12:00", cupo_maximo=30, estado="ABIERTA")
+        db.add_all([seccion, otra_seccion])
+        db.flush()
+
+        matricula = Matriculas(estudiante_id=estudiante.id, seccion_id=seccion.id, fecha_matricula=date(2026, 6, 2), estado="ACTIVA")
+        otra_matricula = Matriculas(estudiante_id=otro_estudiante.id, seccion_id=otra_seccion.id, fecha_matricula=date(2026, 6, 2), estado="ACTIVA")
+        usuario = Usuarios(usuario="ana-docente", correo=docente.correo, contrasena="hash", rol="Docente", docente_id=docente.id, activo=True)
+        db.add_all([matricula, otra_matricula, usuario])
+        db.flush()
+        db.add_all([
+            Calificaciones(matricula_id=matricula.id, primer_parcial=80, segundo_parcial=85, tercer_parcial=90, nota_final=85, observacion=""),
+            Calificaciones(matricula_id=otra_matricula.id, primer_parcial=60, segundo_parcial=65, tercer_parcial=70, nota_final=65, observacion=""),
+        ])
+        db.commit()
+        estudiante_id = estudiante.id
+        usuario_id = usuario.id
+        carrera_id = carrera.id
+        matricula_id = matricula.id
+
+    def base_de_prueba():
+        with Session(motor) as db:
+            yield db
+
+    app.dependency_overrides[abrir_puerta_bd] = base_de_prueba
+    cliente = TestClient(app)
+    cliente.cookies.set("campusflow_session", crear_token("ana-docente", usuario_id, "Docente"))
+
+    try:
+        listado = cliente.get("/estudiantes/?pagina_actual=1&limite=100")
+        assert listado.status_code == 200, listado.text
+        assert {item["cuenta"] for item in listado.json()["data"]} == {"2026-5001", "2026-5002"}
+
+        edicion = cliente.put(f"/estudiantes/{estudiante_id}", json={
+            "cuenta": "2026-5001",
+            "nombre": "Karen Hernandez Actualizada",
+            "correo": "karen@example.com",
+            "telefono": None,
+            "fechaNacimiento": "2002-04-03",
+            "carrera_id": carrera_id,
+            "estado": True,
+        })
+        assert edicion.status_code == 200, edicion.text
+        assert edicion.json()["nombre"] == "Karen Hernandez Actualizada"
+        assert cliente.delete(f"/estudiantes/{estudiante_id}").status_code == 403
+
+        calificaciones = cliente.get("/calificaciones/?pagina_actual=1&limite=100")
+        assert calificaciones.status_code == 200, calificaciones.text
+        assert len(calificaciones.json()["data"]) == 1
+        assert calificaciones.json()["data"][0]["matricula_id"] == matricula_id
+
+        reporte = cliente.get("/reportes/calificaciones/descargar/xlsx")
+        assert reporte.status_code == 200, reporte.text
+        libro = load_workbook(BytesIO(reporte.content))
+        hoja = libro.active
+        assert hoja.max_row == 2
+        assert hoja["A2"].value == "2026-5001"
+        assert hoja["B2"].value == "Karen Hernandez Actualizada"
+        assert cliente.get("/reportes/estudiantes/descargar/xlsx").status_code == 403
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
 
 
 def test_peticion_autenticada_registra_actividad():
