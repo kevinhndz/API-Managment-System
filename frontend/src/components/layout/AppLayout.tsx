@@ -12,7 +12,7 @@ export function AppLayout() {
   const [sidebarWidth, setSidebarWidth] = useState(256)
 
   return (
-    <div className={`relative flex min-h-screen overflow-hidden ${pathname === '/' ? 'bg-[#eef2f6] dark:bg-[#191625]' : 'warm-grid bg-[#faf9f6] dark:bg-[#261f1d]'}`}>
+    <div className={`relative flex min-h-screen overflow-hidden ${pathname === '/' ? 'bg-[#eef2f6] dark:bg-[#191625]' : 'warm-grid bg-[#faf9f6] dark:bg-[#191625]'}`}>
       {pathname !== '/' && <GravityStarsBackground />}
       <Sidebar open={sidebarOpen} collapsed={sidebarCollapsed} width={sidebarWidth} onWidthChange={setSidebarWidth} onClose={() => setSidebarOpen(false)} onToggle={() => setSidebarCollapsed((current) => !current)} />
       <div className="relative z-10 min-w-0 flex-1">

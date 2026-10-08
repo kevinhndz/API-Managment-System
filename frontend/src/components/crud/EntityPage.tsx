@@ -58,7 +58,7 @@ interface EntityPageProps<T extends EntityWithId, TPayload extends object> {
 
 export function StatusBadge({ active }: { active: boolean }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${active ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-stone-800 dark:text-stone-200'}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${active ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-[#302a43] dark:text-stone-200'}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
       {active ? 'Activo' : 'Inactivo'}
     </span>
@@ -175,16 +175,16 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
           <h2 className="mt-1 text-2xl font-semibold tracking-tight text-navy-950 dark:text-white">{title}</h2>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{description}</p>
         </div>
-        {canCreate && <button className="focus-ring flex h-11 items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 text-sm font-semibold text-white transition hover:bg-navy-800 dark:bg-sage-500 dark:hover:bg-sage-600" type="button" onClick={openCreate}>
+        {canCreate && <button className="focus-ring flex h-11 items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 text-sm font-semibold text-white transition hover:bg-navy-800 dark:bg-[#5e35b1] dark:hover:bg-[#7048c6]" type="button" onClick={openCreate}>
           <Plus className="h-4 w-4" />
           {newLabel}
         </button>}
       </header>
 
-      <section className="overflow-hidden rounded-2xl border bg-[#fffdf8] shadow-panel dark:bg-stone-900">
+      <section className="overflow-hidden rounded-2xl border bg-[#fffdf8] shadow-panel dark:border-[#39334b] dark:bg-[#242033]">
         <div className="flex flex-col justify-between gap-3 border-b p-4 sm:flex-row sm:items-center">
           <ExpandableSearchBar ariaLabel={`Buscar ${title.toLocaleLowerCase('es')}`} value={query} onChange={(value) => { setQuery(value); resource.setPage(1) }} placeholder={`Buscar ${title.toLocaleLowerCase('es')}…`} width={280} />
-          <div className="flex flex-wrap items-center gap-3"><p className="text-xs text-slate-400">{resource.total} registros</p>{hasStatus && <select className="focus-ring h-10 rounded-xl border bg-[#faf7f0] px-3 text-xs font-semibold text-slate-600 dark:bg-stone-950 dark:text-slate-300" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); resource.setPage(1) }} aria-label="Filtrar por estado"><option value="todos">Todos los estados</option>{availableStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>}<p className="w-full text-xs font-medium text-[#8a716f] sm:w-auto">{statusFilter === 'todos' ? `Se encontraron ${filteredItems.length} registros en esta página` : `Se encontraron ${filteredItems.length} registros con estado ${availableStatusOptions.find((option) => option.value === statusFilter)?.label?.toLocaleLowerCase('es') ?? statusFilter}`}</p></div>
+          <div className="flex flex-wrap items-center gap-3"><p className="text-xs text-slate-400">{resource.total} registros</p>{hasStatus && <select className="focus-ring h-10 rounded-xl border bg-[#faf7f0] px-3 text-xs font-semibold text-slate-600 dark:border-[#39334b] dark:bg-[#191625] dark:text-slate-300" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); resource.setPage(1) }} aria-label="Filtrar por estado"><option value="todos">Todos los estados</option>{availableStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>}<p className="w-full text-xs font-medium text-[#8a716f] sm:w-auto">{statusFilter === 'todos' ? `Se encontraron ${filteredItems.length} registros en esta página` : `Se encontraron ${filteredItems.length} registros con estado ${availableStatusOptions.find((option) => option.value === statusFilter)?.label?.toLocaleLowerCase('es') ?? statusFilter}`}</p></div>
         </div>
 
         {resource.error && <div className="border-b bg-red-50 px-5 py-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">{resource.error}</div>}
@@ -192,19 +192,19 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse text-left">
             <thead>
-              <tr className="border-b bg-[#faf7f0]/80 dark:bg-[#3b2e2b]">
+              <tr className="border-b bg-[#faf7f0]/80 dark:border-[#39334b] dark:bg-[#302a43]">
                 {columns.map((column) => <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400" key={column.label}>{column.label}</th>)}
                 <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-stone-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-[#39334b]">
               {resource.loading ? (
                 <tr><td className="px-5 py-10" colSpan={columns.length + 1}><TableSkeleton columns={columns.length} /></td></tr>
               ) : filteredItems.length === 0 ? (
                 <tr><td className="px-5 py-14 text-center text-sm text-slate-400" colSpan={columns.length + 1}>No se encontraron registros.</td></tr>
               ) : (
                 filteredItems.map((item) => (
-                  <tr className="transition hover:bg-slate-50/70 dark:hover:bg-stone-800/60" key={item.id}>
+                  <tr className="transition hover:bg-slate-50/70 dark:hover:bg-[#302a43]/70" key={item.id}>
                     {columns.map((column) => <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600 dark:text-slate-300" key={column.label}>{column.render(item)}</td>)}
                     <td className="px-5 py-4 text-right">
                       {renderActions
@@ -225,11 +225,11 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
         <div className="flex flex-col gap-3 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-slate-400">Página {resource.page} de {Math.max(resource.totalPages, 1)} · {filteredItems.length} visibles</p>
           <nav className="flex max-w-full items-center justify-center gap-1 overflow-x-auto pb-0.5" aria-label={`Paginación de ${title.toLocaleLowerCase('es')}`}>
-            <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg border text-slate-500 transition hover:bg-[#faf7f0] disabled:pointer-events-none disabled:opacity-40 dark:text-slate-300 dark:hover:bg-stone-800" type="button" disabled={resource.page <= 1 || resource.loading} onClick={() => resource.setPage((page) => page - 1)} aria-label="Página anterior"><ChevronLeft className="h-4 w-4" /></button>
-            {pagination.showLeftEllipsis && <><button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-sm text-slate-600 hover:bg-[#faf7f0] dark:text-slate-300 dark:hover:bg-stone-800" type="button" onClick={() => resource.setPage(1)} aria-label="Ir a la primera página">1</button><span className="grid h-9 w-6 place-items-center text-slate-400" aria-hidden="true">…</span></>}
-            {pagination.pages.map((page) => <button className={`focus-ring grid h-9 w-9 place-items-center rounded-lg text-sm font-medium transition ${resource.page === page ? 'bg-[#5b0309] text-white shadow-sm dark:bg-rose-900' : 'text-slate-600 hover:bg-[#faf7f0] dark:text-slate-300 dark:hover:bg-stone-800'}`} type="button" key={page} disabled={resource.loading} onClick={() => resource.setPage(page)} aria-current={resource.page === page ? 'page' : undefined} aria-label={`Ir a la página ${page}`}>{page}</button>)}
-            {pagination.showRightEllipsis && <><span className="grid h-9 w-6 place-items-center text-slate-400" aria-hidden="true">…</span><button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-sm text-slate-600 hover:bg-[#faf7f0] dark:text-slate-300 dark:hover:bg-stone-800" type="button" onClick={() => resource.setPage(resource.totalPages)} aria-label="Ir a la última página">{resource.totalPages}</button></>}
-            <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg border text-slate-500 transition hover:bg-[#faf7f0] disabled:pointer-events-none disabled:opacity-40 dark:text-slate-300 dark:hover:bg-stone-800" type="button" disabled={resource.page >= resource.totalPages || resource.loading} onClick={() => resource.setPage((page) => page + 1)} aria-label="Página siguiente"><ChevronRight className="h-4 w-4" /></button>
+            <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg border text-slate-500 transition hover:bg-[#faf7f0] disabled:pointer-events-none disabled:opacity-40 dark:border-[#39334b] dark:text-slate-300 dark:hover:bg-[#302a43]" type="button" disabled={resource.page <= 1 || resource.loading} onClick={() => resource.setPage((page) => page - 1)} aria-label="Página anterior"><ChevronLeft className="h-4 w-4" /></button>
+            {pagination.showLeftEllipsis && <><button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-sm text-slate-600 hover:bg-[#faf7f0] dark:text-slate-300 dark:hover:bg-[#302a43]" type="button" onClick={() => resource.setPage(1)} aria-label="Ir a la primera página">1</button><span className="grid h-9 w-6 place-items-center text-slate-400" aria-hidden="true">…</span></>}
+            {pagination.pages.map((page) => <button className={`focus-ring grid h-9 w-9 place-items-center rounded-lg text-sm font-medium transition ${resource.page === page ? 'bg-[#5b0309] text-white shadow-sm dark:bg-[#5e35b1]' : 'text-slate-600 hover:bg-[#faf7f0] dark:text-slate-300 dark:hover:bg-[#302a43]'}`} type="button" key={page} disabled={resource.loading} onClick={() => resource.setPage(page)} aria-current={resource.page === page ? 'page' : undefined} aria-label={`Ir a la página ${page}`}>{page}</button>)}
+            {pagination.showRightEllipsis && <><span className="grid h-9 w-6 place-items-center text-slate-400" aria-hidden="true">…</span><button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-sm text-slate-600 hover:bg-[#faf7f0] dark:text-slate-300 dark:hover:bg-[#302a43]" type="button" onClick={() => resource.setPage(resource.totalPages)} aria-label="Ir a la última página">{resource.totalPages}</button></>}
+            <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg border text-slate-500 transition hover:bg-[#faf7f0] disabled:pointer-events-none disabled:opacity-40 dark:border-[#39334b] dark:text-slate-300 dark:hover:bg-[#302a43]" type="button" disabled={resource.page >= resource.totalPages || resource.loading} onClick={() => resource.setPage((page) => page + 1)} aria-label="Página siguiente"><ChevronRight className="h-4 w-4" /></button>
           </nav>
         </div>
       </section>
@@ -240,10 +240,10 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
             {fields.map((field) => {
               const value = form[field.key]
               if (field.type === 'checkbox') {
-                return <label className="flex items-center gap-3 self-end rounded-xl border bg-[#faf7f0] px-4 py-3 text-sm font-medium text-slate-700 dark:bg-stone-950 dark:text-slate-200" key={String(field.key)}><input className="peer sr-only" type="checkbox" checked={Boolean(value)} onChange={(event) => updateField(field, event.target.checked)} /><span aria-hidden="true" className="relative h-6 w-11 shrink-0 rounded-full bg-slate-300 transition-colors after:absolute after:left-1 after:top-1 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:bg-[#7b4bd9] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-[#7b4bd9]/50 dark:bg-stone-700" />{field.label}</label>
+                return <label className="flex items-center gap-3 self-end rounded-xl border bg-[#faf7f0] px-4 py-3 text-sm font-medium text-slate-700 dark:border-[#39334b] dark:bg-[#191625] dark:text-slate-200" key={String(field.key)}><input className="peer sr-only" type="checkbox" checked={Boolean(value)} onChange={(event) => updateField(field, event.target.checked)} /><span aria-hidden="true" className="relative h-6 w-11 shrink-0 rounded-full bg-slate-300 transition-colors after:absolute after:left-1 after:top-1 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:bg-[#7b4bd9] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-[#7b4bd9]/50 dark:bg-[#39334b]" />{field.label}</label>
               }
 
-              const sharedClass = 'focus-ring mt-2 h-11 w-full rounded-xl border bg-[#faf7f0] px-3.5 text-sm dark:bg-stone-950'
+              const sharedClass = 'focus-ring mt-2 h-11 w-full rounded-xl border bg-[#faf7f0] px-3.5 text-sm dark:border-[#39334b] dark:bg-[#191625]'
               return (
                 <label className="block" key={String(field.key)}>
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{field.label}</span>
@@ -259,8 +259,8 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
             })}
           </div>
           <div className="flex justify-end gap-3 border-t px-6 py-4">
-            <button className="focus-ring h-10 rounded-xl border px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:text-stone-200 dark:hover:bg-stone-800" type="button" onClick={() => setFormOpen(false)}>Cancelar</button>
-            <button className="focus-ring h-10 rounded-xl bg-navy-900 px-5 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-60 dark:bg-sage-500" type="submit" disabled={resource.saving}>{resource.saving ? 'Guardando…' : 'Guardar'}</button>
+            <button className="focus-ring h-10 rounded-xl border px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:border-[#39334b] dark:text-stone-200 dark:hover:bg-[#302a43]" type="button" onClick={() => setFormOpen(false)}>Cancelar</button>
+            <button className="focus-ring h-10 rounded-xl bg-navy-900 px-5 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-60 dark:bg-[#5e35b1] dark:hover:bg-[#7048c6]" type="submit" disabled={resource.saving}>{resource.saving ? 'Guardando…' : 'Guardar'}</button>
           </div>
         </form>
       </Modal>

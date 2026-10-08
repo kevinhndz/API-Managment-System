@@ -42,7 +42,7 @@ export function ActionMenu({ singular, onEdit, onDelete, canEdit = true, canDele
   }
 
   return <div className="relative inline-block text-left" ref={menuRef}>
-    <button ref={triggerRef} className="focus-ring inline-flex h-9 items-center gap-2 rounded-lg border bg-[#fffdf8] px-3 text-xs font-semibold text-[#574240] shadow-sm transition hover:bg-[#faf7f0] dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800" type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
+    <button ref={triggerRef} className="focus-ring inline-flex h-9 items-center gap-2 rounded-lg border bg-[#fffdf8] px-3 text-xs font-semibold text-[#574240] shadow-sm transition hover:bg-[#faf7f0] dark:border-[#39334b] dark:bg-[#242033] dark:text-stone-200 dark:hover:bg-[#302a43]" type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
       Acciones
       <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
     </button>

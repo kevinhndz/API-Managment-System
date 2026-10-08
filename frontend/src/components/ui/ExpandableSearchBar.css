@@ -103,26 +103,26 @@
 
 .dark .expandable-search-bar__surface,
 .dark .expandable-search-bar__toggle {
-  border-color: #594743;
-  background: #211a19;
-  color: #c6b9b4;
+  border-color: #39334b;
+  background: #211e2b;
+  color: #c4b5fd;
 }
 
 .dark .expandable-search-bar__surface[data-open='true'] {
-  border-color: #b96c70;
+  border-color: #7c5cbf;
 }
 
 .dark .expandable-search-bar__input {
-  color: #f5eeeb;
+  color: #f5f3ff;
 }
 
 .dark .expandable-search-bar__input::placeholder {
-  color: #a79a96;
+  color: #aaa1bd;
 }
 
 .dark .expandable-search-bar.is-open .expandable-search-bar__toggle,
 .dark .expandable-search-bar__toggle:hover {
-  color: #f0b7b4;
+  color: #ddd6fe;
 }
 
 @media (prefers-reduced-motion: reduce) {
