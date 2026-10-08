@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { restablecerContrasena, solicitarRecuperacion } from '../services/api'
+import { PasswordInput } from '../components/ui/PasswordInput'
 
 export function RecuperacionPage() {
   const [search] = useSearchParams()
@@ -10,6 +11,8 @@ export function RecuperacionPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
+  const [contrasena, setContrasena] = useState('')
+  const [confirmacion, setConfirmacion] = useState('')
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -29,6 +32,8 @@ export function RecuperacionPage() {
         setMessage(result.detail)
       }
       formElement.reset()
+      setContrasena('')
+      setConfirmacion('')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No se pudo completar la solicitud.')
     } finally {
@@ -45,8 +50,8 @@ export function RecuperacionPage() {
       <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-stone-300">{token ? 'El enlace es de un solo uso y vence en 30 minutos.' : 'Escribe el correo asociado a tu cuenta. Si existe, enviaremos un enlace para cambiar la contrasena.'}</p>
       {message ? <div className="mt-7 rounded-2xl bg-emerald-50 p-5 text-sm text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100" role="status">{message}{token && <p className="mt-3"><Link className="font-semibold underline" to="/login">Ir al acceso</Link></p>}</div> : <form className="mt-7 space-y-4" onSubmit={submit}>
         {token ? <>
-          <label className="block text-sm font-medium">Nueva contrasena<input className="mt-1.5 h-11 w-full rounded-xl border bg-transparent px-3" name="contrasena" type="password" autoComplete="new-password" minLength={12} maxLength={72} required /></label>
-          <label className="block text-sm font-medium">Confirmar contrasena<input className="mt-1.5 h-11 w-full rounded-xl border bg-transparent px-3" name="confirmacion" type="password" autoComplete="new-password" minLength={12} maxLength={72} required /></label>
+          <PasswordInput id="recuperacion-contrasena" label="Nueva contraseña" name="contrasena" value={contrasena} onChange={setContrasena} minLength={12} maxLength={72} />
+          <PasswordInput id="recuperacion-confirmacion" label="Confirmar contraseña" name="confirmacion" value={confirmacion} onChange={setConfirmacion} minLength={12} maxLength={72} showStrength={false} />
         </> : <label className="block text-sm font-medium">Correo<input className="mt-1.5 h-11 w-full rounded-xl border bg-transparent px-3" name="correo" type="email" autoComplete="email" required /></label>}
         {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200" role="alert">{error}</p>}
         <button className="h-11 w-full rounded-xl bg-[#5b0309] px-4 text-sm font-semibold text-white transition hover:bg-[#76131a] disabled:opacity-60" disabled={sending}>{sending ? 'Procesando...' : token ? 'Cambiar contrasena' : 'Enviar enlace'}</button>

@@ -3,11 +3,13 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 
 import { solicitarCuenta } from '../services/api'
+import { PasswordInput } from '../components/ui/PasswordInput'
 
 export function SolicitudCuentaPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
+  const [contrasena, setContrasena] = useState('')
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -24,6 +26,7 @@ export function SolicitudCuentaPage() {
       })
       setMessage(result.detail)
       formElement.reset()
+      setContrasena('')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No se pudo enviar la solicitud.')
     } finally {
@@ -43,7 +46,7 @@ export function SolicitudCuentaPage() {
         <label className="block text-sm font-medium">Nombre completo<input className="mt-1.5 h-11 w-full rounded-xl border bg-transparent px-3" name="nombre_completo" autoComplete="name" minLength={3} maxLength={160} required /></label>
         <label className="block text-sm font-medium">Correo<input className="mt-1.5 h-11 w-full rounded-xl border bg-transparent px-3" name="correo" type="email" autoComplete="email" maxLength={150} required /></label>
         <label className="block text-sm font-medium">Usuario<input className="mt-1.5 h-11 w-full rounded-xl border bg-transparent px-3" name="usuario" autoComplete="username" minLength={3} maxLength={80} required /></label>
-        <label className="block text-sm font-medium">Contrasena<input className="mt-1.5 h-11 w-full rounded-xl border bg-transparent px-3" name="contrasena" type="password" autoComplete="new-password" minLength={12} maxLength={72} required /><span className="mt-1 block text-xs font-normal text-slate-500">Usa al menos 12 caracteres.</span></label>
+        <PasswordInput id="solicitud-contrasena" label="Contraseña" name="contrasena" value={contrasena} onChange={setContrasena} minLength={12} maxLength={72} />
         {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200" role="alert">{error}</p>}
         <button className="h-11 w-full rounded-xl bg-[#5b0309] px-4 text-sm font-semibold text-white transition hover:bg-[#76131a] disabled:opacity-60" disabled={sending}>{sending ? 'Enviando solicitud...' : 'Enviar solicitud'}</button>
       </form>}
