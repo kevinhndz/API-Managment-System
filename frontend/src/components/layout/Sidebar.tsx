@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, LogOut, X } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 import { brandIcon as BrandIcon, navigationItems } from '../../config/navigation'
@@ -15,14 +15,18 @@ interface SidebarProps {
 }
 
 export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onToggle }: SidebarProps) {
-  const { logout } = useAuth()
+  const { user } = useAuth()
+  const esAdministrador = ['admin', 'administrador'].includes(user?.role.toLocaleLowerCase('es') ?? '')
+  const itemsPermitidos = esAdministrador
+    ? navigationItems
+    : navigationItems.filter((item) => ['/estudiantes', '/calificaciones'].includes(item.path))
   const [resizing, setResizing] = useState(false)
   const [groups, setGroups] = useState({ academico: true, oferta: true, operacion: true, administracion: true })
   const groupedNavigation = [
-    { key: 'academico' as const, label: 'Gestión académica', items: navigationItems.filter((item) => ['/aulas', '/docentes', '/carreras', '/estudiantes'].includes(item.path)) },
-    { key: 'oferta' as const, label: 'Oferta y periodos', items: navigationItems.filter((item) => ['/asignaturas', '/periodos', '/secciones'].includes(item.path)) },
-    { key: 'operacion' as const, label: 'Operación académica', items: navigationItems.filter((item) => ['/matriculas', '/calificaciones'].includes(item.path)) },
-    { key: 'administracion' as const, label: 'Administración', items: navigationItems.filter((item) => ['/reportes', '/actividad'].includes(item.path)) },
+    { key: 'academico' as const, label: 'Gestión académica', items: itemsPermitidos.filter((item) => ['/aulas', '/docentes', '/carreras', '/estudiantes'].includes(item.path)) },
+    { key: 'oferta' as const, label: 'Oferta y periodos', items: itemsPermitidos.filter((item) => ['/asignaturas', '/periodos', '/secciones'].includes(item.path)) },
+    { key: 'operacion' as const, label: 'Operación académica', items: itemsPermitidos.filter((item) => ['/matriculas', '/calificaciones'].includes(item.path)) },
+    { key: 'administracion' as const, label: 'Administración', items: itemsPermitidos.filter((item) => ['/reportes', '/actividad'].includes(item.path)) },
   ]
 
   return (
@@ -75,7 +79,7 @@ export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onTogg
         </button>
 
         <nav className={`mt-12 flex-1 space-y-1.5 ${collapsed ? 'lg:px-1' : ''}`} aria-label="Navegación principal">
-          {navigationItems.filter((item) => item.path === '/').map(({ label, path, icon: Icon }) => (
+          {itemsPermitidos.filter((item) => item.path === '/').map(({ label, path, icon: Icon }) => (
             <NavLink
               key={path}
               to={path}
@@ -101,14 +105,6 @@ export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onTogg
           </section>)}
         </nav>
 
-        <button
-          className={`focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-300 ${collapsed ? 'lg:justify-center lg:px-2' : ''}`}
-          type="button"
-          onClick={logout}
-        >
-          <LogOut className="h-[18px] w-[18px]" />
-          <span className={collapsed ? 'lg:hidden' : ''}>Cerrar sesión</span>
-        </button>
       </aside>
     </>
   )

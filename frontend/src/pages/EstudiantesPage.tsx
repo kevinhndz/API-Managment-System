@@ -7,11 +7,14 @@ import { FolderFloat } from '../components/ui/FolderFloat'
 import { estudiantesApi } from '../services/api'
 import type { Estudiante, EstudiantePayload } from '../types/api'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
+import { useAuth } from '../contexts/AuthContext'
 
 const empty: EstudiantePayload = { cuenta: '', nombre: '', correo: '', telefono: '', fechaNacimiento: '2000-01-01', carrera_id: 1, estado: true }
 
 export function EstudiantesPage() {
   const labels = useAcademicLabels()
+  const { user } = useAuth()
+  const esAdministrador = ['admin', 'administrador'].includes(user?.role.toLocaleLowerCase('es') ?? '')
   const [carnet, setCarnet] = useState<PersonCarnetData | null>(null)
   const closeCarnet = useCallback(() => setCarnet(null), [])
 
@@ -23,6 +26,9 @@ export function EstudiantesPage() {
         newLabel="Nuevo estudiante"
         description="Administra el registro y estado del estudiantado."
         service={estudiantesApi}
+        canCreate={esAdministrador}
+        canEdit
+        canDelete={esAdministrador}
         emptyPayload={empty}
         toPayload={(item) => ({ cuenta: item.cuenta, nombre: item.nombre, correo: item.correo, telefono: item.telefono, fechaNacimiento: item.fechaNacimiento, carrera_id: item.carrera_id, estado: item.estado })}
         searchableText={(item) => `${item.cuenta} ${item.nombre} ${item.correo} ${labels.carreras[item.carrera_id] ?? ''}`}
@@ -62,8 +68,12 @@ export function EstudiantesPage() {
           <FolderFloat
             items={[
               { label: 'Ver carnet', value: 'carnet' },
-              { label: 'Editar', value: 'editar' },
-              { label: 'Eliminar', value: 'eliminar' },
+              ...(esAdministrador ? [
+                { label: 'Editar', value: 'editar' },
+                { label: 'Eliminar', value: 'eliminar' },
+              ] : [
+                { label: 'Editar', value: 'editar' },
+              ]),
             ]}
             label="Acciones"
             sublabel="3 opciones"

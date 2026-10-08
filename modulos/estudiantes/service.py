@@ -32,8 +32,8 @@ class EstudiantesService:
         return repo.guardar_estudiante_repository(db, estudiante)
 
     @staticmethod
-    def listar_service(db: Session, pagina_actual: int, limite: int):
-        total, data = repo.listar_repository(db, pagina_actual, limite)
+    def listar_service(db: Session, pagina_actual: int, limite: int, docente_id: int | None = None):
+        total, data = repo.listar_repository(db, pagina_actual, limite, docente_id)
         return RespuestaPaginada[EstudianteResponse](
             total=total,
             pagina_actual=pagina_actual,
@@ -43,15 +43,15 @@ class EstudiantesService:
         )
 
     @staticmethod
-    def buscar_service(db: Session, id: int):
-        check = repo.buscar_repository(db, id)
+    def buscar_service(db: Session, id: int, docente_id: int | None = None):
+        check = repo.buscar_repository(db, id, docente_id)
         if check is None:
             raise RecursoNoEncontradoError("No existe este estudiante")
         return check
 
     @staticmethod
-    def editar_service(db: Session, id: int, json: Revisar_Json_Editar_Estudiante):
-        check = repo.buscar_repository(db, id)
+    def editar_service(db: Session, id: int, json: Revisar_Json_Editar_Estudiante, docente_id: int | None = None):
+        check = repo.buscar_repository(db, id, docente_id)
         if check is None:
             raise RecursoNoEncontradoError("No existe este estudiante")
 
@@ -70,9 +70,9 @@ class EstudiantesService:
 
     @staticmethod
     def editar_parcialmente_service(
-        db: Session, id: int, json: Editar_Parcialmente_Estudiante
+        db: Session, id: int, json: Editar_Parcialmente_Estudiante, docente_id: int | None = None
     ):
-        check = repo.buscar_repository(db, id)
+        check = repo.buscar_repository(db, id, docente_id)
         if check is None:
             raise RecursoNoEncontradoError("No existe este estudiante")
 

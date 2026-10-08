@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { asignaturasApi, aulasApi, carrerasApi, docentesApi, estudiantesApi, matriculasApi, periodosApi, seccionesApi } from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
 
 export type CatalogOption = { label: string; value: string }
 
@@ -27,7 +28,7 @@ const emptyLabels: AcademicLabels = {
   carreraOptions: [], estudianteOptions: [], asignaturaOptions: [], docenteOptions: [], aulaOptions: [], periodoOptions: [], seccionOptions: [], matriculaOptions: [],
 }
 
-let labelsPromise: Promise<AcademicLabels> | null = null
+const labelsPromises = new Map<string, Promise<AcademicLabels>>()
 
 async function cargarTodo<T>(list: (params: { pagina_actual: number; limite: number }) => Promise<{ data: T[]; total_paginas: number }>) {
   const first = await list({ pagina_actual: 1, limite: 100 })
@@ -39,7 +40,24 @@ function crearOpciones<T extends { id: number }>(items: T[], label: (item: T) =>
   return items.map((item) => ({ label: label(item), value: String(item.id) }))
 }
 
-function crearCatalogo(): Promise<AcademicLabels> {
+function crearCatalogo(esDocente: boolean): Promise<AcademicLabels> {
+  if (esDocente) {
+    return Promise.all([cargarTodo(carrerasApi.list), cargarTodo(estudiantesApi.list), cargarTodo(matriculasApi.list)]).then(([carreras, estudiantes, matriculas]) => {
+      const carrerasLabels = Object.fromEntries(carreras.map((item) => [item.id, item.nombre]))
+      const estudiantesLabels = Object.fromEntries(estudiantes.map((item) => [item.id, item.nombre]))
+      const matriculasLabels = Object.fromEntries(matriculas.map((item) => [item.id, `${item.id} · ${estudiantesLabels[item.estudiante_id] ?? 'Estudiante'}`]))
+      return {
+        ...emptyLabels,
+        carreras: carrerasLabels,
+        estudiantes: estudiantesLabels,
+        matriculas: matriculasLabels,
+        carreraOptions: crearOpciones(carreras, (item) => `${item.codigo} · ${item.nombre}`),
+        estudianteOptions: crearOpciones(estudiantes, (item) => `${item.cuenta} · ${item.nombre}`),
+        matriculaOptions: crearOpciones(matriculas, (item) => `${item.id} · ${estudiantesLabels[item.estudiante_id] ?? 'Estudiante'}`),
+      }
+    })
+  }
+
   return Promise.all([cargarTodo(carrerasApi.list), cargarTodo(estudiantesApi.list), cargarTodo(asignaturasApi.list), cargarTodo(docentesApi.list), cargarTodo(aulasApi.list), cargarTodo(periodosApi.list), cargarTodo(seccionesApi.list), cargarTodo(matriculasApi.list)]).then(([carreras, estudiantes, asignaturas, docentes, aulas, periodos, secciones, matriculas]) => {
     const carrerasLabels = Object.fromEntries(carreras.map((item) => [item.id, item.nombre]))
     const estudiantesLabels = Object.fromEntries(estudiantes.map((item) => [item.id, item.nombre]))
@@ -58,12 +76,15 @@ function crearCatalogo(): Promise<AcademicLabels> {
 }
 
 export function useAcademicLabels() {
+  const { user } = useAuth()
   const [labels, setLabels] = useState<AcademicLabels>(emptyLabels)
   useEffect(() => {
     let active = true
-    labelsPromise ??= crearCatalogo()
-    void labelsPromise.then((nextLabels) => { if (active) setLabels(nextLabels) }).catch(() => undefined)
+    const esDocente = user?.role.toLocaleLowerCase('es') === 'docente'
+    const cacheKey = esDocente ? 'docente' : 'administrador'
+    if (!labelsPromises.has(cacheKey)) labelsPromises.set(cacheKey, crearCatalogo(esDocente))
+    void labelsPromises.get(cacheKey)?.then((nextLabels) => { if (active) setLabels(nextLabels) }).catch(() => undefined)
     return () => { active = false }
-  }, [])
+  }, [user?.role])
   return labels
 }

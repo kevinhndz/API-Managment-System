@@ -91,8 +91,8 @@ class MatriculasService:
         return repo.guardar_matricula_repository(db, matricula)
 
     @staticmethod
-    def listar_service(db: Session, pagina_actual: int, limite: int):
-        total, data = repo.listar_repository(db, pagina_actual, limite)
+    def listar_service(db: Session, pagina_actual: int, limite: int, docente_id: int | None = None):
+        total, data = repo.listar_repository(db, pagina_actual, limite, docente_id)
         return RespuestaPaginada[MatriculaResponse](
             total=total,
             pagina_actual=pagina_actual,

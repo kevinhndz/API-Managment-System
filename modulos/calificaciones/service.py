@@ -1,11 +1,12 @@
 from math import ceil
 from sqlalchemy.orm import Session
-from core.excepciones import RecursoDuplicadoError, RecursoNoEncontradoError
+from core.excepciones import AccesoProhibidoError, RecursoDuplicadoError, RecursoNoEncontradoError
 from core.schema import RespuestaPaginada
 from modulos.calificaciones.repository import CalificacionRepository as repo
 from modulos.calificaciones.schema import *
 from modulos.calificaciones.tabla import Calificaciones
 from modulos.matriculas.tabla import Matriculas
+from modulos.secciones.tabla import Secciones
 
 
 class CalificacionesService:
@@ -14,7 +15,7 @@ class CalificacionesService:
         matricula.estado = "APROBADA" if nota_final >= 60 else "REPROBADA"
 
     @staticmethod
-    def crear_service(db: Session, json: Revisar_Json_Crear_Calificacion):
+    def crear_service(db: Session, json: Revisar_Json_Crear_Calificacion, docente_id: int | None = None):
         if repo.check_repository(db, json) is not None:
             raise RecursoDuplicadoError("Ya existe la calificacion")
         matricula = (
@@ -22,6 +23,7 @@ class CalificacionesService:
         )
         if matricula is None:
             raise RecursoNoEncontradoError("No existe esta matricula")
+        CalificacionesService._validar_docente_matricula(db, matricula, docente_id)
         nota = (json.primer_parcial + json.segundo_parcial + json.tercer_parcial) / 3
         calificacion = Calificaciones(
             matricula_id=json.matricula_id,
@@ -35,8 +37,8 @@ class CalificacionesService:
         return repo.guardar_calificacion_repository(db, calificacion)
 
     @staticmethod
-    def listar_service(db: Session, pagina_actual: int, limite: int):
-        total, data = repo.listar_repository(db, pagina_actual, limite)
+    def listar_service(db: Session, pagina_actual: int, limite: int, docente_id: int | None = None):
+        total, data = repo.listar_repository(db, pagina_actual, limite, docente_id)
         return RespuestaPaginada[CalificacionResponse](
             total=total,
             pagina_actual=pagina_actual,
@@ -46,15 +48,15 @@ class CalificacionesService:
         )
 
     @staticmethod
-    def buscar_service(db: Session, id: int):
-        check = repo.buscar_repository(db, id)
+    def buscar_service(db: Session, id: int, docente_id: int | None = None):
+        check = repo.buscar_repository(db, id, docente_id)
         if check is None:
             raise RecursoNoEncontradoError("No existe esta calificacion")
         return check
 
     @staticmethod
-    def editar_service(db: Session, id: int, json: Revisar_Json_Editar_Calificacion):
-        check = CalificacionesService.buscar_service(db, id)
+    def editar_service(db: Session, id: int, json: Revisar_Json_Editar_Calificacion, docente_id: int | None = None):
+        check = CalificacionesService.buscar_service(db, id, docente_id)
         check.primer_parcial = json.primer_parcial
         check.segundo_parcial = json.segundo_parcial
         check.tercer_parcial = json.tercer_parcial
@@ -68,6 +70,7 @@ class CalificacionesService:
             .first()
         )
         if matricula is not None:
+            CalificacionesService._validar_docente_matricula(db, matricula, docente_id)
             CalificacionesService._actualizar_estado_matricula(
                 matricula, check.nota_final
             )
@@ -75,9 +78,9 @@ class CalificacionesService:
 
     @staticmethod
     def editar_parcialmente_service(
-        db: Session, id: int, json: Editar_Parcialmente_Calificacion
+        db: Session, id: int, json: Editar_Parcialmente_Calificacion, docente_id: int | None = None
     ):
-        check = CalificacionesService.buscar_service(db, id)
+        check = CalificacionesService.buscar_service(db, id, docente_id)
         if json.primer_parcial is not None:
             check.primer_parcial = json.primer_parcial
         if json.segundo_parcial is not None:
@@ -95,6 +98,7 @@ class CalificacionesService:
             .first()
         )
         if matricula is not None:
+            CalificacionesService._validar_docente_matricula(db, matricula, docente_id)
             CalificacionesService._actualizar_estado_matricula(
                 matricula, check.nota_final
             )
@@ -104,3 +108,14 @@ class CalificacionesService:
     def eliminar_service(db: Session, id: int):
         check = CalificacionesService.buscar_service(db, id)
         repo.eliminar_calificacion_repository(db, check)
+
+    @staticmethod
+    def _validar_docente_matricula(db: Session, matricula: Matriculas, docente_id: int | None) -> None:
+        if docente_id is None:
+            return
+        asignada = db.query(Secciones.id).filter(
+            Secciones.id == matricula.seccion_id,
+            Secciones.docente_id == docente_id,
+        ).first()
+        if asignada is None:
+            raise AccesoProhibidoError("Solo puedes gestionar calificaciones de tus secciones.")

@@ -22,11 +22,16 @@ def el_vigilante(
         raise CredencialesInvalidasError("Autorizacion requerida")
     datos = verificar_token(token)
     usuario = db.query(Usuarios).filter(Usuarios.id == datos["user_id"]).first()
-    if usuario is None or not usuario.activo:
+    if (
+        usuario is None
+        or not usuario.activo
+        or datos.get("version_token", 0) != usuario.version_token
+    ):
         raise CredencialesInvalidasError("La cuenta no existe o esta desactivada")
 
     datos["user"] = usuario.usuario
     datos["rol"] = usuario.rol
+    datos["docente_id"] = usuario.docente_id
     return datos
 
 
@@ -37,6 +42,8 @@ def permiso_admin(json: dict = Depends(el_vigilante)) -> dict:
 
 
 def permiso_usuario(json: dict = Depends(el_vigilante)) -> dict:
-    if json["rol"] not in ["Docente", "Admin", "Administrador"]:
+    if json.get("rol", "").casefold() not in {"docente", "admin", "administrador"}:
         raise AccesoProhibidoError("No estas autorizado")
+    if json.get("rol", "").casefold() == "docente" and json.get("docente_id") is None:
+        raise AccesoProhibidoError("La cuenta docente no esta vinculada a un registro institucional")
     return json
