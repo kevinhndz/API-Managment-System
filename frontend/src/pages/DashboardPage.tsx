@@ -1,11 +1,11 @@
-import { ArrowUpRight, BookOpen, GraduationCap, RefreshCw, UsersRound } from 'lucide-react'
+import { ArrowUpRight, RefreshCw } from 'lucide-react'
 
 import { ClassroomCapacityChart } from '../components/dashboard/ClassroomCapacityChart'
 import { ClassroomDistributionChart } from '../components/dashboard/ClassroomDistributionChart'
 import { useAuth } from '../contexts/AuthContext'
 import { useDashboardData } from '../hooks/useDashboardData'
 import { CircularCarousel } from '../components/dashboard/CircularCarousel'
-import { AcademicActivityCard } from '../components/dashboard/AcademicActivityCard'
+import { DashboardIndicators } from '../components/dashboard/DashboardIndicators'
 import { Skeleton } from '../components/ui/Skeleton'
 
 const classroomImage = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=85'
@@ -31,10 +31,16 @@ export function DashboardPage() {
   const activeTeachers = data.docentes.filter((docente) => docente.estado).length
   const activePrograms = data.carreras.filter((carrera) => carrera.activo).length
   const activeStudents = data.estudiantes.filter((student) => student.estado).length
-  const openSections = data.secciones.filter((section) => section.estado.toLocaleLowerCase('es') === 'abierta').length
   const activeEnrollments = data.matriculas.filter((enrollment) => enrollment.estado.toLocaleLowerCase('es') === 'activa').length
-  const graded = data.calificaciones.filter((grade) => grade.nota_final !== null && grade.nota_final !== undefined)
-  const averageGrade = graded.length ? (graded.reduce((total, grade) => total + grade.nota_final, 0) / graded.length).toFixed(1) : '—'
+  const graded = data.calificaciones.filter((grade) => grade.nota_final !== null && grade.nota_final !== undefined && String(grade.nota_final).trim() !== '').map((grade) => Number(grade.nota_final)).filter((grade) => Number.isFinite(grade) && grade >= 0 && grade <= 100)
+  const averageGrade = graded.length ? graded.reduce((total, grade) => total + grade, 0) / graded.length : null
+  const sectionCounts = ['Abiertas', 'Cerradas', 'Canceladas'].map((label) => ({ label, value: data.secciones.filter((section) => section.estado.toLocaleLowerCase('es') === label.slice(0, -1).toLocaleLowerCase('es')).length }))
+  const enrollmentCounts = ['Activas', 'Canceladas'].map((label) => ({ label, value: data.matriculas.filter((enrollment) => enrollment.estado.toLocaleLowerCase('es') === label.slice(0, -1).toLocaleLowerCase('es')).length }))
+  const gradeCounts = [
+    { label: '0–59', value: graded.filter((grade) => grade < 60).length },
+    { label: '60–79', value: graded.filter((grade) => grade >= 60 && grade < 80).length },
+    { label: '80–100', value: graded.filter((grade) => grade >= 80).length },
+  ]
   const greeting = user?.name ? `Buenos días, ${user.name.split(' ')[0]}` : 'Buenos días'
 
   return (
@@ -85,12 +91,7 @@ export function DashboardPage() {
         ]} />
       </section>
 
-      <section className="dashboard-reveal grid gap-5 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indicadores académicos">
-        <AcademicActivityCard icon={<UsersRound className="h-10 w-10" />} title="Estudiantes activos" value={activeStudents.toLocaleString('es')} description="Personas con estado activo en el campus" accent="#5b0309" />
-        <AcademicActivityCard icon={<BookOpen className="h-10 w-10" />} title="Secciones abiertas" value={openSections.toLocaleString('es')} description="Clases disponibles para el periodo" accent="#378b64" />
-        <AcademicActivityCard icon={<GraduationCap className="h-10 w-10" />} title="Matrículas activas" value={activeEnrollments.toLocaleString('es')} description="Inscripciones vigentes actualmente" accent="#b7793f" />
-        <AcademicActivityCard icon={<span className="text-4xl font-semibold tabular-nums">{averageGrade}</span>} title="Promedio registrado" value={graded.length ? `${graded.length} evaluadas` : 'Sin datos'} description="Calificaciones con nota final disponible" accent="#24466e" />
-      </section>
+      <DashboardIndicators activeStudents={activeStudents} totalStudents={data.estudiantes.length} sectionCounts={sectionCounts} enrollmentCounts={enrollmentCounts} gradeCounts={gradeCounts} averageGrade={averageGrade} gradedCount={graded.length} />
 
       <section className="dashboard-reveal grid gap-5 xl:grid-cols-[1.25fr_.75fr]" aria-label="Gráficos académicos">
         <ClassroomCapacityChart aulas={data.aulas} />
