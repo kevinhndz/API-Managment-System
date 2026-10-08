@@ -1,16 +1,11 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
-import type { Aula } from '../../types/api'
-
 interface ClassroomCapacityChartProps {
-  aulas: Aula[]
+  aulas: { codigo: string; capacidad: number }[]
 }
 
 export function ClassroomCapacityChart({ aulas }: ClassroomCapacityChartProps) {
-  const data = [...aulas]
-    .sort((first, second) => second.capacidad - first.capacidad)
-    .slice(0, 8)
-    .map((aula) => ({ codigo: aula.codigo, capacidad: aula.capacidad }))
+  const data = aulas
 
   return (
     <article className="berry-surface rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-[0_2px_14px_rgba(32,40,45,.06)] sm:p-6 dark:border-white/10 dark:bg-[#211e2b]">

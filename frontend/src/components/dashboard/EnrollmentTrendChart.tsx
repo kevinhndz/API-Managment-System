@@ -1,29 +1,20 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
-import type { Matricula } from '../../types/api'
-
 interface EnrollmentTrendChartProps {
-  matriculas: Matricula[]
+  trend: { mes: number; activas: number; canceladas: number; finalizadas: number }[]
   year: number
   periodLabel: string
 }
 
 const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
-export function EnrollmentTrendChart({ matriculas, year, periodLabel }: EnrollmentTrendChartProps) {
-  const data = months.map((month, index) => {
-    const records = matriculas.filter((matricula) => {
-      const [recordYear, recordMonth] = matricula.fecha_matricula.slice(0, 10).split('-').map(Number)
-      return recordYear === year && recordMonth === index + 1
-    })
-
-    return {
-      month,
-      activas: records.filter((record) => record.estado.toLocaleUpperCase('es') === 'ACTIVA').length,
-      canceladas: records.filter((record) => record.estado.toLocaleUpperCase('es') === 'CANCELADA').length,
-      finalizadas: records.filter((record) => ['APROBADA', 'REPROBADA'].includes(record.estado.toLocaleUpperCase('es'))).length,
-    }
-  })
+export function EnrollmentTrendChart({ trend, year, periodLabel }: EnrollmentTrendChartProps) {
+  const data = months.map((month, index) => ({
+    month,
+    activas: trend[index]?.activas ?? 0,
+    canceladas: trend[index]?.canceladas ?? 0,
+    finalizadas: trend[index]?.finalizadas ?? 0,
+  }))
   const total = data.reduce((sum, month) => sum + month.activas + month.canceladas + month.finalizadas, 0)
 
   return (

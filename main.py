@@ -15,6 +15,7 @@ from modulos.login.tabla import Usuarios
 from modulos.auditoria.router import router as router_auditoria
 from modulos.auditoria.registro import identificar_usuario, usuario_actual
 from modulos.solicitudes_cuenta.router import router as router_solicitudes_cuenta
+from modulos.dashboard.router import router as router_dashboard
 from core.escuchadores import ExcepcionesGlobales as eg
 from modulos.carreras.tabla import Carreras
 from modulos.estudiantes.tabla import Estudiantes
@@ -63,4 +64,5 @@ app.include_router(router_reportes)
 app.include_router(router_auditoria, dependencies=[Depends(permiso_admin)])
 app.include_router(router_login)
 app.include_router(router_solicitudes_cuenta)
+app.include_router(router_dashboard)
 eg.directorio(app)
