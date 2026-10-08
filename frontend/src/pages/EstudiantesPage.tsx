@@ -8,12 +8,14 @@ import { estudiantesApi } from '../services/api'
 import type { Estudiante, EstudiantePayload } from '../types/api'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 
 const empty: EstudiantePayload = { cuenta: '', nombre: '', correo: '', telefono: '', fechaNacimiento: '2000-01-01', carrera_id: 1, estado: true }
 
 export function EstudiantesPage() {
   const labels = useAcademicLabels()
   const { user } = useAuth()
+  const { theme } = useTheme()
   const esAdministrador = ['admin', 'administrador'].includes(user?.role.toLocaleLowerCase('es') ?? '')
   const [carnet, setCarnet] = useState<PersonCarnetData | null>(null)
   const closeCarnet = useCallback(() => setCarnet(null), [])
@@ -80,11 +82,11 @@ export function EstudiantesPage() {
             trigger="hover"
             closeOnSelect
             physics
-            folderColor="#5b0309"
-            frontColor="#8f1721"
-            paperColor="#fff8f4"
-            itemColor="#fff4f2"
-            itemTextColor="#351215"
+            folderColor={theme === 'dark' ? '#4c2b8f' : '#5b0309'}
+            frontColor={theme === 'dark' ? '#7048c6' : '#8f1721'}
+            paperColor={theme === 'dark' ? '#e9ddff' : '#fff8f4'}
+            itemColor={theme === 'dark' ? '#302a43' : '#fff4f2'}
+            itemTextColor={theme === 'dark' ? '#f5f3ff' : '#351215'}
             labelColor="#fff8f4"
             width={92}
             height={28}

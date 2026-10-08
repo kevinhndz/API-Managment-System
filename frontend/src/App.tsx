@@ -25,7 +25,7 @@ const ActividadPage = lazy(() => import('./pages/ActividadPage').then((module) =
 const SolicitudesCuentaPage = lazy(() => import('./pages/SolicitudesCuentaPage').then((module) => ({ default: module.SolicitudesCuentaPage })))
 
 function PageLoader() {
-  return <div className="h-72 animate-pulse rounded-2xl border bg-[#fffdf8] dark:bg-stone-900" aria-label="Cargando página" />
+  return <div className="h-72 animate-pulse rounded-2xl border bg-[#fffdf8] dark:border-[#39334b] dark:bg-[#242033]" aria-label="Cargando página" />
 }
 
 function HomeRoute() {

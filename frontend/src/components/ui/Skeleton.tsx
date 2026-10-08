@@ -4,7 +4,7 @@ interface SkeletonProps {
 }
 
 export function Skeleton({ className = '', lines = 1 }: SkeletonProps) {
-  return <span className={`block animate-pulse rounded-lg bg-slate-200/80 dark:bg-stone-800 ${className}`} aria-hidden="true">{lines > 1 && <span className="sr-only">Cargando contenido</span>}</span>
+  return <span className={`block animate-pulse rounded-lg bg-slate-200/80 dark:bg-[#302a43] ${className}`} aria-hidden="true">{lines > 1 && <span className="sr-only">Cargando contenido</span>}</span>
 }
 
 export function TableSkeleton({ columns = 5, rows = 6 }: { columns?: number; rows?: number }) {

@@ -1,0 +1,6 @@
+.berry-dashboard{background:#eef2f6;color:#121926}
+.berry-note-card{background:linear-gradient(135deg,#5e35b1,#4527a0)}
+.berry-refresh-button{transition:background-color 160ms ease,color 160ms ease}
+.berry-surface{color:#121926}
+.dark .berry-dashboard{background:#191625;color:#f9f7ff}
+@media (prefers-reduced-motion:reduce){.berry-refresh-button{transition:none}}

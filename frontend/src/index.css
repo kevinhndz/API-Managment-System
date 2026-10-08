@@ -11,21 +11,25 @@
 
   :root.dark {
     color-scheme: dark;
-    --app-dark-background: #261f1d;
-    --app-dark-surface: #302624;
-    --app-dark-raised: #3b2e2b;
-    --app-dark-input: #211a19;
-    --app-dark-border: #4b3a36;
+    --app-dark-background: #191625;
+    --app-dark-surface: #242033;
+    --app-dark-raised: #302a43;
+    --app-dark-input: #211e2b;
+    --app-dark-border: #39334b;
   }
 
   * {
-    @apply border-slate-200 dark:border-[#4b3a36];
+    @apply border-slate-200 dark:border-[#39334b];
   }
 
   body {
-    @apply m-0 min-w-80 bg-[#faf9f6] text-[#1a1c1a] antialiased dark:bg-[#261f1d] dark:text-stone-100;
+    @apply m-0 min-w-80 bg-[#faf9f6] text-[#1a1c1a] antialiased dark:bg-[#191625] dark:text-stone-100;
     font-family: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
     background-image: radial-gradient(circle at 12% 10%, rgb(91 3 9 / 0.045), transparent 25rem), radial-gradient(circle at 85% 45%, rgb(212 154 69 / 0.07), transparent 22rem);
+  }
+
+  .dark body {
+    background-image: radial-gradient(circle at 12% 10%, rgb(94 53 177 / 0.12), transparent 25rem), radial-gradient(circle at 85% 45%, rgb(124 92 190 / 0.08), transparent 22rem);
   }
 
   button,
@@ -46,11 +50,11 @@
   }
 
   .focus-ring {
-    @apply outline-none ring-offset-2 ring-offset-white focus-visible:ring-2 focus-visible:ring-sage-500 dark:ring-offset-[#261f1d];
+    @apply outline-none ring-offset-2 ring-offset-white focus-visible:ring-2 focus-visible:ring-sage-500 dark:ring-offset-[#191625] dark:focus-visible:ring-violet-400;
   }
 
   .glass-card {
-    @apply border border-white/70 bg-white/65 shadow-[0_18px_55px_-35px_rgb(38_28_22_/_0.55)] backdrop-blur-xl dark:border-white/10 dark:bg-stone-900/60;
+    @apply border border-white/70 bg-white/65 shadow-[0_18px_55px_-35px_rgb(38_28_22_/_0.55)] backdrop-blur-xl dark:border-white/10 dark:bg-[#242033]/90;
   }
 
   .morphing-loader {
@@ -77,20 +81,20 @@
   .progress-status__track { position: relative; height: .65rem; overflow: hidden; border-radius: 999px; background: #f1dfdf; }
   .progress-status__bar { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #5b0309, #b45f63); transition: width 300ms ease; }
   .progress-status__bar.is-indeterminate { width: 42%; animation: progress-slide 1.25s ease-in-out infinite; }
-  .dark .progress-status { color: #fecdd3; }
-  .dark .progress-status__track { background: #3a2528; }
-  .dark .progress-status__bar { background: linear-gradient(90deg, #be6870, #fda4af); }
+  .dark .progress-status { color: #ddd6fe; }
+  .dark .progress-status__track { background: #302a43; }
+  .dark .progress-status__bar { background: linear-gradient(90deg, #5e35b1, #a78bfa); }
   @keyframes progress-slide { 0% { transform: translateX(-115%); } 100% { transform: translateX(270%); } }
 
   .action-menu__popover { position: absolute; right: 0; top: calc(100% + .4rem); z-index: 50; min-width: 9.5rem; overflow: hidden; border: 1px solid rgb(227 226 223 / .9); border-radius: .85rem; background: #fffdf8; padding: .3rem; box-shadow: 0 18px 40px -20px rgb(39 25 24 / .5); animation: action-menu-enter 140ms ease-out both; }
-  .dark .action-menu__popover { border-color: #4b3a36; background: #302624; }
+  .dark .action-menu__popover { border-color: #39334b; background: #242033; }
   .action-menu__item { display: flex; width: 100%; align-items: center; gap: .6rem; border-radius: .6rem; padding: .6rem .7rem; font-size: .8rem; font-weight: 600; text-align: left; transition: background-color 140ms ease, color 140ms ease; }
   .action-menu__item--edit { color: #574240; }
   .action-menu__item--edit:hover { background: #f4f0ec; color: #5b0309; }
   .action-menu__item--delete { color: #b14444; }
   .action-menu__item--delete:hover { background: #fff0ef; color: #9b2525; }
   .dark .action-menu__item--edit { color: #e7e5e4; }
-  .dark .action-menu__item--edit:hover { background: #453532; color: #fecdd3; }
+  .dark .action-menu__item--edit:hover { background: #302a43; color: #ddd6fe; }
   .dark .action-menu__item--delete:hover { background: #51292b; color: #fda4af; }
   @keyframes action-menu-enter { from { opacity: 0; transform: translateY(-4px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
@@ -120,7 +124,7 @@
   .circular-carousel__stage.is-dragging { cursor: grabbing; }
   .circular-carousel__stage:focus-visible { outline: 2px solid #5b0309; outline-offset: -4px; border-radius: 20px; }
   .circular-carousel__card { position: absolute; top: 50%; left: 50%; display: block; width: clamp(190px, 28vw, 340px); aspect-ratio: 1; overflow: hidden; border: 1px solid rgb(255 255 255 / .5); border-radius: 24px; background: #171817; color: #fff; text-align: left; cursor: pointer; backface-visibility: hidden; box-shadow: 0 24px 48px -22px rgb(24 18 20 / .65); transform-style: preserve-3d; transition: transform 240ms var(--ease-in-out), opacity 180ms ease, border-color 180ms ease; user-select: none; }
-  .dark .circular-carousel__card { border-color: rgb(241 215 195 / .2); background: #302624; }
+  .dark .circular-carousel__card { border-color: rgb(221 214 254 / .2); background: #242033; }
   .circular-carousel__stage.is-dragging .circular-carousel__card { transition: none; }
   .circular-carousel__card img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
   .circular-carousel__shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgb(10 10 10 / .04) 38%, rgb(10 10 10 / .84) 100%); pointer-events: none; }
@@ -131,12 +135,12 @@
   .circular-carousel__card.is-previewed .circular-carousel__card-details,
   .circular-carousel__card:focus-visible .circular-carousel__card-details { opacity: 1; transform: translateY(0); }
   .circular-carousel__card:focus-visible { outline: 3px solid #5b0309; outline-offset: 4px; }
-  .dark .circular-carousel__arrow { border-color: rgb(255 255 255 / .14); background: rgb(43 37 36 / .9); color: #ffc5c5; }
-  .dark .circular-carousel__position { color: #c5aaa7; }
+  .dark .circular-carousel__arrow { border-color: rgb(255 255 255 / .14); background: rgb(36 32 51 / .92); color: #ddd6fe; }
+  .dark .circular-carousel__position { color: #c4b5fd; }
   .circular-carousel__empty { padding: 48px 20px; color: #806b68; text-align: center; }
   @media (hover: hover) and (pointer: fine) {
     .circular-carousel__arrow:hover { background: #fff; transform: scale(1.06); }
-    .dark .circular-carousel__arrow:hover { background: #403635; }
+    .dark .circular-carousel__arrow:hover { background: #302a43; }
     .circular-carousel__card:hover .circular-carousel__card-details { opacity: 1; transform: translateY(0); }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -204,7 +208,7 @@
   }
 
   .dark .warm-grid {
-    background-image: radial-gradient(circle at 18% 10%, rgb(159 73 74 / .075), transparent 24rem), radial-gradient(circle at 86% 52%, rgb(183 127 78 / .065), transparent 26rem);
+    background-image: radial-gradient(circle at 18% 10%, rgb(94 53 177 / .12), transparent 24rem), radial-gradient(circle at 86% 52%, rgb(124 92 190 / .08), transparent 26rem);
   }
 
   @keyframes stars-twinkle {
