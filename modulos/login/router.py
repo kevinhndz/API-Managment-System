@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from core.config import settings
 from database.almacen import abrir_puerta_bd
 from utils.auth import permiso_admin
-from modulos.login.schema import LoginRequest, Revisar_Json_Crear_Usuario, SesionResponse, TokenResponse, UsuarioResponse
+from modulos.login.schema import LoginRequest, Revisar_Json_Crear_Usuario, SesionResponse, UsuarioResponse
 from modulos.login.service import LoginService as s
 
 router = APIRouter(prefix="/login", tags=["Login"])
@@ -19,17 +19,6 @@ def _establecer_cookie_sesion(response: Response, token: str) -> None:
         samesite="lax",
         path="/",
     )
-
-
-@router.post("/", response_model=TokenResponse)
-def iniciar_sesion(
-    json: LoginRequest,
-    response: Response,
-    db: Session = Depends(abrir_puerta_bd),
-):
-    token = s.login_service(db, json)
-    _establecer_cookie_sesion(response, token)
-    return TokenResponse(token=token)
 
 
 @router.post("/sesion", response_model=SesionResponse)

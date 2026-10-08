@@ -11,6 +11,13 @@ def test_api_registra_los_modulos_academicos():
     assert esperadas.issubset(rutas)
 
 
+def test_login_web_tiene_una_sola_ruta_de_inicio_de_sesion():
+    rutas = app.openapi()['paths']
+    assert '/login/sesion' in rutas
+    assert 'post' in rutas['/login/sesion']
+    assert '/login/' not in rutas
+
+
 def test_modulos_crud_exponen_operaciones_principales():
     operaciones = {(ruta, metodo.upper()) for ruta, definicion in app.openapi()['paths'].items() for metodo in definicion}
     for modulo in ('estudiantes', 'asignaturas', 'periodos', 'secciones', 'matriculas', 'calificaciones'):
