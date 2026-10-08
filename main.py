@@ -14,6 +14,7 @@ from modulos.login.router import router as router_login
 from modulos.login.tabla import Usuarios
 from modulos.auditoria.router import router as router_auditoria
 from modulos.auditoria.registro import identificar_usuario, usuario_actual
+from modulos.solicitudes_cuenta.router import router as router_solicitudes_cuenta
 from core.escuchadores import ExcepcionesGlobales as eg
 from modulos.carreras.tabla import Carreras
 from modulos.estudiantes.tabla import Estudiantes
@@ -51,14 +52,15 @@ async def contexto_auditoria(request, call_next):
 
 app.include_router(router_aulas, dependencies=[Depends(permiso_admin)])
 app.include_router(router_docentes, dependencies=[Depends(permiso_admin)])
-app.include_router(router_carreras, dependencies=[Depends(permiso_admin)])
-app.include_router(router_estudiantes, dependencies=[Depends(permiso_admin)])
+app.include_router(router_carreras)
+app.include_router(router_estudiantes)
 app.include_router(router_asignaturas, dependencies=[Depends(permiso_admin)])
 app.include_router(router_periodos, dependencies=[Depends(permiso_admin)])
 app.include_router(router_secciones, dependencies=[Depends(permiso_admin)])
-app.include_router(router_matriculas, dependencies=[Depends(permiso_admin)])
-app.include_router(router_calificaciones, dependencies=[Depends(permiso_admin)])
+app.include_router(router_matriculas)
+app.include_router(router_calificaciones)
 app.include_router(router_reportes, dependencies=[Depends(permiso_admin)])
 app.include_router(router_auditoria, dependencies=[Depends(permiso_admin)])
 app.include_router(router_login)
+app.include_router(router_solicitudes_cuenta)
 eg.directorio(app)
