@@ -1,5 +1,5 @@
-import { createContext, useContext, useMemo, useState, type PropsWithChildren } from 'react'
-import { cerrarSesion, iniciarSesion } from '../services/api'
+import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
+import { cerrarSesion, iniciarSesion, obtenerSesionActual } from '../services/api'
 
 interface User {
   name: string
@@ -10,41 +10,51 @@ interface User {
 interface AuthContextValue {
   user: User | null
   isAuthenticated: boolean
+  isLoading: boolean
   login: (usuario: string, password: string) => Promise<void>
   logout: () => void
 }
 
-const SESSION_KEY = 'campusflow.session'
-const USER_KEY = 'campusflow.user'
-
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function readStoredUser(): User | null {
-  localStorage.removeItem(USER_KEY)
-  localStorage.removeItem(SESSION_KEY)
-  return null
-}
-
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [user, setUser] = useState<User | null>(readStoredUser)
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    let mounted = true
+    obtenerSesionActual()
+      .then((session) => {
+        if (mounted) setUser({ name: session.usuario, email: session.correo ?? '', role: session.rol })
+      })
+      .catch(() => {
+        if (mounted) setUser(null)
+      })
+      .finally(() => {
+        if (mounted) setIsLoading(false)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       isAuthenticated: user !== null,
+      isLoading,
       login: async (usuario, password) => {
         await iniciarSesion(usuario, password)
-        const nextUser = { name: usuario, email: usuario, role: 'Gestión académica' }
-        setUser(nextUser)
+        const session = await obtenerSesionActual()
+        setUser({ name: session.usuario, email: session.correo ?? '', role: session.rol })
       },
       logout: () => {
-        localStorage.removeItem(SESSION_KEY)
-        localStorage.removeItem(USER_KEY)
         void cerrarSesion().catch(() => undefined)
         setUser(null)
       },
     }),
-    [user],
+    [user, isLoading],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

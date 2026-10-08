@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, BookOpen, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
 import { useAuth } from '../contexts/AuthContext'
@@ -126,6 +126,11 @@ export function LoginPage() {
                 {!isSubmitting && <ArrowRight className="h-4 w-4" />}
               </button>
             </form>
+
+            <div className="mt-5 flex flex-wrap justify-between gap-3 text-sm">
+              <Link className="text-[#8f252b] hover:underline dark:text-rose-200" to="/recuperar-contrasena">Olvide mi contrasena</Link>
+              <Link className="font-semibold text-[#5b0309] hover:underline dark:text-rose-200" to="/solicitar-cuenta">Solicitar una cuenta</Link>
+            </div>
 
           </div>
         </div>

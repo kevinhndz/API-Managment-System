@@ -17,6 +17,57 @@ export async function iniciarSesion(usuario: string, contrasena: string) {
   return request<{ autenticada: boolean }>('/login/sesion', { method: 'POST', body: JSON.stringify({ usuario, contrasena }) })
 }
 
+export interface SesionActual {
+  usuario: string
+  correo: string | null
+  rol: string
+}
+
+export function obtenerSesionActual() {
+  return request<SesionActual>('/login/actual')
+}
+
+export function solicitarRecuperacion(correo: string) {
+  return request<{ detail: string }>('/login/recuperacion', {
+    method: 'POST',
+    body: JSON.stringify({ correo }),
+  })
+}
+
+export function restablecerContrasena(token: string, contrasena: string) {
+  return request<{ detail: string }>('/login/recuperacion/confirmar', {
+    method: 'POST',
+    body: JSON.stringify({ token, contrasena }),
+  })
+}
+
+export interface SolicitudCuenta {
+  id: number
+  nombre_completo: string
+  correo: string
+  usuario: string
+  estado: string
+  created_at: string
+}
+
+export function solicitarCuenta(datos: { nombre_completo: string; correo: string; usuario: string; contrasena: string }) {
+  return request<{ detail: string }>('/solicitudes-cuenta/', {
+    method: 'POST',
+    body: JSON.stringify(datos),
+  })
+}
+
+export function listarSolicitudesCuenta() {
+  return request<SolicitudCuenta[]>('/solicitudes-cuenta/')
+}
+
+export function revisarSolicitudCuenta(id: number, decision: 'aprobar' | 'rechazar', rol?: 'Docente' | 'Administrador', docente_id?: number) {
+  return request<SolicitudCuenta>(`/solicitudes-cuenta/${id}/${decision}`, {
+    method: 'POST',
+    body: decision === 'aprobar' ? JSON.stringify({ rol, docente_id: rol === 'Docente' ? docente_id : null }) : undefined,
+  })
+}
+
 export async function cerrarSesion() {
   return request<void>('/login/cerrar', { method: 'POST' })
 }
