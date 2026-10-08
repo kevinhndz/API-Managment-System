@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { History } from 'lucide-react'
 
 import { listarActividad, type AuditEvent } from '../services/api'
+import { ExpandableSearchBar } from '../components/ui/ExpandableSearchBar'
 
 const fieldClass = 'focus-ring h-10 rounded-xl border bg-[#faf7f0] px-3 text-sm dark:bg-stone-950'
 
@@ -48,7 +49,7 @@ export function ActividadPage() {
           <option value="">Todas las acciones</option>
           {['CREAR', 'EDITAR', 'ELIMINAR', 'EXPORTAR'].map((item) => <option key={item} value={item}>{item}</option>)}
         </select>
-        <input aria-label="Buscar usuario" className={fieldClass} placeholder="Buscar usuario" value={usuario} onChange={(event) => setUsuario(event.target.value)} />
+        <ExpandableSearchBar ariaLabel="Buscar usuario" placeholder="Buscar usuario" value={usuario} onChange={setUsuario} width={220} />
         <input aria-label="Desde" className={fieldClass} type="date" value={desde} onChange={(event) => setDesde(event.target.value)} />
         <input aria-label="Hasta" className={fieldClass} type="date" min={desde} value={hasta} onChange={(event) => setHasta(event.target.value)} />
       </div>

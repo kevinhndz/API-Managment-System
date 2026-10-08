@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 
 import type { CrudService } from '../../services/api'
@@ -7,6 +7,7 @@ import { usePagination } from '../../hooks/usePagination'
 import { Modal } from '../ui/Modal'
 import { TableSkeleton } from '../ui/Skeleton'
 import { ActionMenu } from '../ui/ActionMenu'
+import { ExpandableSearchBar } from '../ui/ExpandableSearchBar'
 
 interface EntityWithId {
   id: number
@@ -182,10 +183,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
 
       <section className="overflow-hidden rounded-2xl border bg-[#fffdf8] shadow-panel dark:bg-stone-900">
         <div className="flex flex-col justify-between gap-3 border-b p-4 sm:flex-row sm:items-center">
-          <label className="relative block w-full sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input className="focus-ring h-10 w-full rounded-xl border bg-[#faf7f0] pl-10 pr-4 text-sm placeholder:text-slate-400 dark:bg-stone-950" value={query} onChange={(event) => { setQuery(event.target.value); resource.setPage(1) }} placeholder={`Buscar ${title.toLocaleLowerCase('es')}…`} />
-          </label>
+          <ExpandableSearchBar ariaLabel={`Buscar ${title.toLocaleLowerCase('es')}`} value={query} onChange={(value) => { setQuery(value); resource.setPage(1) }} placeholder={`Buscar ${title.toLocaleLowerCase('es')}…`} width={280} />
           <div className="flex flex-wrap items-center gap-3"><p className="text-xs text-slate-400">{resource.total} registros</p>{hasStatus && <select className="focus-ring h-10 rounded-xl border bg-[#faf7f0] px-3 text-xs font-semibold text-slate-600 dark:bg-stone-950 dark:text-slate-300" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); resource.setPage(1) }} aria-label="Filtrar por estado"><option value="todos">Todos los estados</option>{availableStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>}<p className="w-full text-xs font-medium text-[#8a716f] sm:w-auto">{statusFilter === 'todos' ? `Se encontraron ${filteredItems.length} registros en esta página` : `Se encontraron ${filteredItems.length} registros con estado ${availableStatusOptions.find((option) => option.value === statusFilter)?.label?.toLocaleLowerCase('es') ?? statusFilter}`}</p></div>
         </div>
 
