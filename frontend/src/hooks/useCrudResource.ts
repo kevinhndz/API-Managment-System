@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import type { CrudService } from '../services/api'
+import { dashboardQueryKey, queryClient } from '../lib/queryClient'
 
 export function useCrudResource<T, TPayload>(service: CrudService<T, TPayload>, limit = 10, busqueda = '') {
   const [items, setItems] = useState<T[]>([])
@@ -36,6 +37,7 @@ export function useCrudResource<T, TPayload>(service: CrudService<T, TPayload>, 
     try {
       await action()
       await load()
+      void queryClient.invalidateQueries({ queryKey: dashboardQueryKey })
       return true
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'No se pudo guardar el registro.')

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
 import { cerrarSesion, iniciarSesion, obtenerSesionActual } from '../services/api'
+import { queryClient } from '../lib/queryClient'
 
 interface User {
   name: string
@@ -46,11 +47,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
       isLoading,
       login: async (usuario, password) => {
         await iniciarSesion(usuario, password)
+        queryClient.clear()
         const session = await obtenerSesionActual()
         setUser({ name: session.usuario, email: session.correo ?? '', role: session.rol })
       },
       logout: () => {
         void cerrarSesion().catch(() => undefined)
+        queryClient.clear()
         setUser(null)
       },
     }),

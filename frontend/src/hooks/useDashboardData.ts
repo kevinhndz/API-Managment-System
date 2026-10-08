@@ -1,67 +1,41 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
-import { asignaturasApi, aulasApi, calificacionesApi, carrerasApi, docentesApi, estudiantesApi, matriculasApi, periodosApi, seccionesApi } from '../services/api'
-import type { DashboardData, PaginatedResponse, PaginationParams } from '../types/api'
+import { dashboardQueryKey } from '../lib/queryClient'
+import { dashboardApi } from '../services/api'
+import type { DashboardResumen } from '../types/api'
 
-const emptyData: DashboardData = { aulas: [], docentes: [], carreras: [], estudiantes: [], asignaturas: [], periodos: [], secciones: [], matriculas: [], calificaciones: [] }
-
-type ListarPagina<T> = (params?: PaginationParams) => Promise<PaginatedResponse<T>>
-
-async function listarTodosLosRegistros<T>(listar: ListarPagina<T>) {
-  const primeraPagina = await listar({ pagina_actual: 1, limite: 100 })
-  const registros = [...primeraPagina.data]
-
-  for (let pagina = 2; pagina <= primeraPagina.total_paginas; pagina += 1) {
-    const respuesta = await listar({ pagina_actual: pagina, limite: 100 })
-    registros.push(...respuesta.data)
-  }
-
-  return registros
+const emptySummary: DashboardResumen = {
+  anio: new Date().getFullYear(),
+  periodo: null,
+  estudiantes: { total: 0, activos: 0 },
+  docentes: { activos: 0 },
+  carreras: { activas: 0 },
+  aulas: { total: 0, activas: 0, capacidad_total: 0 },
+  aulas_mayor_capacidad: [],
+  edificios: [],
+  secciones: { total: 0, abiertas: 0, cerradas: 0, canceladas: 0, otros_estados: 0 },
+  matriculas: {
+    activas: 0,
+    tendencia: Array.from({ length: 12 }, (_, index) => ({ mes: index + 1, activas: 0, canceladas: 0, finalizadas: 0 })),
+  },
+  calificaciones: { cantidad: 0, promedio: null },
+  cupos_ocupados: 0,
+  capacidad_secciones_abiertas: 0,
+  asignaturas_total: 0,
+  periodos_total: 0,
 }
 
 export function useDashboardData() {
-  const [data, setData] = useState<DashboardData>(emptyData)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const query = useQuery({
+    queryKey: dashboardQueryKey,
+    queryFn: dashboardApi.resumen,
+  })
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError('')
-
-    const [aulas, docentes, carreras, estudiantes, asignaturas, periodos, secciones, matriculas, calificaciones] = await Promise.allSettled([
-      listarTodosLosRegistros(aulasApi.list),
-      listarTodosLosRegistros(docentesApi.list),
-      listarTodosLosRegistros(carrerasApi.list),
-      listarTodosLosRegistros(estudiantesApi.list),
-      listarTodosLosRegistros(asignaturasApi.list),
-      listarTodosLosRegistros(periodosApi.list),
-      listarTodosLosRegistros(seccionesApi.list),
-      listarTodosLosRegistros(matriculasApi.list),
-      listarTodosLosRegistros(calificacionesApi.list),
-    ])
-
-    setData({
-      aulas: aulas.status === 'fulfilled' ? aulas.value : [],
-      docentes: docentes.status === 'fulfilled' ? docentes.value : [],
-      carreras: carreras.status === 'fulfilled' ? carreras.value : [],
-      estudiantes: estudiantes.status === 'fulfilled' ? estudiantes.value : [],
-      asignaturas: asignaturas.status === 'fulfilled' ? asignaturas.value : [],
-      periodos: periodos.status === 'fulfilled' ? periodos.value : [],
-      secciones: secciones.status === 'fulfilled' ? secciones.value : [],
-      matriculas: matriculas.status === 'fulfilled' ? matriculas.value : [],
-      calificaciones: calificaciones.status === 'fulfilled' ? calificaciones.value : [],
-    })
-
-    if ([aulas, docentes, carreras, estudiantes, asignaturas, periodos, secciones, matriculas, calificaciones].some((result) => result.status === 'rejected')) {
-      setError('Algunos indicadores no pudieron sincronizarse con la API.')
-    }
-
-    setLoading(false)
-  }, [])
-
-  useEffect(() => {
-    void load()
-  }, [load])
-
-  return { data, loading, error, refresh: load }
+  return {
+    data: query.data ?? emptySummary,
+    loading: query.isPending,
+    refreshing: query.isFetching,
+    error: query.error instanceof Error ? query.error.message : '',
+    refresh: query.refetch,
+  }
 }

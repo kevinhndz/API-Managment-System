@@ -7,7 +7,7 @@ import type {
   DocentePayload,
   PaginatedResponse,
   PaginationParams,
-  Estudiante, EstudiantePayload, Asignatura, AsignaturaPayload, Periodo, PeriodoPayload, Seccion, SeccionPayload, Matricula, MatriculaPayload, Calificacion, CalificacionPayload,
+  Estudiante, EstudiantePayload, Asignatura, AsignaturaPayload, Periodo, PeriodoPayload, Seccion, SeccionPayload, Matricula, MatriculaPayload, Calificacion, CalificacionPayload, DashboardResumen,
 } from '../types/api'
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')
@@ -184,6 +184,12 @@ export const periodosApi = createCrudService<Periodo, PeriodoPayload>('/periodos
 export const seccionesApi = createCrudService<Seccion, SeccionPayload>('/secciones')
 export const matriculasApi = createCrudService<Matricula, MatriculaPayload>('/matriculas')
 export const calificacionesApi = createCrudService<Calificacion, CalificacionPayload>('/calificaciones')
+
+export const dashboardApi = {
+  resumen() {
+    return request<DashboardResumen>('/dashboard/resumen')
+  },
+}
 
 export type ReportModule = 'matriculas' | 'secciones' | 'estudiantes' | 'docentes' | 'calificaciones'
 export type ReportFormat = 'xlsx' | 'pdf'

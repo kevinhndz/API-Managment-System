@@ -69,3 +69,21 @@ export interface DashboardData {
   matriculas: Matricula[]
   calificaciones: Calificacion[]
 }
+
+export interface DashboardResumen {
+  anio: number
+  periodo: { anio: number; numero: number } | null
+  estudiantes: { total: number; activos: number }
+  docentes: { activos: number }
+  carreras: { activas: number }
+  aulas: { total: number; activas: number; capacidad_total: number }
+  aulas_mayor_capacidad: { codigo: string; capacidad: number }[]
+  edificios: { nombre: string; aulas_activas: number; aulas_totales: number; ocupacion: number | null; capacidad: number }[]
+  secciones: { total: number; abiertas: number; cerradas: number; canceladas: number; otros_estados: number }
+  matriculas: { activas: number; tendencia: { mes: number; activas: number; canceladas: number; finalizadas: number }[] }
+  calificaciones: { cantidad: number; promedio: number | null }
+  cupos_ocupados: number
+  capacidad_secciones_abiertas: number
+  asignaturas_total: number
+  periodos_total: number
+}
