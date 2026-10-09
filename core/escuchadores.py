@@ -4,7 +4,8 @@ from core.excepciones import (
     RecursoNoEncontradoError, 
     RecursoDuplicadoError,
     CredencialesInvalidasError,
-    AccesoProhibidoError
+    AccesoProhibidoError,
+    IntentosInicioSesionLimitadosError,
 )
 
 
@@ -38,15 +39,23 @@ class ExcepcionesGlobales:
             content={"detail": exc.mensaje}
         )
 
+    @staticmethod
+    def intentos_inicio_sesion_limitados(request: Request, exc: IntentosInicioSesionLimitadosError):
+        return JSONResponse(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            content={"detail": exc.mensaje},
+            headers={"Retry-After": str(exc.segundos_restantes)},
+        )
+
     @classmethod
     def directorio(cls, app: FastAPI) -> None:
         app.add_exception_handler(RecursoNoEncontradoError, cls.recurso_no_encontrado)
         app.add_exception_handler(RecursoDuplicadoError, cls.recurso_duplicado)
         app.add_exception_handler(CredencialesInvalidasError, cls.credenciales_invalidas)
         app.add_exception_handler(AccesoProhibidoError, cls.acceso_prohibido)
+        app.add_exception_handler(IntentosInicioSesionLimitadosError, cls.intentos_inicio_sesion_limitados)
         
 """Cuando se lanza un error(se instacia la clase mejor dicho) FAST API revisa en  escuchadores
         y pregunta ¿Tengo registrado 'AccesoProhibidoError'? ──► 
         si La función es 'cls.acceso_prohibido , y esa función le envía la respuesta de error limpia
         (JSONResponse) al cliente.'"""
-        

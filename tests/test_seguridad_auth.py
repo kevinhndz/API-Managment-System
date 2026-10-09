@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from fastapi.testclient import TestClient
 import pytest
 from pydantic import ValidationError
@@ -10,7 +11,7 @@ from database.almacen import abrir_puerta_bd
 from modulos.auditoria.tabla import EventoAuditoria
 from modulos.aulas.tabla import Aulas
 from modulos.docentes.tabla import Docentes
-from modulos.login.tabla import Usuarios
+from modulos.login.tabla import IntentosInicioSesion, Usuarios
 from modulos.login.schema import Revisar_Json_Crear_Usuario
 from modulos.solicitudes_cuenta.tabla import SolicitudesCuenta, SolicitudesRecuperacion
 from main import app
@@ -239,6 +240,77 @@ def test_perfil_rechaza_correo_de_otra_cuenta_y_sesion_ausente():
         motor.dispose()
 
 
+def test_login_limita_intentos_con_espera_y_no_bloquea_otras_cuentas():
+    cliente, motor = _cliente_con_bd_en_memoria()
+
+    try:
+        for _ in range(4):
+            respuesta = cliente.post("/login/sesion", json={
+                "usuario": "cuenta-inexistente",
+                "contrasena": "incorrecta",
+            })
+            assert respuesta.status_code == 401
+            assert respuesta.json()["detail"] == "Usuario o contraseña incorrectos"
+
+        limite = cliente.post("/login/sesion", json={
+            "usuario": "cuenta-inexistente",
+            "contrasena": "incorrecta",
+        })
+        assert limite.status_code == 429
+        assert int(limite.headers["retry-after"]) > 0
+        assert limite.json()["detail"] == "Demasiados intentos. Intenta de nuevo mas tarde."
+
+        otra_cuenta = cliente.post("/login/sesion", json={
+            "usuario": "otra-cuenta",
+            "contrasena": "incorrecta",
+        })
+        assert otra_cuenta.status_code == 401
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_login_correcto_limpia_contador_de_cuenta_y_conserva_el_de_ip():
+    cliente, motor = _cliente_con_bd_en_memoria()
+    contrasena = "clave-correcta-de-prueba"
+    with Session(motor) as db:
+        db.add(Usuarios(
+            usuario="admin-rate-limit",
+            contrasena=encriptar_contrasena(contrasena),
+            rol="Administrador",
+            activo=True,
+        ))
+        db.commit()
+
+    try:
+        for _ in range(4):
+            cliente.post("/login/sesion", json={
+                "usuario": "admin-rate-limit",
+                "contrasena": "clave-incorrecta",
+            })
+
+        ahora_pasado = datetime.now(timezone.utc) - timedelta(seconds=1)
+        with Session(motor) as db:
+            db.query(IntentosInicioSesion).update({
+                IntentosInicioSesion.bloqueado_hasta: ahora_pasado,
+            })
+            db.commit()
+
+        acceso = cliente.post("/login/sesion", json={
+            "usuario": "admin-rate-limit",
+            "contrasena": contrasena,
+        })
+
+        assert acceso.status_code == 200
+        with Session(motor) as db:
+            assert db.query(IntentosInicioSesion).count() == 1
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
 def _cliente_con_bd_en_memoria():
     motor = create_engine(
         "sqlite://",
@@ -249,6 +321,7 @@ def _cliente_con_bd_en_memoria():
     Docentes.__table__.create(motor)
     EventoAuditoria.__table__.create(motor)
     Usuarios.__table__.create(motor)
+    IntentosInicioSesion.__table__.create(motor)
     SolicitudesCuenta.__table__.create(motor)
     SolicitudesRecuperacion.__table__.create(motor)
 

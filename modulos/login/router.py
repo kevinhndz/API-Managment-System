@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 from core.config import settings
 from database.almacen import abrir_puerta_bd
@@ -27,9 +27,11 @@ def _establecer_cookie_sesion(response: Response, token: str) -> None:
 def iniciar_sesion_web(
     json: LoginRequest,
     response: Response,
+    request: Request,
     db: Session = Depends(abrir_puerta_bd),
 ):
-    token = s.login_service(db, json)
+    direccion_ip = request.client.host if request.client else None
+    token = s.login_service(db, json, direccion_ip)
     _establecer_cookie_sesion(response, token)
     return SesionResponse()
 

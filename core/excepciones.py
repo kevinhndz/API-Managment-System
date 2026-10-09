@@ -22,3 +22,11 @@ class CredencialesInvalidasError(SuperPoder):
 class AccesoProhibidoError(SuperPoder):
     """Representa HTTP 403 - Permisos insuficientes o token expirado/invalido."""
     pass
+
+
+class IntentosInicioSesionLimitadosError(SuperPoder):
+    """Representa HTTP 429 cuando se supera el limite de inicio de sesion."""
+
+    def __init__(self, segundos_restantes: int):
+        super().__init__("Demasiados intentos. Intenta de nuevo mas tarde.")
+        self.segundos_restantes = segundos_restantes
