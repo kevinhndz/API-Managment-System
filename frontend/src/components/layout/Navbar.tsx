@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { navigationItems } from '../../config/navigation'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
+import { CampusFlowLogo } from '../brand/CampusFlowLogo'
 import './Navbar.css'
 
 interface NavbarProps {
@@ -76,7 +77,7 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
           </div>
         ) : (
           <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a716f]">CampusFlow / espacio de trabajo</p>
+            <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a716f]"><CampusFlowLogo compact className="[&_img]:h-4 [&_img]:w-4" /> CampusFlow / espacio de trabajo</p>
             <h1 className="mt-1 truncate text-xl font-semibold tracking-[-0.03em] text-[#1a1c1a] dark:text-white">{current.label}</h1>
           </div>
         )}
