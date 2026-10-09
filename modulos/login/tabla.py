@@ -7,6 +7,7 @@ class Usuarios(miClaseBase, PoderAuditor):
     __tablename__ = "usuarios"
     id = Column(Integer, primary_key=True, index=True)
     usuario = Column(String(80), unique=True, nullable=False)
+    nombre = Column(String(160), nullable=True)
     correo = Column(String(150), unique=True, nullable=True)
     contrasena = Column(String(255), nullable=False)
     rol = Column(String(20), nullable=False)

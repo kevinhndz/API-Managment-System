@@ -73,6 +73,7 @@ def test_solicitud_publica_requiere_aprobacion_y_el_admin_asigna_el_rol():
         with Session(motor) as db:
             usuario = db.query(Usuarios).filter_by(usuario="docente.nuevo").one()
             assert usuario.rol == "Docente"
+            assert usuario.nombre == "Docente Nuevo"
             assert usuario.correo == "docente.nuevo@uphn.edu"
             assert usuario.docente_id == docente_id
             solicitud_aprobada = db.query(SolicitudesCuenta).filter_by(id=solicitud_id).one()
@@ -180,6 +181,58 @@ def test_recuperacion_cambia_clave_usa_token_una_vez_e_invalida_sesion(monkeypat
             "contrasena": "clave-nueva-segura-2026",
         })
         assert login_nuevo.status_code == 200
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_perfil_actualiza_solo_la_cuenta_autenticada_y_sus_datos_personales():
+    cliente, motor = _cliente_con_bd_en_memoria()
+    with Session(motor) as db:
+        db.add_all([
+            Usuarios(id=31, usuario="admin-perfil", correo="admin@uphn.edu", contrasena="hash", rol="Administrador", activo=True),
+            Usuarios(id=32, usuario="otra-cuenta", correo="otra@uphn.edu", contrasena="hash", rol="Docente", activo=True),
+        ])
+        db.commit()
+    cliente.cookies.set("campusflow_session", crear_token("admin-perfil", 31, "Administrador"))
+
+    try:
+        respuesta = cliente.patch("/login/perfil", json={
+            "nombre": "  Kevin Hernandez  ",
+            "correo": "KEVIN@UPHN.EDU",
+        })
+
+        assert respuesta.status_code == 200, respuesta.text
+        assert respuesta.json() == {"nombre": "Kevin Hernandez", "correo": "kevin@uphn.edu"}
+        with Session(motor) as db:
+            cuenta = db.query(Usuarios).filter_by(id=31).one()
+            otra = db.query(Usuarios).filter_by(id=32).one()
+            assert (cuenta.usuario, cuenta.nombre, cuenta.correo, cuenta.rol) == ("admin-perfil", "Kevin Hernandez", "kevin@uphn.edu", "Administrador")
+            assert (otra.usuario, otra.correo, otra.rol) == ("otra-cuenta", "otra@uphn.edu", "Docente")
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_perfil_rechaza_correo_de_otra_cuenta_y_sesion_ausente():
+    cliente, motor = _cliente_con_bd_en_memoria()
+    with Session(motor) as db:
+        db.add_all([
+            Usuarios(id=41, usuario="admin-perfil", correo="admin@uphn.edu", contrasena="hash", rol="Administrador", activo=True),
+            Usuarios(id=42, usuario="otra-cuenta", correo="otra@uphn.edu", contrasena="hash", rol="Docente", activo=True),
+        ])
+        db.commit()
+    cliente.cookies.set("campusflow_session", crear_token("admin-perfil", 41, "Administrador"))
+
+    try:
+        conflicto = cliente.patch("/login/perfil", json={"nombre": "Nuevo Admin", "correo": "OTRA@UPHN.EDU"})
+        assert conflicto.status_code == 409
+
+        cliente.cookies.clear()
+        sin_sesion = cliente.patch("/login/perfil", json={"nombre": "Nuevo Admin", "correo": "nuevo@uphn.edu"})
+        assert sin_sesion.status_code == 401
     finally:
         app.dependency_overrides.clear()
         cliente.close()

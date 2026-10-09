@@ -2,12 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 from core.config import settings
 from database.almacen import abrir_puerta_bd
-from utils.auth import permiso_admin
-from modulos.login.schema import LoginRequest, Revisar_Json_Crear_Usuario, RestablecerContrasena, SesionResponse, SesionUsuarioResponse, SolicitarRecuperacion, SolicitarRecuperacionResponse, UsuarioResponse
+from utils.auth import permiso_admin, el_vigilante, permiso_usuario
+from modulos.login.schema import LoginRequest, PerfilUsuarioActualizar, PerfilUsuarioResponse, Revisar_Json_Crear_Usuario, RestablecerContrasena, SesionResponse, SesionUsuarioResponse, SolicitarRecuperacion, SolicitarRecuperacionResponse, UsuarioResponse
 from modulos.login.service import LoginService as s
 from modulos.login.recuperacion import confirmar_recuperacion, solicitar_recuperacion
 from modulos.login.tabla import Usuarios
-from utils.auth import el_vigilante
 
 router = APIRouter(prefix="/login", tags=["Login"])
 
@@ -54,9 +53,20 @@ def obtener_sesion_actual(
     registro = db.query(Usuarios).filter(Usuarios.id == usuario["user_id"]).first()
     return SesionUsuarioResponse(
         usuario=registro.usuario,
+        nombre=registro.nombre,
         correo=registro.correo,
         rol=registro.rol,
     )
+
+
+@router.patch("/perfil", response_model=PerfilUsuarioResponse)
+def actualizar_perfil(
+    json: PerfilUsuarioActualizar,
+    usuario: dict = Depends(permiso_usuario),
+    db: Session = Depends(abrir_puerta_bd),
+):
+    registro = s.actualizar_perfil_service(db, usuario["user_id"], json)
+    return PerfilUsuarioResponse(nombre=registro.nombre, correo=registro.correo)
 
 
 @router.post("/recuperacion", response_model=SolicitarRecuperacionResponse, status_code=status.HTTP_202_ACCEPTED)
