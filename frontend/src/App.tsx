@@ -6,6 +6,7 @@ import { AdministratorRoute } from './components/auth/AdministratorRoute'
 import { useAuth } from './contexts/AuthContext'
 import { AppLayout } from './components/layout/AppLayout'
 import { LoginPage } from './pages/LoginPage'
+import { LoginLanding } from './components/auth/LoginLanding'
 import { ConfiguracionPage } from './pages/ConfiguracionPage'
 import { RecuperacionPage } from './pages/RecuperacionPage'
 import { SolicitudCuentaPage } from './pages/SolicitudCuentaPage'
@@ -39,7 +40,8 @@ function HomeRoute() {
 export function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/login" element={<LoginLanding />} />
+      <Route path="/iniciar-sesion" element={<LoginPage />} />
       <Route path="/solicitar-cuenta" element={<SolicitudCuentaPage />} />
       <Route path="/recuperar-contrasena" element={<RecuperacionPage />} />
       <Route path="/restablecer-contrasena" element={<RecuperacionPage />} />

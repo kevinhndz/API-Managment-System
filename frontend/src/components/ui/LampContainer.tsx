@@ -2,10 +2,11 @@ import { motion, useReducedMotion } from 'framer-motion'
 
 interface LampContainerProps {
   className?: string
+  onOpen?: () => void
 }
 
 /** Lámpara decorativa del encabezado; su haz se abre al cargar la página. */
-export function LampContainer({ className = '' }: LampContainerProps) {
+export function LampContainer({ className = '', onOpen }: LampContainerProps) {
   const reduceMotion = useReducedMotion()
   const transition = reduceMotion ? { duration: 0 } : { duration: 1.35, delay: 0.15, ease: 'easeOut' as const }
 
@@ -37,7 +38,8 @@ export function LampContainer({ className = '' }: LampContainerProps) {
       <motion.div
         initial={reduceMotion ? false : { opacity: 0, scaleX: 0.25 }}
         animate={{ opacity: [0.35, 0.82, 0.62], scaleX: 1 }}
-        transition={reduceMotion ? { duration: 0 } : { ...transition, opacity: { duration: 2.2, repeat: 1, ease: 'easeInOut' } }}
+        transition={reduceMotion ? { duration: 0 } : { ...transition, opacity: { duration: 1.8, ease: 'easeInOut' } }}
+        onAnimationComplete={onOpen}
         className="absolute left-1/2 top-[4.7rem] z-10 h-24 w-[min(75vw,800px)] -translate-x-1/2 rounded-full bg-violet-300/25 blur-[70px]"
       />
     </div>

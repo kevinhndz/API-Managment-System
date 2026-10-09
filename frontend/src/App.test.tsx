@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -47,8 +47,21 @@ function prepararApiDePrueba() {
 
 describe('flujo principal', () => {
   afterEach(() => {
+    cleanup()
     localStorage.clear()
     vi.restoreAllMocks()
+  })
+
+  it('muestra el landing y abre el formulario de acceso desde el navbar', async () => {
+    prepararApiDePrueba()
+    const user = userEvent.setup()
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(<MemoryRouter initialEntries={['/login']}><QueryClientProvider client={queryClient}><ThemeProvider><AuthProvider><App /></AuthProvider></ThemeProvider></QueryClientProvider></MemoryRouter>)
+
+    expect(await screen.findByRole('heading', { name: 'Campus Flow' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Usuario')).not.toBeInTheDocument()
+    await user.click(await screen.findByRole('link', { name: 'Iniciar sesión' }, { timeout: 5000 }))
+    expect(await screen.findByLabelText('Usuario')).toBeVisible()
   })
 
   it('inicia sesión y navega al CRUD de aulas', async () => {
@@ -57,7 +70,7 @@ describe('flujo principal', () => {
 
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
-      <MemoryRouter initialEntries={['/login']}>
+      <MemoryRouter initialEntries={['/iniciar-sesion']}>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
             <AuthProvider>
@@ -82,7 +95,7 @@ describe('flujo principal', () => {
   it('muestra los nuevos módulos en la navegación', async () => {
     prepararApiDePrueba()
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(<MemoryRouter initialEntries={['/login']}><QueryClientProvider client={queryClient}><ThemeProvider><AuthProvider><App /></AuthProvider></ThemeProvider></QueryClientProvider></MemoryRouter>)
+    render(<MemoryRouter initialEntries={['/iniciar-sesion']}><QueryClientProvider client={queryClient}><ThemeProvider><AuthProvider><App /></AuthProvider></ThemeProvider></QueryClientProvider></MemoryRouter>)
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('Usuario'), 'usuario-prueba')
     await user.type(screen.getByLabelText('Contraseña'), 'clave-de-prueba-2026')
