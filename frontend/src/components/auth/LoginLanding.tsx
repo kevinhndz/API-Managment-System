@@ -20,14 +20,14 @@ export function LoginLanding() {
       <nav
         aria-label="Navegación principal"
         aria-hidden={!showNavigation}
-        className={`fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#100d18]/80 px-5 py-3 backdrop-blur-xl transition duration-500 sm:px-8 ${showNavigation ? 'pointer-events-auto translate-y-0 opacity-100' : 'pointer-events-none -translate-y-3 opacity-0'}`}
+        className={`fixed inset-x-0 top-0 z-50 bg-transparent px-5 py-3 transition duration-500 sm:px-8 ${showNavigation ? 'pointer-events-auto translate-y-0 opacity-100' : 'pointer-events-none -translate-y-3 opacity-0'}`}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-          <a href="#inicio" className="font-semibold tracking-tight text-white" tabIndex={showNavigation ? 0 : -1}>
+          <a href="#inicio" className="font-semibold tracking-tight text-white drop-shadow-[0_1px_8px_rgb(16_13_24_/_0.95)]" tabIndex={showNavigation ? 0 : -1}>
             Campus<span className="text-violet-300">Flow</span>
           </a>
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link className="rounded-full px-3 py-2 text-sm text-violet-100 transition hover:bg-white/10" to="/iniciar-sesion" tabIndex={showNavigation ? 0 : -1}>
+            <Link className="rounded-full px-3 py-2 text-sm text-violet-100 drop-shadow-[0_1px_8px_rgb(16_13_24_/_0.95)] transition hover:bg-white/10" to="/iniciar-sesion" tabIndex={showNavigation ? 0 : -1}>
               Iniciar sesión
             </Link>
             <Link className="rounded-full bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400" to="/solicitar-cuenta" tabIndex={showNavigation ? 0 : -1}>
