@@ -6,6 +6,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
 import { useAuth } from '../contexts/AuthContext'
+import { LoginLanding } from '../components/auth/LoginLanding'
 
 const loginSchema = z.object({
   usuario: z.string().min(3, 'Ingresa tu usuario.'),
@@ -40,6 +41,7 @@ export function LoginPage() {
   })
 
   return (
+    <LoginLanding>
     <main className="relative min-h-screen overflow-hidden bg-[#151112] px-4 py-5 sm:px-8 sm:py-8">
       <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(rgba(255,255,255,.12)_1px,transparent_1px)] [background-size:24px_24px]" />
       <section className="relative mx-auto grid min-h-[calc(100vh-2.5rem)] max-w-6xl overflow-hidden rounded-[1.5rem] border border-[#3a292b] bg-[#211719] shadow-[0_30px_100px_-35px_rgb(0_0_0_/_0.8)] lg:grid-cols-[1.05fr_.95fr]">
@@ -136,5 +138,6 @@ export function LoginPage() {
         </div>
       </section>
     </main>
+    </LoginLanding>
   )
 }
