@@ -37,12 +37,12 @@ export function LoginLanding() {
         </div>
       </nav>
 
-      <section id="inicio" className="relative z-10 min-h-svh overflow-visible px-4 pt-9 sm:px-8">
+      <section id="inicio" className="relative z-10 min-h-svh overflow-hidden px-4 sm:px-8">
         <LampContainer
-          className="absolute inset-x-0 top-8 h-[min(100svh,820px)]"
+          className="absolute inset-x-0 top-0 z-0 isolate h-[min(100svh,820px)]"
           onOpen={() => setShowNavigation(true)}
         />
-        <div className="relative z-20 mx-auto flex min-h-[calc(100svh-2.25rem)] max-w-6xl flex-col items-center justify-start pt-[clamp(8rem,22svh,12rem)] text-center">
+        <div className="relative z-10 mx-auto flex min-h-svh max-w-6xl flex-col items-center justify-start pt-[clamp(9rem,21svh,11rem)] text-center">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-violet-100/90 sm:text-sm">Gestión académica, más clara</p>
           <h1 className="text-6xl font-semibold tracking-[-0.075em] text-white drop-shadow-[0_4px_28px_rgb(16_13_24_/_0.95)] sm:text-8xl lg:text-[7.5rem]">
             Campus Flow

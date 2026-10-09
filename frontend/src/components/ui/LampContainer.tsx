@@ -11,7 +11,7 @@ export function LampContainer({ className = '', onOpen }: LampContainerProps) {
   const transition = reduceMotion ? { duration: 0 } : { duration: 1.35, delay: 0.15, ease: 'easeOut' as const }
 
   return (
-    <div aria-hidden="true" className={`pointer-events-none relative w-full overflow-visible ${className}`}>
+    <div aria-hidden="true" className={`pointer-events-none w-full overflow-visible ${className}`}>
       <motion.div
         initial={reduceMotion ? false : { opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
