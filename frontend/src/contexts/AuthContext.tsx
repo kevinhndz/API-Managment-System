@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
-import { cerrarSesion, iniciarSesion, obtenerSesionActual } from '../services/api'
+import { actualizarPerfil, cerrarSesion, iniciarSesion, obtenerSesionActual } from '../services/api'
 import { queryClient } from '../lib/queryClient'
 
 interface User {
@@ -13,6 +13,7 @@ interface AuthContextValue {
   isAuthenticated: boolean
   isLoading: boolean
   login: (usuario: string, password: string) => Promise<void>
+  updateProfile: (nombre: string, correo: string) => Promise<void>
   logout: () => void
 }
 
@@ -26,7 +27,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     let mounted = true
     obtenerSesionActual()
       .then((session) => {
-        if (mounted) setUser({ name: session.usuario, email: session.correo ?? '', role: session.rol })
+        if (mounted) setUser({ name: session.nombre?.trim() || session.usuario, email: session.correo ?? '', role: session.rol })
       })
       .catch(() => {
         if (mounted) setUser(null)
@@ -49,7 +50,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
         await iniciarSesion(usuario, password)
         queryClient.clear()
         const session = await obtenerSesionActual()
-        setUser({ name: session.usuario, email: session.correo ?? '', role: session.rol })
+        setUser({ name: session.nombre?.trim() || session.usuario, email: session.correo ?? '', role: session.rol })
+      },
+      updateProfile: async (nombre, correo) => {
+        const perfil = await actualizarPerfil({ nombre, correo })
+        setUser((actual) => actual ? { ...actual, name: perfil.nombre, email: perfil.correo } : actual)
       },
       logout: () => {
         void cerrarSesion().catch(() => undefined)
