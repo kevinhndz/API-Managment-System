@@ -14,6 +14,7 @@
     "@hookform/resolvers": "^3.9.1",
     "@tanstack/react-query": "^5.104.1",
     "clsx": "^2.1.1",
+    "framer-motion": "^14.0.0",
     "lucide-react": "^0.468.0",
     "matter-js": "^0.20.0",
     "react": "^18.3.1",
