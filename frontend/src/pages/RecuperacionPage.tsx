@@ -5,7 +5,12 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { restablecerContrasena, solicitarRecuperacion } from '../services/api'
 import { PasswordInput } from '../components/ui/PasswordInput'
 
-export function RecuperacionPage() {
+interface RecuperacionPageProps {
+  embedded?: boolean
+  backTo?: string
+}
+
+export function RecuperacionPage({ embedded = false, backTo = '/login' }: RecuperacionPageProps) {
   const [search] = useSearchParams()
   const token = search.get('token')
   const [message, setMessage] = useState('')
@@ -41,9 +46,9 @@ export function RecuperacionPage() {
     }
   }
 
-  return <main className="grid min-h-screen place-items-center bg-[#faf4f1] px-4 py-10 dark:bg-[#191625]">
-    <section className="w-full max-w-lg rounded-3xl border border-[#ead7d7] bg-white p-7 shadow-xl dark:border-[#39334b] dark:bg-[#242033] sm:p-9">
-      <Link className="mb-7 inline-flex items-center gap-2 text-sm text-[#6c5552] hover:text-[#5b0309] dark:text-stone-300" to="/login"><ArrowLeft className="h-4 w-4" /> Volver al acceso</Link>
+  return <main className={embedded ? '' : 'grid min-h-screen place-items-center bg-[#faf4f1] px-4 py-10 dark:bg-[#191625]'}>
+    <section className={`w-full max-w-lg rounded-3xl border border-[#ead7d7] bg-white p-7 shadow-xl dark:border-[#39334b] dark:bg-[#242033] sm:p-9 ${embedded ? 'mx-auto' : ''}`}>
+      <Link className="mb-7 inline-flex items-center gap-2 text-sm text-[#6c5552] hover:text-[#5b0309] dark:text-stone-300" to={backTo}><ArrowLeft className="h-4 w-4" /> {embedded ? 'Volver a editar perfil' : 'Volver al acceso'}</Link>
       <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f7e4e4] text-[#5b0309] dark:bg-[#5e35b1]/20 dark:text-violet-200">{token ? <KeyRound /> : <MailCheck />}</div>
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#9a5e5e]">Seguridad de cuenta</p>
       <h1 className="mt-2 text-3xl font-semibold text-[#261b1a] dark:text-white">{token ? 'Elige una nueva contrasena' : 'Recuperar contrasena'}</h1>

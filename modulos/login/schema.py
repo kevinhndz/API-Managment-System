@@ -82,8 +82,26 @@ class SolicitarRecuperacionResponse(BaseModel):
 
 class SesionUsuarioResponse(BaseModel):
     usuario: str
+    nombre: Optional[str] = None
     correo: Optional[EmailStr]
     rol: str
+
+
+class PerfilUsuarioActualizar(BaseModel):
+    nombre: str = Field(min_length=3, max_length=160)
+    correo: EmailStr
+
+    @field_validator("nombre", mode="before")
+    @classmethod
+    def limpiar_nombre(cls, valor: str) -> str:
+        if isinstance(valor, str):
+            return valor.strip()
+        return valor
+
+
+class PerfilUsuarioResponse(BaseModel):
+    nombre: str
+    correo: EmailStr
 
 
 class SolicitarRecuperacion(BaseModel):

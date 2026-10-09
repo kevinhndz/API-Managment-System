@@ -8,6 +8,7 @@ import { AppLayout } from './components/layout/AppLayout'
 import { LoginPage } from './pages/LoginPage'
 import { LoginLanding } from './components/auth/LoginLanding'
 import { ConfiguracionPage } from './pages/ConfiguracionPage'
+import { PerfilPage } from './pages/PerfilPage'
 import { RecuperacionPage } from './pages/RecuperacionPage'
 import { SolicitudCuentaPage } from './pages/SolicitudCuentaPage'
 
@@ -52,6 +53,8 @@ export function App() {
           <Route path="calificaciones" element={<Suspense fallback={<PageLoader />}><CalificacionesPage /></Suspense>} />
           <Route path="reportes" element={<Suspense fallback={<PageLoader />}><ReportesPage /></Suspense>} />
           <Route path="configuracion" element={<ConfiguracionPage />} />
+          <Route path="configuracion/perfil" element={<PerfilPage />} />
+          <Route path="configuracion/recuperacion" element={<RecuperacionPage embedded backTo="/configuracion/perfil" />} />
           <Route element={<AdministratorRoute />}>
             <Route path="aulas" element={<Suspense fallback={<PageLoader />}><AulasPage /></Suspense>} />
             <Route path="docentes" element={<Suspense fallback={<PageLoader />}><DocentesPage /></Suspense>} />

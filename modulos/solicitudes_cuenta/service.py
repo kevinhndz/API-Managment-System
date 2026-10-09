@@ -98,6 +98,7 @@ def aprobar_solicitud(
 
     db.add(Usuarios(
         usuario=solicitud.usuario,
+        nombre=solicitud.nombre_completo,
         correo=solicitud.correo,
         contrasena=solicitud.contrasena_hash,
         rol=datos.rol,

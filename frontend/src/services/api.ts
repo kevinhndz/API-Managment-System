@@ -19,12 +19,20 @@ export async function iniciarSesion(usuario: string, contrasena: string) {
 
 export interface SesionActual {
   usuario: string
+  nombre?: string | null
   correo: string | null
   rol: string
 }
 
 export function obtenerSesionActual() {
   return request<SesionActual>('/login/actual')
+}
+
+export function actualizarPerfil(datos: { nombre: string; correo: string }) {
+  return request<{ nombre: string; correo: string }>('/login/perfil', {
+    method: 'PATCH',
+    body: JSON.stringify(datos),
+  })
 }
 
 export function solicitarRecuperacion(correo: string) {

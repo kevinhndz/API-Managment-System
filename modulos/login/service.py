@@ -1,19 +1,40 @@
 from sqlalchemy.orm import Session
-from core.excepciones import CredencialesInvalidasError, RecursoDuplicadoError
+from sqlalchemy.exc import IntegrityError
+from core.excepciones import CredencialesInvalidasError, RecursoDuplicadoError, RecursoNoEncontradoError
 from utils.hash import encriptar_contrasena, verificar_contrasena
 from utils.token import crear_token
 from modulos.login.repository import UsuarioRepository as repo
-from modulos.login.schema import LoginRequest, Revisar_Json_Crear_Usuario
+from modulos.login.schema import LoginRequest, PerfilUsuarioActualizar, Revisar_Json_Crear_Usuario
 from modulos.login.tabla import Usuarios
 
 
 class LoginService:
+    @staticmethod
+    def actualizar_perfil_service(db: Session, usuario_id: int, json: PerfilUsuarioActualizar):
+        registro = repo.buscar_por_id_repository(db, usuario_id)
+        if registro is None:
+            raise RecursoNoEncontradoError("No se encontro la cuenta.")
+
+        nombre = json.nombre.strip()
+        correo = str(json.correo).casefold()
+        if repo.buscar_correo_de_otra_cuenta_repository(db, correo, usuario_id):
+            raise RecursoDuplicadoError("Ese correo ya esta asociado a otra cuenta.")
+
+        registro.nombre = nombre
+        registro.correo = correo
+        try:
+            return repo.guardar_cambios_perfil_repository(db, registro)
+        except IntegrityError as error:
+            db.rollback()
+            raise RecursoDuplicadoError("Ese correo ya esta asociado a otra cuenta.") from error
+
     @staticmethod
     def crear_usuario_service(db: Session, json: Revisar_Json_Crear_Usuario):
         if repo.check_repository(db, json) is not None:
             raise RecursoDuplicadoError("Ya existe este usuario")
         usuario = Usuarios(
             usuario=json.usuario,
+            nombre=json.usuario,
             correo=str(json.correo).casefold() if json.correo else None,
             contrasena=encriptar_contrasena(json.contrasena),
             rol=json.rol,

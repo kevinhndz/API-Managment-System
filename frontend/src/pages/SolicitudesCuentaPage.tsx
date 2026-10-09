@@ -1,5 +1,6 @@
-import { Check, RefreshCw, UserPlus, UsersRound, X } from 'lucide-react'
+import { ArrowLeft, Check, RefreshCw, UserPlus, UsersRound, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -118,6 +119,10 @@ export function SolicitudesCuentaPage() {
 
   return (
     <section className="mx-auto max-w-6xl">
+      <div className="mb-6 flex flex-wrap gap-x-5 gap-y-2">
+        <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-[#6b1118] hover:underline dark:text-violet-200"><ArrowLeft className="h-4 w-4" /> Volver al dashboard</Link>
+        <Link to="/configuracion" className="inline-flex items-center gap-2 text-sm font-semibold text-[#6b1118] hover:underline dark:text-violet-200"><ArrowLeft className="h-4 w-4" /> Volver a Settings</Link>
+      </div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a716f]">Administracion de cuentas</p>

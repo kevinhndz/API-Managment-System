@@ -21,7 +21,8 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const [greetingIndex, setGreetingIndex] = useState(0)
   const accountMenuRef = useRef<HTMLDivElement>(null)
-  const current = navigationItems.find((item) => item.path === pathname) ?? navigationItems[0]
+  const current = navigationItems.find((item) => item.path === pathname)
+    ?? (pathname.startsWith('/configuracion') ? { label: 'Settings' } : navigationItems[0])
   const firstName = user?.name?.trim().split(/\s+/)[0] || 'bienvenido'
   const greetingCount = 3
   const dashboardGreetings = [
