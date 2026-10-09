@@ -6,7 +6,6 @@ import { CircularCarousel } from '../components/dashboard/CircularCarousel'
 import { DashboardIndicators } from '../components/dashboard/DashboardIndicators'
 import { EnrollmentTrendChart } from '../components/dashboard/EnrollmentTrendChart'
 import { Skeleton } from '../components/ui/Skeleton'
-import { useAuth } from '../contexts/AuthContext'
 import { useDashboardData } from '../hooks/useDashboardData'
 import './DashboardPage.css'
 
@@ -27,7 +26,6 @@ const metricImages = {
 
 export function DashboardPage() {
   const { data, loading, refreshing, error, refresh } = useDashboardData()
-  const { user } = useAuth()
   const activePeriod = data.periodo
   const currentYear = data.anio
   const periodNumber = activePeriod?.numero
@@ -126,10 +124,10 @@ export function DashboardPage() {
         <section className="grid gap-4 lg:grid-cols-[.7fr_1.3fr]" aria-label="Indicadores complementarios">
           <article className="berry-note-card relative overflow-hidden rounded-2xl p-5 text-white">
             <span className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full border border-white/15" />
-            <div className="relative"><p className="text-[9px] font-bold uppercase tracking-[.16em] text-violet-200">CampusFlow · {currentYear}</p><h2 className="mt-3 text-xl font-bold tracking-tight">Actividad en contexto</h2><p className="mt-2 max-w-sm text-[11px] leading-5 text-violet-100/85">Consulta la ocupación y las matrículas para preparar el siguiente ciclo académico.</p><div className="mt-5 flex items-center gap-2 text-[10px] font-semibold text-violet-100"><span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> {user?.name ? `Sesión de ${user.name}` : 'Sistema académico'}</div></div>
+            <div className="relative"><p className="text-[9px] font-bold uppercase tracking-[.16em] text-violet-200">CAMPUS · {currentYear}</p><h2 className="mt-3 text-xl font-bold tracking-tight">Actividad en contexto</h2><p className="mt-2 max-w-sm text-[11px] leading-5 text-violet-100/85">Consulta la ocupación y las matrículas para preparar el siguiente ciclo académico.</p></div>
           </article>
           <article className="berry-surface rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-[0_2px_14px_rgba(32,40,45,.06)] dark:border-white/10 dark:bg-[#211e2b]">
-            <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#697586] dark:text-stone-400">Resumen de infraestructura</p><h2 className="mt-1 text-sm font-bold text-[#121926] dark:text-white">Capacidad registrada</h2></div><span className="rounded-md bg-[#e3f2fd] px-2 py-1 text-[9px] font-bold text-[#1565c0] dark:bg-blue-950/50 dark:text-blue-200">Campus UPH</span></div>
+            <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#697586] dark:text-stone-400">Resumen de infraestructura</p><h2 className="mt-1 text-sm font-bold text-[#121926] dark:text-white">Capacidad registrada</h2></div></div>
             <div className="mt-4 grid grid-cols-3 gap-2">
               <div className="rounded-xl bg-[#f8fafc] p-3 dark:bg-white/5"><p className="text-[9px] text-[#697586] dark:text-stone-400">Aulas activas</p><p className="mt-1 text-xl font-extrabold text-[#5e35b1] dark:text-violet-200">{data.aulas.activas}</p></div>
               <div className="rounded-xl bg-[#f8fafc] p-3 dark:bg-white/5"><p className="text-[9px] text-[#697586] dark:text-stone-400">Cupos de aula</p><p className="mt-1 text-xl font-extrabold text-[#2196f3]">{totalCapacity}</p></div>

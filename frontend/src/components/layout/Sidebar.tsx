@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
-import { brandIcon as BrandIcon, navigationItems } from '../../config/navigation'
+import { navigationItems } from '../../config/navigation'
+import { CampusFlowLogo } from '../brand/CampusFlowLogo'
 import { useAuth } from '../../contexts/AuthContext'
 
 interface SidebarProps {
@@ -60,15 +61,7 @@ export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onTogg
           }}
         />
         <div className={`flex items-center px-2 ${collapsed ? 'lg:justify-center' : 'justify-between'}`}>
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#ede7f6] text-[#5e35b1] dark:bg-[#5e35b1]/20 dark:text-violet-200">
-              <BrandIcon className="h-5 w-5" />
-            </span>
-            <div className={collapsed ? 'lg:hidden' : ''}>
-              <p className="font-semibold tracking-[-0.03em] text-[#5e35b1] dark:text-violet-200">CampusFlow</p>
-              <p className="text-[11px] text-slate-400">Gestión académica</p>
-            </div>
-          </div>
+          <CampusFlowLogo className={collapsed ? 'lg:hidden' : ''} />
           <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden dark:text-stone-300 dark:hover:bg-[#302a43]" type="button" onClick={onClose} aria-label="Cerrar menú">
             <X className="h-5 w-5" />
           </button>

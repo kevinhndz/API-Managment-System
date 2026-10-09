@@ -1,7 +1,8 @@
 import { useEffect, useRef, type ReactNode } from 'react'
-import { GraduationCap, Mail, RotateCw, ShieldCheck, X } from 'lucide-react'
+import { Mail, RotateCw, ShieldCheck, X } from 'lucide-react'
 
 import { LanyardBadge } from '../ui/LanyardBadge'
+import { CampusFlowLogo } from '../brand/CampusFlowLogo'
 
 export interface PersonCarnetData {
   name: string
@@ -48,9 +49,8 @@ export function PersonCarnetDialog({ person, onClose }: PersonCarnetDialogProps)
   const front = (
     <CarnetSide>
       <div className="relative flex items-center gap-2 border-b border-[#5b0309]/15 pb-3 dark:border-violet-300/15">
-        <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#5b0309] text-white dark:bg-[#5e35b1]"><GraduationCap className="h-5 w-5" /></span>
+        <CampusFlowLogo compact className="[&_img]:h-8 [&_img]:w-8" />
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#5b0309] dark:text-violet-200">CampusFlow</p>
           <p className="text-[8px] font-medium uppercase tracking-[0.12em] text-[#8a716f]">{person.typeLabel}</p>
         </div>
       </div>
@@ -71,7 +71,7 @@ export function PersonCarnetDialog({ person, onClose }: PersonCarnetDialogProps)
   const back = (
     <CarnetSide>
       <div className="relative flex items-center justify-between">
-        <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#5b0309] dark:text-violet-200">CampusFlow</span>
+        <CampusFlowLogo compact className="[&_img]:h-7 [&_img]:w-7" />
         <ShieldCheck className="h-5 w-5 text-[#5b0309] dark:text-violet-200" />
       </div>
       <div className="relative mt-5 rounded-xl border border-[#5b0309]/15 bg-white/70 p-3 dark:border-violet-300/15 dark:bg-white/5">
