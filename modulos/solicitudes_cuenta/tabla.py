@@ -26,3 +26,19 @@ class SolicitudesRecuperacion(miClaseBase):
     expira_en = Column(DateTime, nullable=False)
     usado_en = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=fecha_actual_utc_sin_zona, nullable=False)
+
+
+class VerificacionesCorreoSolicitud(miClaseBase):
+    __tablename__ = "verificaciones_correo_solicitud"
+
+    id = Column(String(36), primary_key=True)
+    correo = Column(String(150), nullable=False, index=True)
+    ip_hash = Column(String(64), nullable=False, index=True)
+    codigo_hash = Column(String(64), nullable=False)
+    expira_en = Column(DateTime, nullable=False)
+    reintentar_desde = Column(DateTime, nullable=False)
+    intentos = Column(Integer, default=0, nullable=False)
+    ticket_hash = Column(String(64), nullable=True, unique=True)
+    ticket_expira_en = Column(DateTime, nullable=True)
+    consumido_en = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=fecha_actual_utc_sin_zona, nullable=False)
