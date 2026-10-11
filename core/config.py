@@ -12,6 +12,14 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM: str = ""
     SMTP_STARTTLS: bool = True
+    LOGIN_RATE_LIMIT_WINDOW_SECONDS: int = 900
+    LOGIN_RATE_LIMIT_IDENTITY_ATTEMPTS: int = 5
+    LOGIN_RATE_LIMIT_IP_ATTEMPTS: int = 100
+    LOGIN_RATE_LIMIT_BASE_LOCK_SECONDS: int = 30
+    LOGIN_RATE_LIMIT_MAX_LOCK_SECONDS: int = 1800
+    SIGNUP_EMAIL_CODE_TTL_MINUTES: int = 10
+    SIGNUP_EMAIL_CODE_RESEND_SECONDS: int = 60
+    SIGNUP_EMAIL_CODE_MAX_ATTEMPTS: int = 5
 
     # Configuracion de Pydantic para indicarle que lea el archivo .env automaticamente
     model_config = SettingsConfigDict(

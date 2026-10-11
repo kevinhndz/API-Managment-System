@@ -22,3 +22,27 @@ class CredencialesInvalidasError(SuperPoder):
 class AccesoProhibidoError(SuperPoder):
     """Representa HTTP 403 - Permisos insuficientes o token expirado/invalido."""
     pass
+
+
+class IntentosInicioSesionLimitadosError(SuperPoder):
+    """Representa HTTP 429 cuando se supera el limite de inicio de sesion."""
+
+    def __init__(self, segundos_restantes: int):
+        super().__init__("Demasiados intentos. Intenta de nuevo mas tarde.")
+        self.segundos_restantes = segundos_restantes
+
+
+class IntentosVerificacionLimitadosError(SuperPoder):
+    """Representa HTTP 429 al solicitar o validar codigos de correo."""
+
+    def __init__(self, segundos_restantes: int):
+        super().__init__("Demasiados intentos. Espera antes de intentarlo de nuevo.")
+        self.segundos_restantes = segundos_restantes
+
+
+class ServicioCorreoNoDisponibleError(SuperPoder):
+    """Representa HTTP 503 cuando no se puede enviar un codigo de correo."""
+
+
+class VerificacionCorreoInvalidaError(SuperPoder):
+    """Representa HTTP 400 cuando el codigo o pase de correo no es valido."""

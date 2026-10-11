@@ -1,4 +1,7 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from datetime import datetime, timezone
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
 from database.almacen import miClaseBase
 from database.base import PoderAuditor
 
@@ -14,3 +17,22 @@ class Usuarios(miClaseBase, PoderAuditor):
     docente_id = Column(Integer, ForeignKey("docentes.id"), nullable=True)
     activo = Column(Boolean, default=True, nullable=False)
     version_token = Column(Integer, default=0, nullable=False)
+
+
+class IntentosInicioSesion(miClaseBase):
+    __tablename__ = "intentos_inicio_sesion"
+
+    clave_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    intentos: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    nivel_bloqueo: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    inicio_ventana: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+    bloqueado_hasta: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    actualizado_en: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+
+    __table_args__ = (
+        Index("ix_intentos_inicio_sesion_actualizado_en", "actualizado_en"),
+    )

@@ -24,9 +24,13 @@ from modulos.periodos.tabla import Periodos
 from modulos.secciones.tabla import Secciones
 from modulos.matriculas.tabla import Matriculas
 from modulos.calificaciones.tabla import Calificaciones
-from modulos.login.tabla import Usuarios
+from modulos.login.tabla import IntentosInicioSesion, Usuarios
 from modulos.auditoria.tabla import EventoAuditoria
-from modulos.solicitudes_cuenta.tabla import SolicitudesCuenta, SolicitudesRecuperacion
+from modulos.solicitudes_cuenta.tabla import (
+    SolicitudesCuenta,
+    SolicitudesRecuperacion,
+    VerificacionesCorreoSolicitud,
+)
 
 # Configuracion de Alembic
 config = context.config

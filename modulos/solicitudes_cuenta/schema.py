@@ -11,11 +11,21 @@ class SolicitudCuentaCrear(BaseModel):
     correo: EmailStr
     usuario: str = Field(min_length=3, max_length=80)
     contrasena: str = Field(min_length=12, max_length=72)
+    ticket_verificacion: str = Field(min_length=32, max_length=128)
 
     @field_validator("contrasena")
     @classmethod
     def validar_longitud_bcrypt(cls, valor: str) -> str:
         return validar_contrasena_nueva(valor)
+
+
+class SolicitarVerificacionCorreo(BaseModel):
+    correo: EmailStr
+
+
+class ConfirmarVerificacionCorreo(BaseModel):
+    verificacion_id: str = Field(min_length=36, max_length=36)
+    codigo: str = Field(pattern=r"^\d{6}$")
 
 
 class SolicitudCuentaResponse(BaseModel):

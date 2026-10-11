@@ -70,7 +70,21 @@ export interface RevisionSolicitudCuenta {
   docente_nuevo?: NuevoDocenteSolicitud
 }
 
-export function solicitarCuenta(datos: { nombre_completo: string; correo: string; usuario: string; contrasena: string }) {
+export function solicitarCodigoVerificacionCuenta(correo: string) {
+  return request<{ verificacion_id: string; expires_in_seconds: number; resend_after_seconds: number; detail: string }>(
+    '/solicitudes-cuenta/verificacion',
+    { method: 'POST', body: JSON.stringify({ correo }) },
+  )
+}
+
+export function confirmarCodigoVerificacionCuenta(verificacion_id: string, codigo: string) {
+  return request<{ ticket_verificacion: string; detail: string }>(
+    '/solicitudes-cuenta/verificacion/confirmar',
+    { method: 'POST', body: JSON.stringify({ verificacion_id, codigo }) },
+  )
+}
+
+export function solicitarCuenta(datos: { nombre_completo: string; correo: string; usuario: string; contrasena: string; ticket_verificacion: string }) {
   return request<{ detail: string }>('/solicitudes-cuenta/', {
     method: 'POST',
     body: JSON.stringify(datos),
