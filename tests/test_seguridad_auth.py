@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import re
 from fastapi.testclient import TestClient
 import pytest
 from pydantic import ValidationError
@@ -13,14 +14,18 @@ from modulos.aulas.tabla import Aulas
 from modulos.docentes.tabla import Docentes
 from modulos.login.tabla import IntentosInicioSesion, Usuarios
 from modulos.login.schema import Revisar_Json_Crear_Usuario
-from modulos.solicitudes_cuenta.tabla import SolicitudesCuenta, SolicitudesRecuperacion
+from modulos.solicitudes_cuenta.tabla import (
+    SolicitudesCuenta,
+    SolicitudesRecuperacion,
+    VerificacionesCorreoSolicitud,
+)
 from main import app
 from utils.hash import encriptar_contrasena
 from utils.token import crear_token
 from core.config import settings
 
 
-def test_solicitud_publica_requiere_aprobacion_y_el_admin_asigna_el_rol():
+def test_solicitud_publica_requiere_aprobacion_y_el_admin_asigna_el_rol(monkeypatch):
     cliente, motor = _cliente_con_bd_en_memoria()
     with Session(motor) as db:
         db.add(Usuarios(id=17, usuario="admin", contrasena="hash", rol="Administrador", activo=True))
@@ -28,11 +33,13 @@ def test_solicitud_publica_requiere_aprobacion_y_el_admin_asigna_el_rol():
     cliente.cookies.set("campusflow_session", crear_token("admin", 17, "Administrador"))
 
     try:
+        ticket = _solicitar_y_verificar_correo(cliente, monkeypatch, "docente.nuevo@uphn.edu")
         solicitud = cliente.post("/solicitudes-cuenta/", json={
             "nombre_completo": "Docente Nuevo",
             "correo": "docente.nuevo@uphn.edu",
             "usuario": "docente.nuevo",
             "contrasena": "clave-segura-de-prueba",
+            "ticket_verificacion": ticket,
         })
         assert solicitud.status_code == 202
         with Session(motor) as db:
@@ -85,7 +92,7 @@ def test_solicitud_publica_requiere_aprobacion_y_el_admin_asigna_el_rol():
         motor.dispose()
 
 
-def test_aprobar_new_hire_crea_docente_y_vincula_la_cuenta_en_una_operacion():
+def test_aprobar_new_hire_crea_docente_y_vincula_la_cuenta_en_una_operacion(monkeypatch):
     cliente, motor = _cliente_con_bd_en_memoria()
     with Session(motor) as db:
         db.add(Usuarios(id=18, usuario="admin-new-hire", contrasena="hash", rol="Administrador", activo=True))
@@ -93,11 +100,13 @@ def test_aprobar_new_hire_crea_docente_y_vincula_la_cuenta_en_una_operacion():
     cliente.cookies.set("campusflow_session", crear_token("admin-new-hire", 18, "Administrador"))
 
     try:
+        ticket = _solicitar_y_verificar_correo(cliente, monkeypatch, "ana.nueva@uphn.edu")
         solicitud = cliente.post("/solicitudes-cuenta/", json={
             "nombre_completo": "Ana Maria Nueva",
             "correo": "ana.nueva@uphn.edu",
             "usuario": "ana.nueva",
             "contrasena": "clave-segura-de-prueba",
+            "ticket_verificacion": ticket,
         })
         assert solicitud.status_code == 202
         solicitud_id = cliente.get("/solicitudes-cuenta/").json()[0]["id"]
@@ -324,6 +333,7 @@ def _cliente_con_bd_en_memoria():
     IntentosInicioSesion.__table__.create(motor)
     SolicitudesCuenta.__table__.create(motor)
     SolicitudesRecuperacion.__table__.create(motor)
+    VerificacionesCorreoSolicitud.__table__.create(motor)
 
     def abrir_bd_prueba():
         with Session(motor) as db:
@@ -331,6 +341,102 @@ def _cliente_con_bd_en_memoria():
 
     app.dependency_overrides[abrir_puerta_bd] = abrir_bd_prueba
     return TestClient(app), motor
+
+
+def _solicitar_y_verificar_correo(cliente, monkeypatch, correo):
+    monkeypatch.setattr(settings, "SMTP_HOST", "smtp.prueba")
+    monkeypatch.setattr(settings, "SMTP_USER", "usuario")
+    monkeypatch.setattr(settings, "SMTP_PASSWORD", "clave")
+    monkeypatch.setattr(settings, "SMTP_FROM", "campusflow@prueba.test")
+    mensaje = {}
+
+    def guardar_correo(destinatario, asunto, contenido):
+        mensaje.update(destinatario=destinatario, asunto=asunto, contenido=contenido)
+
+    monkeypatch.setattr("modulos.solicitudes_cuenta.service.enviar_correo", guardar_correo)
+    respuesta_codigo = cliente.post("/solicitudes-cuenta/verificacion", json={"correo": correo})
+    assert respuesta_codigo.status_code == 202, respuesta_codigo.text
+    codigo = re.search(r"\b(\d{6})\b", mensaje["contenido"]).group(1)
+    respuesta_validacion = cliente.post(
+        "/solicitudes-cuenta/verificacion/confirmar",
+        json={"verificacion_id": respuesta_codigo.json()["verificacion_id"], "codigo": codigo},
+    )
+    assert respuesta_validacion.status_code == 200, respuesta_validacion.text
+    return respuesta_validacion.json()["ticket_verificacion"]
+
+
+def test_solicitud_cuenta_exige_verificacion_de_correo_y_ticket_de_un_solo_uso(monkeypatch):
+    cliente, motor = _cliente_con_bd_en_memoria()
+    correo = "solicitante@uphn.edu"
+    datos = {
+        "nombre_completo": "Solicitante de Prueba",
+        "correo": correo,
+        "usuario": "solicitante.prueba",
+        "contrasena": "clave-segura-de-prueba",
+    }
+
+    try:
+        sin_verificacion = cliente.post("/solicitudes-cuenta/", json=datos)
+        assert sin_verificacion.status_code == 422
+        with Session(motor) as db:
+            assert db.query(SolicitudesCuenta).count() == 0
+
+        ticket = _solicitar_y_verificar_correo(cliente, monkeypatch, correo)
+        datos["ticket_verificacion"] = ticket
+        solicitud = cliente.post("/solicitudes-cuenta/", json=datos)
+        assert solicitud.status_code == 202, solicitud.text
+
+        ticket_reutilizado = cliente.post("/solicitudes-cuenta/", json=datos)
+        assert ticket_reutilizado.status_code == 400
+        with Session(motor) as db:
+            assert db.query(SolicitudesCuenta).count() == 1
+            verificacion = db.query(VerificacionesCorreoSolicitud).one()
+            assert verificacion.codigo_hash == ""
+            assert verificacion.consumido_en is not None
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_codigo_de_correo_limita_intentos_y_reenvios(monkeypatch):
+    cliente, motor = _cliente_con_bd_en_memoria()
+    monkeypatch.setattr(settings, "SMTP_HOST", "smtp.prueba")
+    monkeypatch.setattr(settings, "SMTP_USER", "usuario")
+    monkeypatch.setattr(settings, "SMTP_PASSWORD", "clave")
+    monkeypatch.setattr(settings, "SMTP_FROM", "campusflow@prueba.test")
+    correo_enviado = {}
+    monkeypatch.setattr(
+        "modulos.solicitudes_cuenta.service.enviar_correo",
+        lambda destinatario, asunto, contenido: correo_enviado.update(contenido=contenido),
+    )
+
+    try:
+        emision = cliente.post(
+            "/solicitudes-cuenta/verificacion",
+            json={"correo": "limites@uphn.edu"},
+        )
+        assert emision.status_code == 202
+        verificacion_id = emision.json()["verificacion_id"]
+        codigo_real = re.search(r"\b(\d{6})\b", correo_enviado["contenido"]).group(1)
+        codigo_incorrecto = "000001" if codigo_real == "000000" else "000000"
+        for _ in range(settings.SIGNUP_EMAIL_CODE_MAX_ATTEMPTS):
+            incorrecto = cliente.post(
+                "/solicitudes-cuenta/verificacion/confirmar",
+                json={"verificacion_id": verificacion_id, "codigo": codigo_incorrecto},
+            )
+        assert incorrecto.status_code == 429
+
+        reenvio = cliente.post(
+            "/solicitudes-cuenta/verificacion",
+            json={"correo": "limites@uphn.edu"},
+        )
+        assert reenvio.status_code == 429
+        assert int(reenvio.headers["retry-after"]) > 0
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
 
 
 def test_proteccion_de_rutas_responde_401_sin_sesion_o_con_token_invalido():

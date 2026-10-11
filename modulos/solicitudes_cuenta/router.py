@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 
 from core.excepciones import RecursoNoEncontradoError
@@ -6,16 +6,19 @@ from database.almacen import abrir_puerta_bd
 from modulos.login.tabla import Usuarios
 from modulos.solicitudes_cuenta.schema import (
     AprobarSolicitudCuenta,
+    ConfirmarVerificacionCorreo,
+    SolicitarVerificacionCorreo,
     SolicitudCuentaCrear,
     SolicitudCuentaResponse,
 )
 from modulos.solicitudes_cuenta.service import (
     aprobar_solicitud,
+    confirmar_codigo_correo,
     crear_solicitud,
     listar_solicitudes,
     rechazar_solicitud,
+    solicitar_codigo_correo,
 )
-from modulos.solicitudes_cuenta.tabla import SolicitudesCuenta
 from utils.auth import permiso_admin
 
 
@@ -26,6 +29,26 @@ router = APIRouter(prefix="/solicitudes-cuenta", tags=["Solicitudes de cuenta"])
 def solicitar_cuenta(datos: SolicitudCuentaCrear, db: Session = Depends(abrir_puerta_bd)):
     crear_solicitud(db, datos)
     return {"detail": "Solicitud recibida. Un administrador la revisara."}
+
+
+@router.post("/verificacion", status_code=status.HTTP_202_ACCEPTED)
+def enviar_codigo_verificacion(
+    datos: SolicitarVerificacionCorreo,
+    request: Request,
+    db: Session = Depends(abrir_puerta_bd),
+):
+    ip = request.client.host if request.client else "unknown"
+    return solicitar_codigo_correo(db, str(datos.correo), ip)
+
+
+@router.post("/verificacion/confirmar")
+def verificar_codigo(
+    datos: ConfirmarVerificacionCorreo,
+    request: Request,
+    db: Session = Depends(abrir_puerta_bd),
+):
+    ip = request.client.host if request.client else "unknown"
+    return confirmar_codigo_correo(db, datos.verificacion_id, datos.codigo, ip)
 
 
 @router.get("/", response_model=list[SolicitudCuentaResponse])
