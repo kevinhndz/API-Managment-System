@@ -26,6 +26,7 @@ from modulos.periodos.tabla import Periodos
 from modulos.secciones.tabla import Secciones
 from modulos.reportes.exportadores import exportar_csv, exportar_excel, exportar_json, exportar_pdf
 from modulos.reportes.repository import ReportesRepository
+from modulos.reportes.service import ReportesService
 from database.almacen import abrir_puerta_bd
 from main import app
 from utils.token import crear_token
@@ -136,6 +137,17 @@ def test_exportacion_json_conserva_valores_vacios_y_fechas_legibles():
 
     assert datos["registros"][0]["fecha_matricula"] == "2026-10-11"
     assert datos["registros"][0]["nota_final"] is None
+
+
+def test_vista_previa_limita_filas_y_conserva_el_total(monkeypatch):
+    registros = [SimpleNamespace(cuenta=f"2026-{numero:04}", nombre="Ana", correo="ana@example.com", carrera="Ingenieria", estado=True) for numero in range(25)]
+    monkeypatch.setattr(ReportesRepository, "estudiantes_repository", lambda db, estado, carrera_id: registros)
+
+    vista = ReportesService.vista_previa(None, "estudiantes", {"rol": "Administrador"})
+
+    assert vista["total_registros"] == 25
+    assert len(vista["registros"]) == 20
+    assert vista["registros"][0]["cuenta"] == "2026-0000"
 
 
 async def leer_respuesta(respuesta):
@@ -269,6 +281,13 @@ def test_docente_consulta_y_edita_estudiantes_y_descarga_solo_sus_calificaciones
         assert datos_json["total_registros"] == 1
         assert datos_json["registros"][0]["cuenta"] == "2026-5001"
         assert datos_json["registros"][0]["nota_final"] == 85.0
+
+        vista_previa = cliente.get("/reportes/calificaciones/vista-previa")
+        assert vista_previa.status_code == 200, vista_previa.text
+        assert vista_previa.json()["total_registros"] == 1
+        assert vista_previa.json()["registros"][0]["cuenta"] == "2026-5001"
+        assert vista_previa.json()["columnas"][0] == {"titulo": "Cuenta", "campo": "cuenta"}
+        assert cliente.get("/reportes/estudiantes/vista-previa").status_code == 403
 
         formato_invalido = cliente.get("/reportes/calificaciones/descargar/txt")
         assert formato_invalido.status_code == 422

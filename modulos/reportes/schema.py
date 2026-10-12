@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Optional
+from typing import Any, Optional
 from pydantic import BaseModel
 
 
@@ -25,3 +25,15 @@ class ReporteSeccionItem(BaseModel):
     estado: str
     cupo_maximo: int
     matriculados: int
+
+
+class ReporteColumna(BaseModel):
+    titulo: str
+    campo: str
+
+
+class ReporteVistaPrevia(BaseModel):
+    modulo: str
+    total_registros: int
+    columnas: list[ReporteColumna]
+    registros: list[dict[str, Any]]

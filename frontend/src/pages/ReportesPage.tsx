@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { AnimatedDownloadButton } from '../components/ui/AnimatedDownloadButton'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
 import { descargarReporte, type ReportFilters, type ReportFormat, type ReportModule } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
+import type { ResultadoVistaPrevia, VistaPreviaReporte } from '../workers/reportePreview.types'
 
 const modulos: Array<{ value: ReportModule; label: string }> = [
   { value: 'matriculas', label: 'Matrículas' },
@@ -30,6 +31,12 @@ const formatos: Array<{ value: ReportFormat; label: string }> = [
 
 const fieldClass = 'focus-ring mt-2 h-11 w-full rounded-xl border bg-[#faf7f0] px-3 text-sm dark:border-[#39334b] dark:bg-[#191625]'
 
+function mostrarValor(valor: string | number | boolean | null) {
+  if (valor === null) return '—'
+  if (typeof valor === 'boolean') return valor ? 'Sí' : 'No'
+  return String(valor)
+}
+
 export function ReportesPage() {
   const labels = useAcademicLabels()
   const { user } = useAuth()
@@ -39,9 +46,62 @@ export function ReportesPage() {
   const [filtros, setFiltros] = useState<ReportFilters>({})
   const [descargando, setDescargando] = useState<ReportFormat | null>(null)
   const [error, setError] = useState('')
+  const [vista, setVista] = useState<VistaPreviaReporte | null>(null)
+  const [consultando, setConsultando] = useState(false)
+  const [errorVista, setErrorVista] = useState('')
+  const trabajador = useRef<Worker | null>(null)
+  const solicitudActual = useRef(0)
+
+  useEffect(() => () => trabajador.current?.terminate(), [])
+
+  const invalidarVista = () => {
+    solicitudActual.current += 1
+    trabajador.current?.terminate()
+    trabajador.current = null
+    setVista(null)
+    setConsultando(false)
+    setErrorVista('')
+  }
 
   const cambiarFiltro = (key: keyof ReportFilters, value: string) => {
+    invalidarVista()
     setFiltros((current) => ({ ...current, [key]: value === '' ? undefined : ['periodo_id', 'estudiante_id', 'carrera_id'].includes(key) ? Number(value) : value }))
+  }
+
+  const consultarVista = () => {
+    const id = ++solicitudActual.current
+    setVista(null)
+    setErrorVista('')
+    setConsultando(true)
+
+    try {
+      if (!trabajador.current) {
+        const nuevoTrabajador = new Worker(new URL('../workers/reportePreview.worker.ts', import.meta.url), { type: 'module' })
+        nuevoTrabajador.onmessage = (event: MessageEvent<ResultadoVistaPrevia>) => {
+          if (event.data.id !== solicitudActual.current) return
+          setConsultando(false)
+          if (event.data.estado === 'completada') {
+            setVista(event.data.datos)
+          } else if (event.data.codigo === 401) {
+            window.location.assign('/login')
+          } else {
+            setErrorVista(event.data.mensaje)
+          }
+        }
+        nuevoTrabajador.onerror = () => {
+          setConsultando(false)
+          setErrorVista('No se pudo iniciar la consulta en segundo plano.')
+          nuevoTrabajador.terminate()
+          trabajador.current = null
+        }
+        trabajador.current = nuevoTrabajador
+      }
+
+      trabajador.current.postMessage({ id, modulo: moduloActivo, filtros })
+    } catch {
+      setConsultando(false)
+      setErrorVista('Este navegador no pudo iniciar la consulta en segundo plano.')
+    }
   }
 
   const descargar = async (formato: ReportFormat) => {
@@ -70,7 +130,7 @@ export function ReportesPage() {
     <section className="rounded-2xl border bg-[#fffdf8] p-6 shadow-panel dark:border-[#39334b] dark:bg-[#242033]">
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         <label className="text-sm font-medium">Módulo
-          <select className={fieldClass} value={moduloActivo} onChange={(event) => { setModulo(event.target.value as ReportModule); setFiltros({}); setError('') }}>
+          <select className={fieldClass} value={moduloActivo} onChange={(event) => { invalidarVista(); setModulo(event.target.value as ReportModule); setFiltros({}); setError('') }}>
             {modulosDisponibles.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </label>
@@ -125,6 +185,25 @@ export function ReportesPage() {
       <p className="mt-3 text-xs text-slate-500" role="note">
         Los archivos se descargan en la ubicación configurada en tu navegador. CSV puede abrirse en una hoja de cálculo; JSON conserva los datos estructurados.
       </p>
+
+      <div className="mt-7 border-t pt-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="button" onClick={consultarVista} className="focus-ring rounded-xl border px-4 py-2 text-sm font-semibold hover:bg-slate-50 dark:border-[#39334b] dark:hover:bg-[#302a42]">
+            {consultando ? 'Actualizar consulta' : 'Consultar vista previa'}
+          </button>
+          {consultando && <span role="status" className="text-sm text-slate-500">Consultando en segundo plano. Puedes seguir usando los filtros.</span>}
+        </div>
+        {errorVista && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{errorVista}</p>}
+        {vista && <div className="mt-5">
+          <p className="text-sm font-medium">{vista.total_registros} registros encontrados. Se muestran los primeros {vista.registros.length}.</p>
+          <div className="mt-3 overflow-x-auto rounded-xl border dark:border-[#39334b]">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-slate-100 dark:bg-[#302a42]"><tr>{vista.columnas.map((columna) => <th key={columna.campo} scope="col" className="whitespace-nowrap px-3 py-2">{columna.titulo}</th>)}</tr></thead>
+              <tbody>{vista.registros.map((registro, index) => <tr key={index} className="border-t dark:border-[#39334b]">{vista.columnas.map((columna) => <td key={columna.campo} className="whitespace-nowrap px-3 py-2">{mostrarValor(registro[columna.campo] ?? null)}</td>)}</tr>)}</tbody>
+            </table>
+          </div>
+        </div>}
+      </div>
 
       {esDocente && <p className="mt-5 rounded-xl border border-sage-200 bg-sage-50 p-3 text-sm text-sage-900 dark:border-sage-800 dark:bg-sage-950/30 dark:text-sage-200">
         El reporte incluye solo tus secciones asignadas. Si no aparecen datos, pide al administrador que te asigne secciones y verifica que tengan calificaciones registradas.
