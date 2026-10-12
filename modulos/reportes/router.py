@@ -1,13 +1,13 @@
 from datetime import date
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from database.almacen import abrir_puerta_bd
 from modulos.reportes.service import ReportesService as s
 from modulos.reportes.schema import ReporteMatriculaItem, ReporteSeccionItem
 from modulos.reportes.repository import ReportesRepository as repo
-from modulos.reportes.exportadores import exportar_excel, exportar_pdf
+from modulos.reportes.exportadores import exportar_csv, exportar_excel, exportar_json, exportar_pdf
 from modulos.auditoria.registro import registrar_evento
 from core.excepciones import AccesoProhibidoError
 from utils.auth import permiso_admin, permiso_usuario
@@ -43,7 +43,7 @@ def reporte_secciones(
 @router.get("/{modulo}/descargar/{formato}")
 def descargar_reporte(
     modulo: Literal["matriculas", "secciones", "estudiantes", "docentes", "calificaciones"],
-    formato: Literal["xlsx", "pdf"],
+    formato: Literal["xlsx", "pdf", "csv", "json"],
     periodo_id: int | None = None,
     estudiante_id: int | None = None,
     estado: str | None = None,
@@ -58,7 +58,6 @@ def descargar_reporte(
         raise AccesoProhibidoError("Los docentes solo pueden descargar reportes de sus calificaciones")
 
     if desde and hasta and desde > hasta:
-        from fastapi import HTTPException
         raise HTTPException(status_code=422, detail="La fecha inicial no puede superar la fecha final")
 
     if modulo == "matriculas":
@@ -73,6 +72,13 @@ def descargar_reporte(
         docente_id = usuario["docente_id"] if es_docente else None
         registros = repo.calificaciones_repository(db, periodo_id, carrera_id, docente_id)
 
-    respuesta = exportar_excel(modulo, registros) if formato == "xlsx" else exportar_pdf(modulo, registros)
+    if formato == "xlsx":
+        respuesta = exportar_excel(modulo, registros)
+    elif formato == "pdf":
+        respuesta = exportar_pdf(modulo, registros)
+    elif formato == "csv":
+        respuesta = exportar_csv(modulo, registros)
+    else:
+        respuesta = exportar_json(modulo, registros)
     registrar_evento(db, "EXPORTAR", modulo, f"Descargo reporte {formato.upper()} de {modulo} con {len(registros)} registros")
     return respuesta

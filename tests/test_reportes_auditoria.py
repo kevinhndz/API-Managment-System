@@ -226,6 +226,25 @@ def test_docente_consulta_y_edita_estudiantes_y_descarga_solo_sus_calificaciones
         assert hoja.max_row == 2
         assert hoja["A2"].value == "2026-5001"
         assert hoja["B2"].value == "Karen Hernandez Actualizada"
+
+        reporte_csv = cliente.get("/reportes/calificaciones/descargar/csv")
+        assert reporte_csv.status_code == 200, reporte_csv.text
+        assert reporte_csv.headers["content-disposition"] == 'attachment; filename="reporte_calificaciones.csv"'
+        filas_csv = list(csv.DictReader(reporte_csv.content.decode("utf-8-sig").splitlines()))
+        assert len(filas_csv) == 1
+        assert filas_csv[0]["Cuenta"] == "2026-5001"
+        assert filas_csv[0]["Estudiante"] == "Karen Hernandez Actualizada"
+
+        reporte_json = cliente.get("/reportes/calificaciones/descargar/json")
+        assert reporte_json.status_code == 200, reporte_json.text
+        datos_json = reporte_json.json()
+        assert datos_json["modulo"] == "calificaciones"
+        assert datos_json["total_registros"] == 1
+        assert datos_json["registros"][0]["cuenta"] == "2026-5001"
+        assert datos_json["registros"][0]["nota_final"] == 85.0
+
+        formato_invalido = cliente.get("/reportes/calificaciones/descargar/txt")
+        assert formato_invalido.status_code == 422
         assert cliente.get("/reportes/estudiantes/descargar/xlsx").status_code == 403
     finally:
         app.dependency_overrides.clear()

@@ -63,15 +63,14 @@ def exportar_json(modulo, registros):
         {campo: valor_json(item, campo) for _, campo in columnas}
         for item in registros
     ]
-    contenido = json.dumps(
-        {"modulo": modulo, "total_registros": len(datos), "registros": datos},
-        ensure_ascii=False,
-        indent=2,
-    ).encode("utf-8")
-
-    with BytesIO() as archivo:
-        archivo.write(contenido)
-        contenido = archivo.getvalue()
+    with StringIO() as texto:
+        json.dump(
+            {"modulo": modulo, "total_registros": len(datos), "registros": datos},
+            texto,
+            ensure_ascii=False,
+            indent=2,
+        )
+        contenido = texto.getvalue().encode("utf-8")
 
     return Response(
         content=contenido,
