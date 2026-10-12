@@ -270,6 +270,13 @@ def test_docente_consulta_y_edita_estudiantes_y_descarga_solo_sus_calificaciones
         assert datos_json["registros"][0]["cuenta"] == "2026-5001"
         assert datos_json["registros"][0]["nota_final"] == 85.0
 
+        vista_previa = cliente.get("/reportes/calificaciones/vista-previa")
+        assert vista_previa.status_code == 200, vista_previa.text
+        assert vista_previa.json()["total_registros"] == 1
+        assert vista_previa.json()["registros"][0]["cuenta"] == "2026-5001"
+        assert vista_previa.json()["columnas"][0] == {"titulo": "Cuenta", "campo": "cuenta"}
+        assert cliente.get("/reportes/estudiantes/vista-previa").status_code == 403
+
         formato_invalido = cliente.get("/reportes/calificaciones/descargar/txt")
         assert formato_invalido.status_code == 422
         assert cliente.get("/reportes/estudiantes/descargar/xlsx").status_code == 403
