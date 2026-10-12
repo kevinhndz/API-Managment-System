@@ -214,7 +214,7 @@ export const dashboardApi = {
 }
 
 export type ReportModule = 'matriculas' | 'secciones' | 'estudiantes' | 'docentes' | 'calificaciones'
-export type ReportFormat = 'xlsx' | 'pdf'
+export type ReportFormat = 'xlsx' | 'pdf' | 'csv' | 'json'
 
 export interface ReportFilters {
   periodo_id?: number
