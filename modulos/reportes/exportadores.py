@@ -1,7 +1,11 @@
-from io import BytesIO
+import csv
+import json
+from datetime import date, datetime
+from decimal import Decimal
+from io import BytesIO, StringIO
 from html import escape
 
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 from reportlab.lib import colors
@@ -26,6 +30,60 @@ def valor(item, campo):
     if isinstance(dato, bool):
         return "Si" if dato else "No"
     return dato
+
+
+def valor_json(item, campo):
+    dato = getattr(item, campo, None)
+    if isinstance(dato, (date, datetime)):
+        return dato.isoformat()
+    if isinstance(dato, Decimal):
+        return float(dato)
+    return dato
+
+
+def valor_csv(item, campo):
+    dato = valor(item, campo)
+    if isinstance(dato, str) and dato.startswith(("=", "+", "-", "@", "\t", "\r")):
+        return f"'{dato}"
+    return dato
+
+
+def exportar_csv(modulo, registros):
+    columnas = COLUMNAS[modulo]
+    with StringIO(newline="") as texto:
+        escritor = csv.writer(texto)
+        escritor.writerow([titulo for titulo, _ in columnas])
+        for item in registros:
+            escritor.writerow([valor_csv(item, campo) for _, campo in columnas])
+        contenido = texto.getvalue().encode("utf-8-sig")
+
+    return Response(
+        content=contenido,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="reporte_{modulo}.csv"'},
+    )
+
+
+def exportar_json(modulo, registros):
+    columnas = COLUMNAS[modulo]
+    datos = [
+        {campo: valor_json(item, campo) for _, campo in columnas}
+        for item in registros
+    ]
+    with StringIO() as texto:
+        json.dump(
+            {"modulo": modulo, "total_registros": len(datos), "registros": datos},
+            texto,
+            ensure_ascii=False,
+            indent=2,
+        )
+        contenido = texto.getvalue().encode("utf-8")
+
+    return Response(
+        content=contenido,
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="reporte_{modulo}.json"'},
+    )
 
 
 def exportar_excel(modulo, registros):

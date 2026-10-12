@@ -21,6 +21,13 @@ const estados: Record<ReportModule, Array<{ value: string; label: string }>> = {
   calificaciones: [],
 }
 
+const formatos: Array<{ value: ReportFormat; label: string }> = [
+  { value: 'xlsx', label: 'Excel' },
+  { value: 'pdf', label: 'PDF' },
+  { value: 'csv', label: 'CSV' },
+  { value: 'json', label: 'JSON' },
+]
+
 const fieldClass = 'focus-ring mt-2 h-11 w-full rounded-xl border bg-[#faf7f0] px-3 text-sm dark:border-[#39334b] dark:bg-[#191625]'
 
 export function ReportesPage() {
@@ -105,16 +112,19 @@ export function ReportesPage() {
       {error && <p className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p>}
 
       <div className="mt-7 flex flex-wrap gap-3 border-t pt-5">
-        {(['xlsx', 'pdf'] as const).map((formato) => (
+        {formatos.map(({ value: formato, label }) => (
           <AnimatedDownloadButton
             key={formato}
-            label={formato === 'xlsx' ? 'Excel' : 'PDF'}
+            label={label}
             loading={descargando === formato}
             disabled={descargando !== null}
             onClick={() => void descargar(formato)}
           />
         ))}
       </div>
+      <p className="mt-3 text-xs text-slate-500" role="note">
+        Los archivos se descargan en la ubicación configurada en tu navegador. CSV puede abrirse en una hoja de cálculo; JSON conserva los datos estructurados.
+      </p>
 
       {esDocente && <p className="mt-5 rounded-xl border border-sage-200 bg-sage-50 p-3 text-sm text-sage-900 dark:border-sage-800 dark:bg-sage-950/30 dark:text-sage-200">
         El reporte incluye solo tus secciones asignadas. Si no aparecen datos, pide al administrador que te asigne secciones y verifica que tengan calificaciones registradas.
