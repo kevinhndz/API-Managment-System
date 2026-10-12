@@ -1,5 +1,7 @@
 from io import BytesIO
 import asyncio
+import csv
+import json
 from datetime import date
 from types import SimpleNamespace
 
@@ -22,7 +24,7 @@ from modulos.estudiantes.tabla import Estudiantes
 from modulos.matriculas.tabla import Matriculas
 from modulos.periodos.tabla import Periodos
 from modulos.secciones.tabla import Secciones
-from modulos.reportes.exportadores import exportar_excel, exportar_pdf
+from modulos.reportes.exportadores import exportar_csv, exportar_excel, exportar_json, exportar_pdf
 from modulos.reportes.repository import ReportesRepository
 from database.almacen import abrir_puerta_bd
 from main import app
@@ -62,6 +64,51 @@ def test_exportaciones_generan_archivos_reales():
 
     pdf = exportar_pdf("estudiantes", registros)
     assert asyncio.run(leer_respuesta(pdf)).startswith(b"%PDF")
+
+
+def test_exportaciones_csv_y_json_se_pueden_leer_y_coinciden_con_los_registros():
+    registros = [
+        SimpleNamespace(
+            cuenta="2026-0001",
+            nombre="Ana López, María",
+            correo="ana@example.com",
+            carrera="Ingeniería",
+            estado=True,
+        ),
+        SimpleNamespace(
+            cuenta="2026-0002",
+            nombre="Luis Pérez",
+            correo="luis@example.com",
+            carrera="Matemáticas",
+            estado=False,
+        ),
+    ]
+
+    respuesta_csv = exportar_csv("estudiantes", registros)
+    texto_csv = respuesta_csv.body.decode("utf-8-sig")
+    filas_csv = list(csv.DictReader(texto_csv.splitlines()))
+    assert respuesta_csv.headers["content-disposition"] == 'attachment; filename="reporte_estudiantes.csv"'
+    assert filas_csv[0] == {
+        "Cuenta": "2026-0001",
+        "Nombre": "Ana López, María",
+        "Correo": "ana@example.com",
+        "Carrera": "Ingeniería",
+        "Activo": "Si",
+    }
+    assert filas_csv[1]["Activo"] == "No"
+
+    respuesta_json = exportar_json("estudiantes", registros)
+    datos_json = json.loads(respuesta_json.body)
+    assert respuesta_json.headers["content-disposition"] == 'attachment; filename="reporte_estudiantes.json"'
+    assert datos_json["modulo"] == "estudiantes"
+    assert datos_json["total_registros"] == 2
+    assert datos_json["registros"][0] == {
+        "cuenta": "2026-0001",
+        "nombre": "Ana López, María",
+        "correo": "ana@example.com",
+        "carrera": "Ingeniería",
+        "estado": True,
+    }
 
 
 async def leer_respuesta(respuesta):
