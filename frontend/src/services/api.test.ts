@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { aulasApi } from './api'
+import { aulasApi, descargarReporte } from './api'
 import { matriculasApi, calificacionesApi } from './api'
 
 describe('aulasApi', () => {
@@ -33,6 +33,43 @@ describe('aulasApi', () => {
     await matriculasApi.list()
     await calificacionesApi.list()
     expect(fetchMockPaths()).toEqual(['/api/matriculas/?pagina_actual=1&limite=100', '/api/calificaciones/?pagina_actual=1&limite=100'])
+  })
+})
+
+describe('descargarReporte', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    vi.useRealTimers()
+    localStorage.clear()
+  })
+
+  it.each([
+    ['csv', 'reporte_estudiantes.csv'],
+    ['json', 'reporte_estudiantes.json'],
+  ] as const)('descarga el archivo %s con nombre correcto', async (formato, nombreEsperado) => {
+    vi.useFakeTimers()
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('archivo de prueba', { status: 200, headers: { 'Content-Type': formato === 'csv' ? 'text/csv' : 'application/json' } }),
+    )
+    const crearUrl = vi.fn().mockReturnValue('blob:archivo-de-prueba')
+    const revocarUrl = vi.fn()
+    vi.stubGlobal('URL', { createObjectURL: crearUrl, revokeObjectURL: revocarUrl })
+    const nombresDescargados: string[] = []
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      nombresDescargados.push(this.download)
+    })
+
+    await descargarReporte('estudiantes', formato, { estado: 'ACTIVO' })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/reportes/estudiantes/descargar/' + formato + '?estado=ACTIVO',
+      { credentials: 'include' },
+    )
+    expect(crearUrl).toHaveBeenCalledWith(expect.any(Blob))
+    expect(nombresDescargados).toEqual([nombreEsperado])
+    vi.runOnlyPendingTimers()
+    expect(revocarUrl).toHaveBeenCalledWith('blob:archivo-de-prueba')
   })
 })
 
