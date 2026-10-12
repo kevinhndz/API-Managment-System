@@ -41,13 +41,20 @@ def valor_json(item, campo):
     return dato
 
 
+def valor_csv(item, campo):
+    dato = valor(item, campo)
+    if isinstance(dato, str) and dato.startswith(("=", "+", "-", "@", "\t", "\r")):
+        return f"'{dato}"
+    return dato
+
+
 def exportar_csv(modulo, registros):
     columnas = COLUMNAS[modulo]
     with StringIO(newline="") as texto:
         escritor = csv.writer(texto)
         escritor.writerow([titulo for titulo, _ in columnas])
         for item in registros:
-            escritor.writerow([valor(item, campo) for _, campo in columnas])
+            escritor.writerow([valor_csv(item, campo) for _, campo in columnas])
         contenido = texto.getvalue().encode("utf-8-sig")
 
     return Response(
