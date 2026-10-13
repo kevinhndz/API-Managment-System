@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react'
 import { useRef, useState, type PointerEvent } from 'react'
+import { useForm } from 'react-hook-form'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
