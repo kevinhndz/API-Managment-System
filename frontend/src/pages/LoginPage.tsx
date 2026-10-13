@@ -1,12 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react'
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useRef, useState, type PointerEvent } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
 import { useAuth } from '../contexts/AuthContext'
 import { CampusFlowLogo } from '../components/brand/CampusFlowLogo'
+import './LoginPage.css'
 
 const loginSchema = z.object({
   usuario: z.string().min(3, 'Ingresa tu usuario.'),
@@ -19,6 +19,7 @@ export function LoginPage() {
   const { isAuthenticated, login } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [serverError, setServerError] = useState('')
+  const cardRef = useRef<HTMLElement>(null)
   const navigate = useNavigate()
   const location = useLocation()
   const {
@@ -40,92 +41,103 @@ export function LoginPage() {
     }
   })
 
-  return (
-    <main className="relative min-h-screen overflow-hidden bg-[#100d18] px-4 py-5 sm:px-8 sm:py-8">
-      <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(rgba(255,255,255,.12)_1px,transparent_1px)] [background-size:24px_24px]" />
-      <section className="relative mx-auto grid min-h-[calc(100vh-2.5rem)] max-w-6xl overflow-hidden rounded-[1.5rem] border border-[#34264a] bg-[#191523] shadow-[0_30px_100px_-35px_rgb(0_0_0_/_0.8)] lg:grid-cols-[1.05fr_.95fr]">
-        <div className="relative hidden overflow-hidden bg-[#241637] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-12">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgb(192_132_252_/_0.2),transparent_22rem),linear-gradient(145deg,#4c1d75,#171221_78%)]" />
-          <CampusFlowLogo light className="relative" />
+  const handleCardPointerMove = (event: PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== 'mouse' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-          <div className="relative max-w-md">
-            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-violet-200">Gestión académica</p>
-            <h1 className="max-w-md text-5xl font-semibold leading-[1.02] tracking-[-0.06em]">Tu campus, organizado en un solo lugar.</h1>
-            <p className="mt-5 max-w-sm text-sm leading-7 text-violet-100/75">
-              Administra aulas, docentes y carreras con información clara y decisiones respaldadas por datos.
-            </p>
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const horizontal = (event.clientX - bounds.left) / bounds.width - 0.5
+    const vertical = (event.clientY - bounds.top) / bounds.height - 0.5
+    event.currentTarget.style.setProperty('--signin-rotate-x', `${vertical * -3}deg`)
+    event.currentTarget.style.setProperty('--signin-rotate-y', `${horizontal * 3}deg`)
+  }
+
+  const resetCardTilt = () => {
+    cardRef.current?.style.setProperty('--signin-rotate-x', '0deg')
+    cardRef.current?.style.setProperty('--signin-rotate-y', '0deg')
+  }
+
+  return (
+    <main className="signin-page">
+      <div aria-hidden="true" className="signin-page__grain" />
+      <div aria-hidden="true" className="signin-page__glow signin-page__glow--top" />
+      <div aria-hidden="true" className="signin-page__glow signin-page__glow--bottom" />
+
+      <section
+        ref={cardRef}
+        className="signin-card"
+        aria-labelledby="signin-title"
+        onPointerMove={handleCardPointerMove}
+        onPointerLeave={resetCardTilt}
+      >
+        <div aria-hidden="true" className="signin-card__beam" />
+        <div className="signin-card__content">
+          <CampusFlowLogo light className="signin-card__logo" />
+
+          <div className="signin-card__intro">
+            <p className="signin-card__eyebrow">Tu campus, en un solo lugar</p>
+            <h1 id="signin-title">Inicia sesión</h1>
+            <p className="signin-card__description">Ingresa tus credenciales para acceder al panel académico.</p>
           </div>
 
-          <p className="relative text-xs text-violet-100/55">© {new Date().getFullYear()} CampusFlow · Universidad Politécnica de Honduras</p>
-        </div>
+          <form className="signin-form" onSubmit={onSubmit} noValidate>
+            <label className="signin-field">
+              <span className="signin-field__label">Usuario</span>
+              <span className="signin-field__control">
+                <Mail aria-hidden="true" className="signin-field__icon" />
+                <input
+                  aria-invalid={Boolean(errors.usuario)}
+                  aria-describedby={errors.usuario ? 'signin-username-error' : undefined}
+                  autoComplete="username"
+                  placeholder="Tu nombre de usuario"
+                  type="text"
+                  {...register('usuario')}
+                />
+              </span>
+              {errors.usuario && <span id="signin-username-error" className="signin-field__error">{errors.usuario.message}</span>}
+            </label>
 
-        <div className="flex items-center justify-center bg-[#171421] px-6 py-12 text-white sm:px-12 lg:px-12 xl:px-16">
-          <div className="w-full max-w-md">
-            <CampusFlowLogo light className="mb-10 lg:hidden" />
+            <label className="signin-field">
+              <span className="signin-field__label">Contraseña</span>
+              <span className="signin-field__control">
+                <LockKeyhole aria-hidden="true" className="signin-field__icon" />
+                <input
+                  aria-invalid={Boolean(errors.password)}
+                  aria-describedby={errors.password ? 'signin-password-error' : undefined}
+                  autoComplete="current-password"
+                  placeholder="Escribe tu contraseña"
+                  type={showPassword ? 'text' : 'password'}
+                  {...register('password')}
+                />
+                <button
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  className="signin-field__toggle"
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                >
+                  {showPassword ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+                </button>
+              </span>
+              {errors.password && <span id="signin-password-error" className="signin-field__error">{errors.password.message}</span>}
+            </label>
 
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-violet-300">Bienvenido de nuevo</p>
-            <h2 className="mt-2 text-4xl font-semibold tracking-[-0.05em] text-white">Inicia sesión</h2>
-            <p className="mt-3 text-sm leading-6 text-[#b9a9bd]">Ingresa tus credenciales para acceder al panel académico.</p>
+            {serverError && <p className="signin-form__server-error" role="alert">{serverError}</p>}
 
-            <form className="mt-8 space-y-5" onSubmit={onSubmit} noValidate>
-              <label className="block">
-                  <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.12em] text-[#d8c9df]">Usuario</span>
-                <span className="relative block">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7e6d6d]" />
-                  <input
-                    className="focus-ring h-12 w-full rounded-xl border border-[#443650] bg-[#211b2b] pl-11 pr-4 text-sm text-white placeholder:text-[#93899c]"
-                    type="text"
-                    autoComplete="username"
-                    placeholder="admin"
-                    {...register('usuario')}
-                  />
-                </span>
-                {errors.usuario && <span className="mt-1.5 block text-xs text-rose-300">{errors.usuario.message}</span>}
-              </label>
+            <button className="signin-submit" type="submit" disabled={isSubmitting}>
+              <span>{isSubmitting ? 'Ingresando…' : 'Ingresar al campus'}</span>
+              {!isSubmitting && <ArrowRight aria-hidden="true" />}
+              {isSubmitting && <span aria-hidden="true" className="signin-submit__spinner" />}
+            </button>
+          </form>
 
-              <label className="block">
-                  <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.12em] text-[#d8c9df]">Contraseña</span>
-                <span className="relative block">
-                  <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7e6d6d]" />
-                  <input
-                    className="focus-ring h-12 w-full rounded-xl border border-[#443650] bg-[#211b2b] pl-11 pr-12 text-sm text-white placeholder:text-[#93899c]"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    placeholder="••••••••"
-                    {...register('password')}
-                  />
-                  <button
-                    className="focus-ring absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-[#a59aae] hover:text-white"
-                    type="button"
-                    onClick={() => setShowPassword((current) => !current)}
-                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </span>
-                {errors.password && <span className="mt-1.5 block text-xs text-rose-300">{errors.password.message}</span>}
-              </label>
-
-              {serverError && <p className="rounded-xl border border-rose-900/50 bg-rose-950/40 px-4 py-3 text-sm text-rose-200">{serverError}</p>}
-
-              <button
-                className="focus-ring flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#7e22ce] px-5 text-sm font-semibold text-white transition hover:bg-[#9333ea] disabled:cursor-not-allowed disabled:opacity-60"
-                type="submit"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Ingresando…' : 'Ingresar'}
-                {!isSubmitting && <ArrowRight className="h-4 w-4" />}
-              </button>
-            </form>
-
-            <div className="mt-5 flex flex-wrap justify-between gap-3 text-sm">
-              <Link className="text-violet-300 hover:text-violet-200 hover:underline" to="/recuperar-contrasena">Olvide mi contrasena</Link>
-              <Link className="font-semibold text-violet-300 hover:text-violet-200 hover:underline" to="/solicitar-cuenta">Solicitar una cuenta</Link>
-            </div>
-
+          <div className="signin-links">
+            <Link to="/recuperar-contrasena">¿Olvidaste tu contraseña?</Link>
+            <span aria-hidden="true" className="signin-links__separator" />
+            <Link to="/solicitar-cuenta">Solicitar una cuenta</Link>
           </div>
         </div>
       </section>
+
+      <p className="signin-page__footer">© {new Date().getFullYear()} CampusFlow · Universidad Politécnica de Honduras</p>
     </main>
   )
 }
