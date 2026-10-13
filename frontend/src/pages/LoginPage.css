@@ -390,3 +390,28 @@
     display: none;
   }
 }
+
+@media (hover: none), (pointer: coarse) {
+  .signin-card {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signin-card,
+  .signin-card::before,
+  .signin-submit__spinner {
+    animation: none;
+  }
+
+  .signin-card,
+  .signin-field__control input,
+  .signin-submit,
+  .signin-links a {
+    transition-duration: .01ms;
+  }
+
+  .signin-card {
+    transform: none;
+  }
+}
