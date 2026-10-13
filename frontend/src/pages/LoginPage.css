@@ -60,6 +60,49 @@
   transform: perspective(1100px) rotateX(var(--signin-rotate-x)) rotateY(var(--signin-rotate-y));
   transform-style: preserve-3d;
   transition: transform 260ms var(--ease-out, cubic-bezier(.23, 1, .32, 1));
+  animation: signin-card-enter 650ms var(--ease-out, cubic-bezier(.23, 1, .32, 1)) both;
+}
+
+@property --signin-beam-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes signin-card-enter {
+  from { opacity: 0; transform: perspective(1100px) translateY(18px) scale(.985); }
+  to { opacity: 1; transform: perspective(1100px) rotateX(var(--signin-rotate-x)) rotateY(var(--signin-rotate-y)); }
+}
+
+@keyframes signin-border-beam {
+  to { --signin-beam-angle: 360deg; }
+}
+
+@keyframes signin-spinner-rotate {
+  to { transform: rotate(360deg); }
+}
+
+.signin-card::before {
+  position: absolute;
+  z-index: 2;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--signin-beam-angle),
+    transparent 0deg 292deg,
+    rgb(209 161 255 / 12%) 315deg,
+    #e9c9ff 337deg,
+    #a96bff 347deg,
+    transparent 360deg
+  );
+  content: '';
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  padding: 1px;
+  animation: signin-border-beam 8s linear infinite;
 }
 
 .signin-card__beam {
@@ -278,6 +321,7 @@
   border: 2px solid rgb(255 255 255 / 35%);
   border-top-color: #fff;
   border-radius: 50%;
+  animation: signin-spinner-rotate 800ms linear infinite;
 }
 
 .signin-links {
