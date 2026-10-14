@@ -188,8 +188,10 @@ export function CircularCarousel({ items, onSelect, onHover, selectedTitle }: Ci
                   onPointerEnter={(event) => {
                     if (event.pointerType === 'mouse') {
                       setPreview(index)
-                      onHover?.(item)
                     }
+                  }}
+                  onPointerMove={(event) => {
+                    if (event.pointerType === 'mouse' && !dragRef.current) onHover?.(item)
                   }}
                   onPointerLeave={() => setPreview(null)}
                   onFocus={() => setPreview(index)}
