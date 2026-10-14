@@ -50,18 +50,19 @@ describe('ActividadPage', () => {
     }))
   })
 
-  it('no selecciona por un pointerenter causado por el montaje y sí al mover el cursor sobre la tarjeta', async () => {
+  it('ignora el cursor inmóvil y abre el módulo tras un hover intencional', async () => {
     const user = userEvent.setup()
     vi.mocked(listarActividad).mockResolvedValue([])
     render(<ActividadPage />)
 
     const docentes = screen.getByRole('button', { name: 'Docentes: Cambios y registros' })
     fireEvent.pointerEnter(docentes, { pointerType: 'mouse' })
+    fireEvent.pointerMove(docentes, { pointerType: 'mouse', movementX: 0, movementY: 0 })
 
     expect(screen.getByText('¿Qué parte del campus quieres revisar?')).toBeInTheDocument()
     expect(listarActividad).not.toHaveBeenCalled()
 
-    fireEvent.pointerMove(docentes, { pointerType: 'mouse', clientX: 30, clientY: 30 })
+    fireEvent.pointerMove(docentes, { pointerType: 'mouse', movementX: 8, movementY: 2 })
 
     expect(await screen.findByRole('heading', { name: 'Actividad de Docentes' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Album de metricas del campus' })).not.toBeInTheDocument()
