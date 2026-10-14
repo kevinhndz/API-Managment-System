@@ -67,6 +67,7 @@ export function CircularCarousel({ items, onSelect, onHover, selectedTitle }: Ci
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.button !== 0 || !items.length) return
+    if (event.target instanceof Element && event.target.closest('.circular-carousel__card')) return
 
     const cardWidth = firstCardRef.current?.getBoundingClientRect().width ?? 0
     if (!cardWidth) return
@@ -196,7 +197,7 @@ export function CircularCarousel({ items, onSelect, onHover, selectedTitle }: Ci
                   }}
                   onPointerMove={(event) => {
                     const moved = event.nativeEvent.movementX !== 0 || event.nativeEvent.movementY !== 0
-                    if (event.pointerType !== 'mouse' || !moved || dragRef.current || !onHover) return
+                    if (event.pointerType !== 'mouse' || event.buttons !== 0 || !moved || dragRef.current || !onHover) return
 
                     window.clearTimeout(hoverTimerRef.current)
                     hoverTimerRef.current = window.setTimeout(() => onHover(item), 300)
