@@ -12,6 +12,7 @@ export interface CarouselItem {
 interface CircularCarouselProps {
   items: CarouselItem[]
   onSelect?: (item: CarouselItem) => void
+  onHover?: (item: CarouselItem) => void
   selectedTitle?: string
 }
 
@@ -37,7 +38,7 @@ function shortestOffset(index: number, position: number, length: number) {
   return offset
 }
 
-export function CircularCarousel({ items, onSelect, selectedTitle }: CircularCarouselProps) {
+export function CircularCarousel({ items, onSelect, onHover, selectedTitle }: CircularCarouselProps) {
   const firstCardRef = useRef<HTMLButtonElement>(null)
   const dragRef = useRef<DragState | null>(null)
   const draggedRef = useRef(false)
@@ -84,7 +85,7 @@ export function CircularCarousel({ items, onSelect, selectedTitle }: CircularCar
 
     const distance = event.clientX - drag.startX
 
-    if (Math.abs(distance) > 5) draggedRef.current = true
+    if (Math.abs(distance) > 10) draggedRef.current = true
 
     setPosition(drag.startPosition - distance / (drag.cardWidth * 0.74))
   }
@@ -185,7 +186,10 @@ export function CircularCarousel({ items, onSelect, selectedTitle }: CircularCar
                     onSelect?.(item)
                   }}
                   onPointerEnter={(event) => {
-                    if (event.pointerType === 'mouse') setPreview(index)
+                    if (event.pointerType === 'mouse') {
+                      setPreview(index)
+                      onHover?.(item)
+                    }
                   }}
                   onPointerLeave={() => setPreview(null)}
                   onFocus={() => setPreview(index)}
