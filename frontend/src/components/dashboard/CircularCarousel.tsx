@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export interface CarouselItem {
@@ -42,12 +42,15 @@ export function CircularCarousel({ items, onSelect, onHover, selectedTitle }: Ci
   const firstCardRef = useRef<HTMLButtonElement>(null)
   const dragRef = useRef<DragState | null>(null)
   const draggedRef = useRef(false)
+  const hoverTimerRef = useRef<number | undefined>(undefined)
   const [position, setPosition] = useState(0)
   const [preview, setPreview] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
 
   const active = wrapIndex(Math.round(position), items.length)
   const detailIndex = preview ?? active
+
+  useEffect(() => () => window.clearTimeout(hoverTimerRef.current), [])
 
   function goTo(index: number) {
     setPosition((currentPosition) => {
@@ -180,6 +183,7 @@ export function CircularCarousel({ items, onSelect, onHover, selectedTitle }: Ci
                   aria-pressed={onSelect ? selectedTitle === item.title : undefined}
                   tabIndex={visible ? 0 : -1}
                   onClick={() => {
+                    window.clearTimeout(hoverTimerRef.current)
                     if (draggedRef.current) return
                     goTo(index)
                     setPreview(null)
@@ -191,9 +195,16 @@ export function CircularCarousel({ items, onSelect, onHover, selectedTitle }: Ci
                     }
                   }}
                   onPointerMove={(event) => {
-                    if (event.pointerType === 'mouse' && !dragRef.current) onHover?.(item)
+                    const moved = event.nativeEvent.movementX !== 0 || event.nativeEvent.movementY !== 0
+                    if (event.pointerType !== 'mouse' || !moved || dragRef.current || !onHover) return
+
+                    window.clearTimeout(hoverTimerRef.current)
+                    hoverTimerRef.current = window.setTimeout(() => onHover(item), 300)
                   }}
-                  onPointerLeave={() => setPreview(null)}
+                  onPointerLeave={() => {
+                    window.clearTimeout(hoverTimerRef.current)
+                    setPreview(null)
+                  }}
                   onFocus={() => setPreview(index)}
                   onBlur={() => setPreview(null)}
                 >
