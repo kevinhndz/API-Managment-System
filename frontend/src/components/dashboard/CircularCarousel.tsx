@@ -1,15 +1,18 @@
 import { useRef, useState, type PointerEvent } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-interface CarouselItem {
+export interface CarouselItem {
   src: string
   alt: string
   title: string
   subtitle: string
+  value?: string
 }
 
 interface CircularCarouselProps {
   items: CarouselItem[]
+  onSelect?: (item: CarouselItem) => void
+  selectedTitle?: string
 }
 
 interface DragState {
@@ -34,7 +37,7 @@ function shortestOffset(index: number, position: number, length: number) {
   return offset
 }
 
-export function CircularCarousel({ items }: CircularCarouselProps) {
+export function CircularCarousel({ items, onSelect, selectedTitle }: CircularCarouselProps) {
   const firstCardRef = useRef<HTMLButtonElement>(null)
   const dragRef = useRef<DragState | null>(null)
   const draggedRef = useRef(false)
@@ -164,7 +167,7 @@ export function CircularCarousel({ items }: CircularCarouselProps) {
                   key={item.title}
                   ref={index === 0 ? firstCardRef : undefined}
                   type="button"
-                  className={`circular-carousel__card${isActive ? ' is-active' : ''}${isPreviewed ? ' is-previewed' : ''}`}
+                  className={`circular-carousel__card${isActive ? ' is-active' : ''}${isPreviewed ? ' is-previewed' : ''}${selectedTitle === item.title ? ' is-selected' : ''}`}
                   style={{
                     transform: `translateX(calc(-50% + ${offset * 74}%)) translateY(-50%) translateZ(${-ramp * 42}px) rotateY(${-tilt}deg) scale(${scale})`,
                     opacity: visible ? Math.max(0, 1 - distance * 0.2) : 0,
@@ -173,11 +176,13 @@ export function CircularCarousel({ items }: CircularCarouselProps) {
                   }}
                   aria-label={`${item.title}: ${item.subtitle}`}
                   aria-current={isActive ? 'true' : undefined}
+                  aria-pressed={onSelect ? selectedTitle === item.title : undefined}
                   tabIndex={visible ? 0 : -1}
                   onClick={() => {
                     if (draggedRef.current) return
                     goTo(index)
                     setPreview(null)
+                    onSelect?.(item)
                   }}
                   onPointerEnter={(event) => {
                     if (event.pointerType === 'mouse') setPreview(index)

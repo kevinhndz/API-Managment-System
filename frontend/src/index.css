@@ -132,7 +132,9 @@
   .circular-carousel__card-details strong { font-size: 1.05rem; letter-spacing: -.02em; }
   .circular-carousel__card-details > span { color: rgb(255 255 255 / .82); font-size: .82rem; line-height: 1.4; }
   .circular-carousel__card.is-active { border-color: rgb(255 255 255 / .82); }
+  .circular-carousel__card.is-selected { border-color: rgb(196 142 255 / .95); box-shadow: 0 0 0 2px rgb(167 108 255 / .28), 0 24px 48px -22px rgb(24 18 20 / .65); }
   .circular-carousel__card.is-previewed .circular-carousel__card-details,
+  .circular-carousel__card.is-selected .circular-carousel__card-details,
   .circular-carousel__card:focus-visible .circular-carousel__card-details { opacity: 1; transform: translateY(0); }
   .circular-carousel__card:focus-visible { outline: 3px solid #5b0309; outline-offset: 4px; }
   .dark .circular-carousel__arrow { border-color: rgb(255 255 255 / .14); background: rgb(36 32 51 / .92); color: #ddd6fe; }

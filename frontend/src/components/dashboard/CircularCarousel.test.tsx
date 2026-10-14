@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { CircularCarousel } from './CircularCarousel'
 
@@ -40,6 +40,20 @@ describe('CircularCarousel', () => {
 
     expect(screen.getByText('01 / 02')).toBeInTheDocument()
     expect(within(screen.getByRole('button', { name: 'Aulas: 12 registradas' })).getByText('12 registradas')).toBeInTheDocument()
+  })
+
+  it('notifica la tarjeta elegida cuando se usa como filtro', async () => {
+    const user = userEvent.setup()
+    const onSelect = vi.fn()
+    render(<CircularCarousel items={items} onSelect={onSelect} selectedTitle="Aulas" />)
+
+    const aulas = screen.getByRole('button', { name: 'Aulas: 12 registradas' })
+    expect(aulas).toHaveAttribute('aria-pressed', 'true')
+    expect(aulas).toHaveClass('is-selected')
+
+    await user.click(screen.getByRole('button', { name: 'Docentes: 8 activos' }))
+
+    expect(onSelect).toHaveBeenCalledWith(items[1])
   })
 
   it('explica cuando no hay metricas', () => {
