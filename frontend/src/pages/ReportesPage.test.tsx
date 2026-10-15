@@ -10,9 +10,9 @@ vi.mock('../contexts/AuthContext', () => ({
 
 vi.mock('../hooks/useAcademicLabels', () => ({
   useAcademicLabels: () => ({
-    carreraOptions: [],
-    periodoOptions: [],
-    estudianteOptions: [],
+    carreraOptions: [{ value: '8', label: 'ING · Ingeniería' }, { value: '9', label: 'ADM · Administración' }],
+    periodoOptions: [{ value: '2', label: '2026 · período 2' }],
+    estudianteOptions: [{ value: '17', label: '20260017 · Ana López' }, { value: '18', label: '20260018 · Luis Díaz' }],
   }),
 }))
 
@@ -31,17 +31,35 @@ describe('ReportesPage', () => {
     vi.mocked(descargarReporte).mockResolvedValue(undefined)
     render(<ReportesPage />)
 
+    expect(screen.queryByRole('combobox', { name: 'Módulo' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
     expect(screen.getByRole('button', { name: 'Descargar Excel' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Descargar PDF' })).toBeInTheDocument()
     const csvButton = screen.getByRole('button', { name: 'Descargar CSV' })
     expect(csvButton).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Descargar JSON' })).toBeInTheDocument()
 
+    fireEvent.change(screen.getByRole('combobox', { name: 'Carrera' }), { target: { value: 'Ingeniería' } })
+    expect(screen.getByRole('option', { name: 'ING · Ingeniería' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('option', { name: 'ING · Ingeniería' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Estudiante' }), { target: { value: '20260017' } })
+    expect(screen.getByRole('option', { name: '20260017 · Ana López' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('option', { name: '20260017 · Ana López' }))
+
     fireEvent.click(csvButton)
 
     await waitFor(() => {
-      expect(descargarReporte).toHaveBeenCalledWith('matriculas', 'csv', {})
+      expect(descargarReporte).toHaveBeenCalledWith('matriculas', 'csv', { carrera_id: 8, estudiante_id: 17 })
     })
+  })
+
+  it('abre el reporte elegido y permite regresar a la cuadrícula', () => {
+    render(<ReportesPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir reporte académico' }))
+    expect(screen.getByRole('heading', { name: 'Estudiantes' })).toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: 'Módulo' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Elegir otro reporte' }))
+    expect(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' })).toBeInTheDocument()
   })
 
   it('mantiene los filtros activos y descarta respuestas antiguas del hilo', async () => {
@@ -65,21 +83,21 @@ describe('ReportesPage', () => {
     vi.stubGlobal('Worker', TrabajadorDePrueba)
     render(<ReportesPage />)
 
+    fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
     fireEvent.click(screen.getByRole('button', { name: 'Consultar vista previa' }))
     expect(screen.getByRole('status')).toHaveTextContent('Consultando en segundo plano')
-    expect(screen.getByRole('combobox', { name: 'Módulo' })).toBeEnabled()
-    expect(trabajadores[0].postMessage).toHaveBeenCalledWith({ id: 1, modulo: 'matriculas', filtros: {} })
+    expect(trabajadores[0].postMessage).toHaveBeenCalledWith({ id: 2, modulo: 'matriculas', filtros: {} })
 
     fireEvent.click(screen.getByRole('button', { name: 'Actualizar consulta' }))
-    trabajadores[0].onmessage?.({ data: { id: 1, estado: 'completada', datos: { total_registros: 1, columnas: [], registros: [] } } } as MessageEvent)
+    trabajadores[0].onmessage?.({ data: { id: 2, estado: 'completada', datos: { total_registros: 1, columnas: [], registros: [] } } } as MessageEvent)
     expect(screen.getByRole('status')).toHaveTextContent('Consultando en segundo plano')
 
-    trabajadores[0].onmessage?.({ data: { id: 2, estado: 'completada', datos: {
+    trabajadores[0].onmessage?.({ data: { id: 3, estado: 'completada', datos: {
       modulo: 'matriculas', total_registros: 1, columnas: [{ titulo: 'Estudiante', campo: 'estudiante' }], registros: [{ estudiante: 'Ana López' }],
     } } } as MessageEvent)
     expect(await screen.findByText('Ana López')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByRole('combobox', { name: 'Módulo' }), { target: { value: 'estudiantes' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Elegir otro reporte' }))
     expect(trabajadores[0].terminate).toHaveBeenCalled()
     expect(screen.queryByText('Ana López')).not.toBeInTheDocument()
   })
