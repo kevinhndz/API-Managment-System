@@ -1,15 +1,19 @@
-import { useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-interface CarouselItem {
+export interface CarouselItem {
   src: string
   alt: string
   title: string
   subtitle: string
+  value?: string
 }
 
 interface CircularCarouselProps {
   items: CarouselItem[]
+  onSelect?: (item: CarouselItem) => void
+  onHover?: (item: CarouselItem) => void
+  selectedTitle?: string
 }
 
 interface DragState {
@@ -34,16 +38,19 @@ function shortestOffset(index: number, position: number, length: number) {
   return offset
 }
 
-export function CircularCarousel({ items }: CircularCarouselProps) {
+export function CircularCarousel({ items, onSelect, onHover, selectedTitle }: CircularCarouselProps) {
   const firstCardRef = useRef<HTMLButtonElement>(null)
   const dragRef = useRef<DragState | null>(null)
   const draggedRef = useRef(false)
+  const hoverTimerRef = useRef<number | undefined>(undefined)
   const [position, setPosition] = useState(0)
   const [preview, setPreview] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
 
   const active = wrapIndex(Math.round(position), items.length)
   const detailIndex = preview ?? active
+
+  useEffect(() => () => window.clearTimeout(hoverTimerRef.current), [])
 
   function goTo(index: number) {
     setPosition((currentPosition) => {
@@ -60,6 +67,7 @@ export function CircularCarousel({ items }: CircularCarouselProps) {
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.button !== 0 || !items.length) return
+    if (event.target instanceof Element && event.target.closest('.circular-carousel__card')) return
 
     const cardWidth = firstCardRef.current?.getBoundingClientRect().width ?? 0
     if (!cardWidth) return
@@ -81,7 +89,7 @@ export function CircularCarousel({ items }: CircularCarouselProps) {
 
     const distance = event.clientX - drag.startX
 
-    if (Math.abs(distance) > 5) draggedRef.current = true
+    if (Math.abs(distance) > 10) draggedRef.current = true
 
     setPosition(drag.startPosition - distance / (drag.cardWidth * 0.74))
   }
@@ -164,7 +172,7 @@ export function CircularCarousel({ items }: CircularCarouselProps) {
                   key={item.title}
                   ref={index === 0 ? firstCardRef : undefined}
                   type="button"
-                  className={`circular-carousel__card${isActive ? ' is-active' : ''}${isPreviewed ? ' is-previewed' : ''}`}
+                  className={`circular-carousel__card${isActive ? ' is-active' : ''}${isPreviewed ? ' is-previewed' : ''}${selectedTitle === item.title ? ' is-selected' : ''}`}
                   style={{
                     transform: `translateX(calc(-50% + ${offset * 74}%)) translateY(-50%) translateZ(${-ramp * 42}px) rotateY(${-tilt}deg) scale(${scale})`,
                     opacity: visible ? Math.max(0, 1 - distance * 0.2) : 0,
@@ -173,16 +181,31 @@ export function CircularCarousel({ items }: CircularCarouselProps) {
                   }}
                   aria-label={`${item.title}: ${item.subtitle}`}
                   aria-current={isActive ? 'true' : undefined}
+                  aria-pressed={onSelect ? selectedTitle === item.title : undefined}
                   tabIndex={visible ? 0 : -1}
                   onClick={() => {
+                    window.clearTimeout(hoverTimerRef.current)
                     if (draggedRef.current) return
                     goTo(index)
                     setPreview(null)
+                    onSelect?.(item)
                   }}
                   onPointerEnter={(event) => {
-                    if (event.pointerType === 'mouse') setPreview(index)
+                    if (event.pointerType === 'mouse') {
+                      setPreview(index)
+                    }
                   }}
-                  onPointerLeave={() => setPreview(null)}
+                  onPointerMove={(event) => {
+                    const moved = event.nativeEvent.movementX !== 0 || event.nativeEvent.movementY !== 0
+                    if (event.pointerType !== 'mouse' || event.buttons !== 0 || !moved || dragRef.current || !onHover) return
+
+                    window.clearTimeout(hoverTimerRef.current)
+                    hoverTimerRef.current = window.setTimeout(() => onHover(item), 300)
+                  }}
+                  onPointerLeave={() => {
+                    window.clearTimeout(hoverTimerRef.current)
+                    setPreview(null)
+                  }}
                   onFocus={() => setPreview(index)}
                   onBlur={() => setPreview(null)}
                 >

@@ -132,12 +132,37 @@
   .circular-carousel__card-details strong { font-size: 1.05rem; letter-spacing: -.02em; }
   .circular-carousel__card-details > span { color: rgb(255 255 255 / .82); font-size: .82rem; line-height: 1.4; }
   .circular-carousel__card.is-active { border-color: rgb(255 255 255 / .82); }
+  .circular-carousel__card.is-selected { border-color: rgb(196 142 255 / .95); box-shadow: 0 0 0 2px rgb(167 108 255 / .28), 0 24px 48px -22px rgb(24 18 20 / .65); }
   .circular-carousel__card.is-previewed .circular-carousel__card-details,
+  .circular-carousel__card.is-selected .circular-carousel__card-details,
   .circular-carousel__card:focus-visible .circular-carousel__card-details { opacity: 1; transform: translateY(0); }
   .circular-carousel__card:focus-visible { outline: 3px solid #5b0309; outline-offset: 4px; }
   .dark .circular-carousel__arrow { border-color: rgb(255 255 255 / .14); background: rgb(36 32 51 / .92); color: #ddd6fe; }
   .dark .circular-carousel__position { color: #c4b5fd; }
   .circular-carousel__empty { padding: 48px 20px; color: #806b68; text-align: center; }
+  .activity-detail { display: grid; align-items: stretch; gap: 1rem; animation: activity-detail-enter 240ms var(--ease-out) both; }
+  .activity-detail__module { position: relative; min-height: 240px; overflow: hidden; border: 1px solid rgb(255 255 255 / .55); border-radius: 1.25rem; background: #211a2b; box-shadow: 0 20px 45px -30px rgb(24 18 20 / .6); isolation: isolate; }
+  .activity-detail__module img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .activity-detail__shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgb(18 12 28 / .02) 10%, rgb(18 12 28 / .88) 100%); }
+  .activity-detail__module-copy { position: absolute; right: 1.25rem; bottom: 1.25rem; left: 1.25rem; color: white; }
+  .activity-detail__module-copy > span { color: rgb(255 255 255 / .76); font-size: .66rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
+  .activity-detail__module-copy h3 { margin-top: .3rem; font-size: clamp(1.65rem, 3vw, 2.35rem); font-weight: 700; letter-spacing: -.04em; }
+  .activity-detail__module-copy p { margin-top: .25rem; color: rgb(255 255 255 / .82); font-size: .85rem; }
+  .activity-detail__content { min-width: 0; animation: activity-content-enter 260ms var(--ease-out) both; }
+  @keyframes activity-detail-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes activity-content-enter { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+  @media (min-width: 900px) {
+    .activity-detail { grid-template-columns: minmax(220px, .72fr) minmax(0, 1.7fr); }
+    .activity-detail__module { position: sticky; top: 1rem; min-height: 480px; max-height: 68vh; }
+  }
+  @media (max-width: 899px) {
+    .activity-detail { grid-template-columns: minmax(0, 1fr); }
+    .activity-detail__module { min-height: 210px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .activity-detail,
+    .activity-detail__content { animation-duration: 0.01ms; }
+  }
   @media (hover: hover) and (pointer: fine) {
     .circular-carousel__arrow:hover { background: #fff; transform: scale(1.06); }
     .dark .circular-carousel__arrow:hover { background: #302a43; }
