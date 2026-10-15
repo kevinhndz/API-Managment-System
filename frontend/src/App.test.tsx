@@ -83,7 +83,7 @@ describe('flujo principal', () => {
 
     await user.type(screen.getByLabelText('Usuario'), 'usuario-prueba')
     await user.type(screen.getByLabelText('Contraseña'), 'clave-de-prueba-2026')
-    await user.click(screen.getByRole('button', { name: 'Ingresar' }))
+    await user.click(screen.getByRole('button', { name: 'Ingresar al campus' }))
 
     const enlaceAulas = await screen.findByRole('link', { name: 'Aulas' }, { timeout: 15_000 })
     await user.click(enlaceAulas)
@@ -99,7 +99,7 @@ describe('flujo principal', () => {
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('Usuario'), 'usuario-prueba')
     await user.type(screen.getByLabelText('Contraseña'), 'clave-de-prueba-2026')
-    await user.click(screen.getByRole('button', { name: 'Ingresar' }))
+    await user.click(screen.getByRole('button', { name: 'Ingresar al campus' }))
     expect(await screen.findByRole('link', { name: 'Estudiantes' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Calificaciones' })).toBeInTheDocument()
   })
