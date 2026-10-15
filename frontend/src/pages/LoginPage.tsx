@@ -43,7 +43,8 @@ export function LoginPage() {
   })
 
   const handleCardPointerMove = (event: PointerEvent<HTMLElement>) => {
-    if (event.pointerType !== 'mouse' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    if (event.pointerType !== 'mouse' || prefersReducedMotion) return
 
     const bounds = event.currentTarget.getBoundingClientRect()
     const horizontal = (event.clientX - bounds.left) / bounds.width - 0.5

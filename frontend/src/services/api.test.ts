@@ -66,7 +66,11 @@ describe('descargarReporte', () => {
       '/api/reportes/estudiantes/descargar/' + formato + '?estado=ACTIVO',
       { credentials: 'include' },
     )
-    expect(crearUrl).toHaveBeenCalledWith(expect.any(Blob))
+    expect(crearUrl).toHaveBeenCalledTimes(1)
+    expect(crearUrl.mock.calls[0]?.[0]).toMatchObject({
+      type: formato === 'csv' ? 'text/csv' : 'application/json',
+      size: 'archivo de prueba'.length,
+    })
     expect(nombresDescargados).toEqual([nombreEsperado])
     vi.runOnlyPendingTimers()
     expect(revocarUrl).toHaveBeenCalledWith('blob:archivo-de-prueba')
