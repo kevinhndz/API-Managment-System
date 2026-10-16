@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { listarMatriculas } = vi.hoisted(() => ({ listarMatriculas: vi.fn() }))
@@ -24,11 +24,18 @@ describe('MatriculasPage', () => {
     })
   })
 
-  it('aplica el chip solo a la matrícula ACTIVA y conserva los otros estados', async () => {
+  it('muestra chips con texto e iconos apropiados para los estados de matrícula', async () => {
     render(<MatriculasPage />)
 
     expect(await screen.findByRole('status', { name: 'Estado: Activa' })).toBeInTheDocument()
-    await waitFor(() => expect(screen.getByText('CANCELADA')).toBeInTheDocument())
+    expect(await screen.findByRole('status', { name: 'Estado: Cancelada' })).toBeInTheDocument()
     expect(screen.queryByRole('status', { name: 'Estado: Inactivo' })).not.toBeInTheDocument()
+  })
+
+  it('permite filtrar las matrículas por sección y estado', async () => {
+    render(<MatriculasPage />)
+    fireEvent.click(screen.getByRole('button', { name: /filtros/i }))
+    expect(await screen.findByRole('combobox', { name: 'Filtrar por sección' })).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Filtrar por estado' })).toBeInTheDocument()
   })
 })
