@@ -1,6 +1,6 @@
 interface GradeGaugeProps {
   label: string
-  value: number | null | undefined
+  value: number | string | null | undefined
   final?: boolean
 }
 
@@ -12,8 +12,13 @@ function gradeTone(value: number) {
 }
 
 export function GradeGauge({ label, value, final = false }: GradeGaugeProps) {
-  if (value == null || !Number.isFinite(value)) return <span aria-label={`${label}: sin nota`}>—</span>
-  const boundedValue = Math.max(0, Math.min(100, value))
+  const numericValue = typeof value === 'number'
+    ? value
+    : typeof value === 'string' && value.trim() !== ''
+      ? Number(value)
+      : Number.NaN
+  if (!Number.isFinite(numericValue)) return <span aria-label={`${label}: sin nota`}>—</span>
+  const boundedValue = Math.max(0, Math.min(100, numericValue))
   const tone = gradeTone(boundedValue)
   const display = boundedValue.toFixed(2)
 

@@ -1,19 +1,94 @@
 import { UserRound } from 'lucide-react'
 import { EntityPage } from '../components/crud/EntityPage'
+import { GradeGauge } from '../components/ui/GradeGauge'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
 import { calificacionesApi } from '../services/api'
-import type { Calificacion, CalificacionPayload } from '../types/api'
 import { useAuth } from '../contexts/AuthContext'
-import { GradeGauge } from '../components/ui/GradeGauge'
-const empty: CalificacionPayload = { matricula_id: 1, primer_parcial: 0, segundo_parcial: 0, tercer_parcial: 0, observacion: '' }
+import type { Calificacion, CalificacionPayload } from '../types/api'
+
+const empty: CalificacionPayload = {
+  matricula_id: 1,
+  primer_parcial: 0,
+  segundo_parcial: 0,
+  tercer_parcial: 0,
+  observacion: '',
+}
+
 export function CalificacionesPage() {
   const labels = useAcademicLabels()
   const { user } = useAuth()
   const esAdministrador = ['admin', 'administrador'].includes(user?.role.toLocaleLowerCase('es') ?? '')
-  return <div className="space-y-4">
-    {!esAdministrador && <p className="rounded-xl border border-sage-200 bg-sage-50 p-3 text-sm text-sage-900 dark:border-sage-800 dark:bg-sage-950/30 dark:text-sage-200">
-      Aquí aparecen las calificaciones de tus secciones asignadas. Si la lista está vacía, pide al administrador que te asigne secciones y verifica que tengan matrículas y calificaciones registradas.
-    </p>}
-    <EntityPage<Calificacion, CalificacionPayload> title="Calificaciones" singular="Calificación" newLabel="Nueva calificación" description="Registra y consulta las evaluaciones académicas." service={calificacionesApi} canCreate canEdit canDelete={esAdministrador} emptyPayload={empty} toPayload={(item) => ({ matricula_id: item.matricula_id, primer_parcial: item.primer_parcial, segundo_parcial: item.segundo_parcial, tercer_parcial: item.tercer_parcial, observacion: item.observacion })} searchableText={(item) => `${labels.matriculas[item.matricula_id] ?? ''} ${item.nota_final}`} filters={[{ key: 'matricula', label: 'Estudiante', options: labels.matriculaOptions, getValue: (item) => item.matricula_id }, { key: 'resultado', label: 'Resultado final', options: [{ value: 'reprobada', label: 'Menos de 60' }, { value: 'basica', label: '60–69' }, { value: 'buena', label: '70–84' }, { value: 'excelente', label: '85–100' }], getValue: (item) => item.nota_final < 60 ? 'reprobada' : item.nota_final < 70 ? 'basica' : item.nota_final < 85 ? 'buena' : 'excelente' }]} columns={[{ label: 'Estudiante', render: (item) => <span className="inline-flex items-center gap-2"><UserRound className="h-4 w-4 text-sage-600" /><strong>{labels.matriculas[item.matricula_id] ?? `Matrícula #${item.matricula_id}`}</strong></span> }, { label: 'Primer parcial', render: (item) => <GradeGauge label="Primer parcial" value={item.primer_parcial} /> }, { label: 'Segundo parcial', render: (item) => <GradeGauge label="Segundo parcial" value={item.segundo_parcial} /> }, { label: 'Tercer parcial', render: (item) => <GradeGauge label="Tercer parcial" value={item.tercer_parcial} /> }, { label: 'Nota final', render: (item) => <GradeGauge label="Nota final" value={item.nota_final} final /> }]} fields={[{ key: 'matricula_id', label: 'Matrícula', type: 'select', valueType: 'number', options: labels.matriculaOptions }, { key: 'primer_parcial', label: 'Primer parcial', type: 'number', min: 0, max: 100 }, { key: 'segundo_parcial', label: 'Segundo parcial', type: 'number', min: 0, max: 100 }, { key: 'tercer_parcial', label: 'Tercer parcial', type: 'number', min: 0, max: 100 }, { key: 'observacion', label: 'Observación' }]} />
-  </div>
+
+  return (
+    <div className="space-y-4">
+      {!esAdministrador && (
+        <p className="rounded-xl border border-sage-200 bg-sage-50 p-3 text-sm text-sage-900 dark:border-sage-800 dark:bg-sage-950/30 dark:text-sage-200">
+          Aquí aparecen las calificaciones de tus secciones asignadas. Si la lista está vacía, pide al administrador que te asigne secciones y verifica que tengan matrículas y calificaciones registradas.
+        </p>
+      )}
+      <EntityPage<Calificacion, CalificacionPayload>
+        title="Calificaciones"
+        singular="Calificación"
+        newLabel="Nueva calificación"
+        description="Registra y consulta las evaluaciones académicas."
+        service={calificacionesApi}
+        canCreate
+        canEdit
+        canDelete={esAdministrador}
+        emptyPayload={empty}
+        toPayload={(item) => ({
+          matricula_id: item.matricula_id,
+          primer_parcial: Number(item.primer_parcial),
+          segundo_parcial: Number(item.segundo_parcial),
+          tercer_parcial: Number(item.tercer_parcial),
+          observacion: item.observacion,
+        })}
+        searchableText={(item) => `${labels.matriculas[item.matricula_id] ?? ''} ${item.nota_final}`}
+        filters={[
+          {
+            key: 'matricula',
+            label: 'Estudiante',
+            options: labels.matriculaOptions,
+            getValue: (item) => item.matricula_id,
+          },
+          {
+            key: 'resultado',
+            label: 'Resultado final',
+            options: [
+              { value: 'reprobada', label: 'Menos de 60' },
+              { value: 'basica', label: '60–69' },
+              { value: 'buena', label: '70–84' },
+              { value: 'excelente', label: '85–100' },
+            ],
+            getValue: (item) => {
+              const notaFinal = Number(item.nota_final)
+              return notaFinal < 60 ? 'reprobada' : notaFinal < 70 ? 'basica' : notaFinal < 85 ? 'buena' : 'excelente'
+            },
+          },
+        ]}
+        columns={[
+          {
+            label: 'Estudiante',
+            render: (item) => (
+              <span className="inline-flex items-center gap-2">
+                <UserRound className="h-4 w-4 text-sage-600" />
+                <strong>{labels.matriculas[item.matricula_id] ?? `Matrícula #${item.matricula_id}`}</strong>
+              </span>
+            ),
+          },
+          { label: 'Primer parcial', render: (item) => <GradeGauge label="Primer parcial" value={item.primer_parcial} /> },
+          { label: 'Segundo parcial', render: (item) => <GradeGauge label="Segundo parcial" value={item.segundo_parcial} /> },
+          { label: 'Tercer parcial', render: (item) => <GradeGauge label="Tercer parcial" value={item.tercer_parcial} /> },
+          { label: 'Nota final', render: (item) => <GradeGauge label="Nota final" value={item.nota_final} final /> },
+        ]}
+        fields={[
+          { key: 'matricula_id', label: 'Matrícula', type: 'select', valueType: 'number', options: labels.matriculaOptions },
+          { key: 'primer_parcial', label: 'Primer parcial', type: 'number', min: 0, max: 100 },
+          { key: 'segundo_parcial', label: 'Segundo parcial', type: 'number', min: 0, max: 100 },
+          { key: 'tercer_parcial', label: 'Tercer parcial', type: 'number', min: 0, max: 100 },
+          { key: 'observacion', label: 'Observación' },
+        ]}
+      />
+    </div>
+  )
 }

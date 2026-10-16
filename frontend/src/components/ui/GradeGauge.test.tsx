@@ -22,4 +22,10 @@ describe('GradeGauge', () => {
     render(<GradeGauge label="Primer parcial" value={null} />)
     expect(screen.getByLabelText('Primer parcial: sin nota')).toHaveTextContent('—')
   })
+
+  it('interpreta el decimal enviado como texto por la API', () => {
+    render(<GradeGauge label="Primer parcial" value="60.00" />)
+    expect(screen.getByRole('img', { name: 'Primer parcial: 60.00 puntos, Aprobada' })).toBeInTheDocument()
+    expect(document.querySelector('circle[stroke-width="3"]')).toHaveAttribute('stroke', '#d97706')
+  })
 })
