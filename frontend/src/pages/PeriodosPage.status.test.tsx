@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { listarPeriodos } = vi.hoisted(() => ({ listarPeriodos: vi.fn() }))
@@ -16,5 +16,12 @@ describe('PeriodosPage status chips', () => {
     render(<PeriodosPage />)
     expect(await screen.findByRole('status', { name: 'Estado: Activo' })).toBeInTheDocument()
     expect(screen.getByRole('status', { name: 'Estado: Inactivo' })).toBeInTheDocument()
+  })
+
+  it('ofrece filtrar los periodos por número y estado', async () => {
+    render(<PeriodosPage />)
+    fireEvent.click(screen.getByRole('button', { name: /filtros/i }))
+    expect(await screen.findByRole('combobox', { name: 'Filtrar por número de periodo' })).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Filtrar por estado' })).toBeInTheDocument()
   })
 })
