@@ -52,4 +52,10 @@ describe('DocentesPage', () => {
     expect(carnet).toHaveTextContent('gabriela.pineda@uph.edu')
     expect(carnet).toHaveTextContent('Identificación docente')
   })
+
+  it('permite abrir el filtro de estado de los docentes', async () => {
+    render(<DocentesPage />)
+    fireEvent.click(screen.getByRole('button', { name: /filtros/i }))
+    expect(await screen.findByRole('combobox', { name: 'Filtrar por estado' })).toBeInTheDocument()
+  })
 })
