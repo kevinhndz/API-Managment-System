@@ -7,7 +7,7 @@ interface RoomPayload { building: string }
 
 describe('EntityPage filters', () => {
   it('applies a filter to all API pages, not only the visible page', async () => {
-    const list = vi.fn(async ({ pagina_actual = 1 }: { pagina_actual?: number }) => pagina_actual === 1
+    const list = vi.fn(async ({ pagina_actual = 1 }: { pagina_actual?: number } = {}) => pagina_actual === 1
       ? { total: 2, pagina_actual: 1, limite: 100, total_paginas: 2, data: [{ id: 1, building: 'North', active: true }] }
       : { total: 2, pagina_actual: 2, limite: 100, total_paginas: 2, data: [{ id: 2, building: 'South', active: true }] })
     const service = { list, get: vi.fn(), create: vi.fn(), update: vi.fn(), patch: vi.fn(), remove: vi.fn() }
