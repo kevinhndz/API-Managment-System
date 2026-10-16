@@ -55,8 +55,9 @@ export interface Seccion { id: number; codigo: string; asignatura_id: number; do
 export type SeccionPayload = Omit<Seccion, 'id'>
 export interface Matricula { id: number; estudiante_id: number; seccion_id: number; fecha_matricula: string; estado: string }
 export type MatriculaPayload = Omit<Matricula, 'id'>
-export interface Calificacion { id: number; matricula_id: number; primer_parcial: number; segundo_parcial: number; tercer_parcial: number; nota_final: number; observacion?: string | null }
-export type CalificacionPayload = Omit<Calificacion, 'id' | 'nota_final'>
+// Pydantic serializes Decimal values as strings (for example, "60.00").
+export interface Calificacion { id: number; matricula_id: number; primer_parcial: number | string; segundo_parcial: number | string; tercer_parcial: number | string; nota_final: number | string; observacion?: string | null }
+export interface CalificacionPayload { matricula_id: number; primer_parcial: number; segundo_parcial: number; tercer_parcial: number; observacion?: string | null }
 
 export interface DashboardData {
   aulas: Aula[]

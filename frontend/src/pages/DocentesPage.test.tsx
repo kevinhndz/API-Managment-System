@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { listarDocentes } = vi.hoisted(() => ({
   listarDocentes: vi.fn(),
@@ -19,6 +19,7 @@ vi.mock('../services/api', () => ({
 import { DocentesPage } from './DocentesPage'
 
 describe('DocentesPage', () => {
+  afterEach(cleanup)
   beforeEach(() => {
     listarDocentes.mockResolvedValue({
       total: 1,
@@ -43,6 +44,7 @@ describe('DocentesPage', () => {
     render(<DocentesPage />)
 
     await waitFor(() => expect(screen.getByText('DOC-012')).toBeInTheDocument())
+    expect(screen.getByRole('status', { name: 'Estado: Activo' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /acciones/i }))
     fireEvent.click(screen.getByRole('menuitem', { name: /ver carnet/i }))
 
@@ -50,5 +52,11 @@ describe('DocentesPage', () => {
     expect(carnet).toHaveTextContent('DOC-012')
     expect(carnet).toHaveTextContent('gabriela.pineda@uph.edu')
     expect(carnet).toHaveTextContent('Identificación docente')
+  })
+
+  it('permite abrir el filtro de estado de los docentes', async () => {
+    render(<DocentesPage />)
+    fireEvent.click(screen.getByRole('button', { name: /filtros/i }))
+    expect(await screen.findByRole('combobox', { name: 'Filtrar por estado' })).toBeInTheDocument()
   })
 })
