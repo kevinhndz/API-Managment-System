@@ -20,6 +20,7 @@ export function CarrerasPage() {
       emptyPayload={emptyCarrera}
       toPayload={({ codigo, nombre, duracion_anios, activo }) => ({ codigo, nombre, duracion_anios, activo })}
       searchableText={(carrera) => `${carrera.codigo} ${carrera.nombre}`}
+      filters={[{ key: 'duracion', label: 'Duración', options: [{ value: 'short', label: '1–2 años' }, { value: 'medium', label: '3–4 años' }, { value: 'long', label: '5 años o más' }], getValue: (carrera) => carrera.duracion_anios <= 2 ? 'short' : carrera.duracion_anios <= 4 ? 'medium' : 'long' }]}
       columns={[
         { label: 'Código', render: (carrera) => <strong className="font-semibold text-slate-800 dark:text-slate-100">{carrera.codigo}</strong> },
         { label: 'Nombre', render: (carrera) => carrera.nombre },
