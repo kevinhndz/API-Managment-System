@@ -65,6 +65,7 @@ describe('EstudiantesPage', () => {
 
     render(<ThemeProvider><EstudiantesPage /></ThemeProvider>)
     await waitFor(() => expect(screen.getByText('2026-0001')).toBeInTheDocument())
+    expect(screen.getByRole('status', { name: 'Estado: Activo' })).toBeInTheDocument()
 
     const trigger = screen.getByRole('button', { name: 'Acciones' })
     fireEvent.pointerEnter(trigger.closest('.folder-float')!)
