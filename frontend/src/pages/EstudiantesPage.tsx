@@ -34,6 +34,7 @@ export function EstudiantesPage() {
         emptyPayload={empty}
         toPayload={(item) => ({ cuenta: item.cuenta, nombre: item.nombre, correo: item.correo, telefono: item.telefono, fechaNacimiento: item.fechaNacimiento, carrera_id: item.carrera_id, estado: item.estado })}
         searchableText={(item) => `${item.cuenta} ${item.nombre} ${item.correo} ${labels.carreras[item.carrera_id] ?? ''}`}
+        filters={[{ key: 'carrera', label: 'Carrera', options: labels.carreraOptions, getValue: (item) => item.carrera_id }]}
         columns={[
           { label: 'Cuenta', render: (item) => <strong>{item.cuenta}</strong> },
           { label: 'Nombre', render: (item) => item.nombre },
