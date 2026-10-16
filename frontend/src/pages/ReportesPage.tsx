@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight, ChevronDown, Search } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { AnimatedDownloadButton } from '../components/ui/AnimatedDownloadButton'
+import { StatusBadge } from '../components/ui/StatusBadge'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
 import type { CatalogOption } from '../hooks/useAcademicLabels'
 import { academicModuleCards } from '../data/academicModuleCards'
@@ -121,7 +122,7 @@ function SelectorBuscable({
 
 function mostrarValor(valor: string | number | boolean | null) {
   if (valor === null) return '—'
-  if (typeof valor === 'boolean') return valor ? 'Sí' : 'No'
+  if (typeof valor === 'boolean') return <StatusBadge active={valor} />
   return String(valor)
 }
 
