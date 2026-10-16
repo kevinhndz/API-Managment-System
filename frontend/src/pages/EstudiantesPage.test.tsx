@@ -73,4 +73,11 @@ describe('EstudiantesPage', () => {
 
     expect(await screen.findByRole('dialog', { name: dialogTitle })).toBeInTheDocument()
   })
+
+  it('ofrece filtros por carrera y estado sin alterar las acciones del listado', async () => {
+    render(<ThemeProvider><EstudiantesPage /></ThemeProvider>)
+    fireEvent.click(screen.getByRole('button', { name: /filtros/i }))
+    expect(await screen.findByRole('combobox', { name: 'Filtrar por carrera' })).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Filtrar por estado' })).toBeInTheDocument()
+  })
 })
