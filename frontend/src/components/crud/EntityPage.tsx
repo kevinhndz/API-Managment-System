@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Filter, Plus, RotateCcw, X } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 
 import type { CrudService } from '../../services/api'
@@ -38,6 +38,13 @@ interface Field<TPayload> {
 
 export interface StatusOption { value: string; label: string }
 
+export interface EntityFilter<T> {
+  key: string
+  label: string
+  options: StatusOption[]
+  getValue: (item: T) => string | number | boolean | null | undefined
+}
+
 interface EntityPageProps<T extends EntityWithId, TPayload extends object> {
   title: string
   description: string
@@ -50,6 +57,7 @@ interface EntityPageProps<T extends EntityWithId, TPayload extends object> {
   toPayload: (item: T) => TPayload
   searchableText: (item: T) => string
   statusOptions?: StatusOption[]
+  filters?: EntityFilter<T>[]
   canCreate?: boolean
   canEdit?: boolean
   canDelete?: boolean
@@ -69,6 +77,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   toPayload,
   searchableText,
   statusOptions,
+  filters = [],
   canCreate = true,
   canEdit = true,
   canDelete = true,
@@ -82,7 +91,10 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   const [pendingDelete, setPendingDelete] = useState<T | null>(null)
   const [form, setForm] = useState<TPayload>(emptyPayload)
   const [statusFilter, setStatusFilter] = useState('todos')
-  const [statusItems, setStatusItems] = useState<T[] | null>(null)
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({})
+  const [filterItems, setFilterItems] = useState<T[] | null>(null)
+  const [filterLoading, setFilterLoading] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [statusRefresh, setStatusRefresh] = useState(0)
   const normalizeStatus = (value: string | boolean | undefined) => {
     if (value === true) return 'activo'
@@ -90,21 +102,27 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
     return String(value ?? '').trim().toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
   }
 
+  const hasActiveFilters = statusFilter !== 'todos' || Object.values(filterValues).some(Boolean)
+
   useEffect(() => {
-    if (statusFilter === 'todos') { setStatusItems(null); return undefined }
+    if (!hasActiveFilters) { setFilterItems(null); return undefined }
     let active = true
     void (async () => {
+      setFilterLoading(true)
       try {
-        const first = await service.list({ pagina_actual: 1, limite: 100 })
-        const rest = await Promise.all(Array.from({ length: Math.max(0, first.total_paginas - 1) }, (_, index) => service.list({ pagina_actual: index + 2, limite: 100 })))
-        if (active) setStatusItems([...first.data, ...rest.flatMap((page) => page.data)])
+        const first = await service.list({ pagina_actual: 1, limite: 100, busqueda: query })
+        const rest = await Promise.all(Array.from({ length: Math.max(0, first.total_paginas - 1) }, (_, index) => service.list({ pagina_actual: index + 2, limite: 100, busqueda: query })))
+        if (active) setFilterItems([...first.data, ...rest.flatMap((page) => page.data)])
       } catch {
-        if (active) setStatusItems([])
+        if (active) setFilterItems([])
+      } finally {
+        if (active) setFilterLoading(false)
       }
     })()
     return () => { active = false }
-  }, [service, statusFilter, statusRefresh])
-  const pagination = usePagination({ currentPage: resource.page, totalPages: Math.max(resource.totalPages, 1), paginationItemsToDisplay: 7 })
+  }, [service, hasActiveFilters, query, statusRefresh])
+  const totalPages = hasActiveFilters ? Math.max(1, Math.ceil((filterItems?.length ?? 0) / 10)) : Math.max(resource.totalPages, 1)
+  const pagination = usePagination({ currentPage: resource.page, totalPages, paginationItemsToDisplay: 7 })
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase('es')
@@ -114,20 +132,25 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
       const value = (item as T & { estado?: string | boolean; activo?: boolean }).estado ?? (item as T & { activo?: boolean }).activo
       return normalizeStatus(value) === statusFilter
     }
-    const sourceItems = statusFilter === 'todos' ? resource.items : statusItems ?? []
-    return sourceItems.filter((item) => matchesQuery(item) && matchesStatus(item))
-  }, [query, resource.items, searchableText, statusFilter, statusItems])
+    const sourceItems = hasActiveFilters ? filterItems ?? [] : resource.items
+    return sourceItems.filter((item) => matchesQuery(item) && matchesStatus(item) && filters.every((filter) => {
+      const selected = filterValues[filter.key]
+      return !selected || String(filter.getValue(item) ?? '') === selected
+    }))
+  }, [query, resource.items, searchableText, statusFilter, filterItems, filterValues, filters, hasActiveFilters])
+
+  const visibleItems = hasActiveFilters ? filteredItems.slice((resource.page - 1) * 10, resource.page * 10) : filteredItems
 
   const availableStatusOptions = useMemo<StatusOption[]>(() => {
     if (statusOptions?.length) return statusOptions
     const hasBooleanStatus = resource.items.some((item) => typeof (item as T & { activo?: unknown }).activo === 'boolean' || typeof (item as T & { estado?: unknown }).estado === 'boolean')
     if (hasBooleanStatus) return [{ value: 'activo', label: 'Activos' }, { value: 'inactivo', label: 'Inactivos' }]
-    const values = new Set((statusItems ?? resource.items).map((item) => {
+      const values = new Set((filterItems ?? resource.items).map((item) => {
       const value = (item as T & { estado?: string | boolean; activo?: boolean }).estado ?? (item as T & { activo?: boolean }).activo
       return value === true ? 'activo' : value === false ? 'inactivo' : normalizeStatus(value)
     }).filter(Boolean))
     return [...values].map((value) => ({ value, label: value.charAt(0).toLocaleUpperCase('es') + value.slice(1) }))
-  }, [resource.items, statusItems, statusOptions])
+  }, [resource.items, filterItems, statusOptions])
   const hasStatus = availableStatusOptions.length > 0 && resource.items.some((item) => 'estado' in item || 'activo' in item)
 
   const openCreate = () => {
@@ -176,8 +199,15 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
       <section className="overflow-hidden rounded-2xl border bg-[#fffdf8] shadow-panel dark:border-[#39334b] dark:bg-[#242033]">
         <div className="flex flex-col justify-between gap-3 border-b p-4 sm:flex-row sm:items-center">
           <ExpandableSearchBar ariaLabel={`Buscar ${title.toLocaleLowerCase('es')}`} value={query} onChange={(value) => { setQuery(value); resource.setPage(1) }} placeholder={`Buscar ${title.toLocaleLowerCase('es')}…`} width={280} />
-          <div className="flex flex-wrap items-center gap-3"><p className="text-xs text-slate-400">{resource.total} registros</p>{hasStatus && <select className="focus-ring h-10 rounded-xl border bg-[#faf7f0] px-3 text-xs font-semibold text-slate-600 dark:border-[#39334b] dark:bg-[#191625] dark:text-slate-300" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); resource.setPage(1) }} aria-label="Filtrar por estado"><option value="todos">Todos los estados</option>{availableStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>}<p className="w-full text-xs font-medium text-[#8a716f] sm:w-auto">{statusFilter === 'todos' ? `Se encontraron ${filteredItems.length} registros en esta página` : `Se encontraron ${filteredItems.length} registros con estado ${availableStatusOptions.find((option) => option.value === statusFilter)?.label?.toLocaleLowerCase('es') ?? statusFilter}`}</p></div>
+          <div className="flex flex-wrap items-center gap-3"><p className="text-xs text-slate-400">{hasActiveFilters ? filteredItems.length : resource.total} registros</p><button type="button" className={`focus-ring inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-xs font-semibold transition ${filtersOpen || hasActiveFilters ? 'border-violet-300 bg-violet-50 text-violet-800 dark:border-violet-700 dark:bg-violet-950/40 dark:text-violet-200' : 'bg-[#faf7f0] text-slate-600 dark:border-[#39334b] dark:bg-[#191625] dark:text-slate-300'}`} aria-expanded={filtersOpen} aria-controls="entity-filters" onClick={() => setFiltersOpen((open) => !open)}><Filter className="h-4 w-4" />Filtros{hasActiveFilters && <span className="rounded-full bg-violet-700 px-1.5 text-[10px] text-white">{Number(statusFilter !== 'todos') + Object.values(filterValues).filter(Boolean).length}</span>}</button><p className="w-full text-xs font-medium text-[#8a716f] sm:w-auto">{hasActiveFilters ? `Se encontraron ${filteredItems.length} registros filtrados` : `Se encontraron ${filteredItems.length} registros en esta página`}</p></div>
         </div>
+
+        {filtersOpen && <div id="entity-filters" className="flex flex-wrap items-end gap-3 border-b bg-[#faf7f0]/70 p-4 dark:bg-[#191625]/70">
+          {hasStatus && <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Estado<select className="focus-ring mt-1 block h-10 min-w-40 rounded-xl border bg-white px-3 text-xs dark:border-[#39334b] dark:bg-[#191625]" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); resource.setPage(1) }} aria-label="Filtrar por estado"><option value="todos">Todos</option>{availableStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>}
+          {filters.map((filter) => <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300" key={filter.key}>{filter.label}<select className="focus-ring mt-1 block h-10 min-w-40 rounded-xl border bg-white px-3 text-xs dark:border-[#39334b] dark:bg-[#191625]" aria-label={`Filtrar por ${filter.label.toLocaleLowerCase('es')}`} value={filterValues[filter.key] ?? ''} onChange={(event) => { setFilterValues((current) => ({ ...current, [filter.key]: event.target.value })); resource.setPage(1) }}><option value="">Todos</option>{filter.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>)}
+          {hasActiveFilters && <button type="button" className="focus-ring inline-flex h-10 items-center gap-2 rounded-xl px-3 text-xs font-semibold text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-[#302a43]" onClick={() => { setStatusFilter('todos'); setFilterValues({}); resource.setPage(1) }}><RotateCcw className="h-3.5 w-3.5" />Limpiar</button>}
+          <button type="button" className="focus-ring ml-auto grid h-10 w-10 place-items-center rounded-xl text-slate-500 hover:bg-white dark:hover:bg-[#302a43]" aria-label="Cerrar filtros" onClick={() => setFiltersOpen(false)}><X className="h-4 w-4" /></button>
+        </div>}
 
         {resource.error && <div className="border-b bg-red-50 px-5 py-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">{resource.error}</div>}
 
@@ -190,12 +220,12 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-[#39334b]">
-              {resource.loading ? (
+              {resource.loading || filterLoading ? (
                 <tr><td className="px-5 py-10" colSpan={columns.length + 1}><TableSkeleton columns={columns.length} /></td></tr>
-              ) : filteredItems.length === 0 ? (
+              ) : visibleItems.length === 0 ? (
                 <tr><td className="px-5 py-14 text-center text-sm text-slate-400" colSpan={columns.length + 1}>No se encontraron registros.</td></tr>
               ) : (
-                filteredItems.map((item) => (
+                visibleItems.map((item) => (
                   <tr className="transition hover:bg-slate-50/70 dark:hover:bg-[#302a43]/70" key={item.id}>
                     {columns.map((column) => <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600 dark:text-slate-300" key={column.label}>{column.render(item)}</td>)}
                     <td className="px-5 py-4 text-right">
@@ -215,13 +245,13 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
         </div>
 
         <div className="flex flex-col gap-3 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-slate-400">Página {resource.page} de {Math.max(resource.totalPages, 1)} · {filteredItems.length} visibles</p>
+          <p className="text-xs text-slate-400">Página {resource.page} de {totalPages} · {visibleItems.length} visibles</p>
           <nav className="flex max-w-full items-center justify-center gap-1 overflow-x-auto pb-0.5" aria-label={`Paginación de ${title.toLocaleLowerCase('es')}`}>
             <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg border text-slate-500 transition hover:bg-[#faf7f0] disabled:pointer-events-none disabled:opacity-40 dark:border-[#39334b] dark:text-slate-300 dark:hover:bg-[#302a43]" type="button" disabled={resource.page <= 1 || resource.loading} onClick={() => resource.setPage((page) => page - 1)} aria-label="Página anterior"><ChevronLeft className="h-4 w-4" /></button>
             {pagination.showLeftEllipsis && <><button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-sm text-slate-600 hover:bg-[#faf7f0] dark:text-slate-300 dark:hover:bg-[#302a43]" type="button" onClick={() => resource.setPage(1)} aria-label="Ir a la primera página">1</button><span className="grid h-9 w-6 place-items-center text-slate-400" aria-hidden="true">…</span></>}
             {pagination.pages.map((page) => <button className={`focus-ring grid h-9 w-9 place-items-center rounded-lg text-sm font-medium transition ${resource.page === page ? 'bg-[#5b0309] text-white shadow-sm dark:bg-[#5e35b1]' : 'text-slate-600 hover:bg-[#faf7f0] dark:text-slate-300 dark:hover:bg-[#302a43]'}`} type="button" key={page} disabled={resource.loading} onClick={() => resource.setPage(page)} aria-current={resource.page === page ? 'page' : undefined} aria-label={`Ir a la página ${page}`}>{page}</button>)}
-            {pagination.showRightEllipsis && <><span className="grid h-9 w-6 place-items-center text-slate-400" aria-hidden="true">…</span><button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-sm text-slate-600 hover:bg-[#faf7f0] dark:text-slate-300 dark:hover:bg-[#302a43]" type="button" onClick={() => resource.setPage(resource.totalPages)} aria-label="Ir a la última página">{resource.totalPages}</button></>}
-            <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg border text-slate-500 transition hover:bg-[#faf7f0] disabled:pointer-events-none disabled:opacity-40 dark:border-[#39334b] dark:text-slate-300 dark:hover:bg-[#302a43]" type="button" disabled={resource.page >= resource.totalPages || resource.loading} onClick={() => resource.setPage((page) => page + 1)} aria-label="Página siguiente"><ChevronRight className="h-4 w-4" /></button>
+            {pagination.showRightEllipsis && <><span className="grid h-9 w-6 place-items-center text-slate-400" aria-hidden="true">…</span><button className="focus-ring grid h-9 w-9 place-items-center rounded-lg text-sm text-slate-600 hover:bg-[#faf7f0] dark:text-slate-300 dark:hover:bg-[#302a43]" type="button" onClick={() => resource.setPage(totalPages)} aria-label="Ir a la última página">{totalPages}</button></>}
+            <button className="focus-ring grid h-9 w-9 place-items-center rounded-lg border text-slate-500 transition hover:bg-[#faf7f0] disabled:pointer-events-none disabled:opacity-40 dark:border-[#39334b] dark:text-slate-300 dark:hover:bg-[#302a43]" type="button" disabled={resource.page >= totalPages || resource.loading} onClick={() => resource.setPage((page) => page + 1)} aria-label="Página siguiente"><ChevronRight className="h-4 w-4" /></button>
           </nav>
         </div>
       </section>
