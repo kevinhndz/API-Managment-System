@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { listarDocentes } = vi.hoisted(() => ({
   listarDocentes: vi.fn(),
@@ -19,6 +19,7 @@ vi.mock('../services/api', () => ({
 import { DocentesPage } from './DocentesPage'
 
 describe('DocentesPage', () => {
+  afterEach(cleanup)
   beforeEach(() => {
     listarDocentes.mockResolvedValue({
       total: 1,

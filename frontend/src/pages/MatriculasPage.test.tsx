@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { listarMatriculas } = vi.hoisted(() => ({ listarMatriculas: vi.fn() }))
 
@@ -14,6 +14,7 @@ vi.mock('../hooks/useAcademicLabels', () => ({
 import { MatriculasPage } from './MatriculasPage'
 
 describe('MatriculasPage', () => {
+  afterEach(cleanup)
   beforeEach(() => {
     listarMatriculas.mockResolvedValue({
       total: 2, pagina_actual: 1, limite: 10, total_paginas: 1,
