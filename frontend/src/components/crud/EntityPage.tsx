@@ -8,8 +8,6 @@ import { Modal } from '../ui/Modal'
 import { TableSkeleton } from '../ui/Skeleton'
 import { ActionMenu } from '../ui/ActionMenu'
 import { ExpandableSearchBar } from '../ui/ExpandableSearchBar'
-import { StatusBadge } from '../ui/StatusBadge'
-
 export { StatusBadge } from '../ui/StatusBadge'
 
 interface EntityWithId {
