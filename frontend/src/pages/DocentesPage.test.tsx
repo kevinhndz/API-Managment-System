@@ -43,6 +43,7 @@ describe('DocentesPage', () => {
     render(<DocentesPage />)
 
     await waitFor(() => expect(screen.getByText('DOC-012')).toBeInTheDocument())
+    expect(screen.getByRole('status', { name: 'Estado: Activo' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /acciones/i }))
     fireEvent.click(screen.getByRole('menuitem', { name: /ver carnet/i }))
 
