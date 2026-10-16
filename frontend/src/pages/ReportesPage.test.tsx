@@ -123,4 +123,26 @@ describe('ReportesPage', () => {
 
     expect(await screen.findByRole('status', { name: 'Estado: Inactivo' })).toBeInTheDocument()
   })
+
+  it('muestra estados de matrícula como chips en la vista previa', async () => {
+    const trabajadores: Array<{ onmessage: ((event: MessageEvent) => void) | null; postMessage: ReturnType<typeof vi.fn>; terminate: ReturnType<typeof vi.fn> }> = []
+    class TrabajadorDePrueba {
+      onmessage: ((event: MessageEvent) => void) | null = null
+      onerror: (() => void) | null = null
+      postMessage = vi.fn()
+      terminate = vi.fn()
+      constructor() { trabajadores.push(this) }
+    }
+    vi.stubGlobal('Worker', TrabajadorDePrueba)
+
+    render(<ReportesPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Consultar vista previa' }))
+    trabajadores[0].onmessage?.({ data: { id: 2, estado: 'completada', datos: {
+      modulo: 'matriculas', total_registros: 1,
+      columnas: [{ titulo: 'Estado', campo: 'estado' }], registros: [{ estado: 'REPROBADA' }],
+    } } } as MessageEvent)
+
+    expect(await screen.findByRole('status', { name: 'Estado: Reprobada' })).toBeInTheDocument()
+  })
 })
