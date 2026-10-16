@@ -8,6 +8,9 @@ import { Modal } from '../ui/Modal'
 import { TableSkeleton } from '../ui/Skeleton'
 import { ActionMenu } from '../ui/ActionMenu'
 import { ExpandableSearchBar } from '../ui/ExpandableSearchBar'
+import { StatusBadge } from '../ui/StatusBadge'
+
+export { StatusBadge } from '../ui/StatusBadge'
 
 interface EntityWithId {
   id: number
@@ -54,15 +57,6 @@ interface EntityPageProps<T extends EntityWithId, TPayload extends object> {
   canDelete?: boolean
   rowAction?: (item: T) => { label: string; icon: ReactNode; onSelect: () => void } | undefined
   renderActions?: (item: T, handlers: { onEdit: () => void; onDelete: () => void; onExtraAction?: () => void }) => ReactNode
-}
-
-export function StatusBadge({ active }: { active: boolean }) {
-  return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${active ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-[#302a43] dark:text-stone-200'}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-      {active ? 'Activo' : 'Inactivo'}
-    </span>
-  )
 }
 
 export function EntityPage<T extends EntityWithId, TPayload extends object>({
