@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { AnimatedDownloadButton } from '../components/ui/AnimatedDownloadButton'
 import { StatusBadge } from '../components/ui/StatusBadge'
+import { AcademicStatusBadge } from '../components/ui/AcademicStatusBadge'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
 import type { CatalogOption } from '../hooks/useAcademicLabels'
 import { academicModuleCards } from '../data/academicModuleCards'
@@ -123,6 +124,7 @@ function SelectorBuscable({
 function mostrarValor(valor: string | number | boolean | null) {
   if (valor === null) return '—'
   if (typeof valor === 'boolean') return <StatusBadge active={valor} />
+  if (typeof valor === 'string' && /^(ACTIVA|CANCELADA|APROBADA|REPROBADA|ABIERTA|CERRADA|PENDIENTE|RECHAZADA|INACTIVA|INACTIVO)$/i.test(valor.trim())) return <AcademicStatusBadge status={valor} />
   return String(valor)
 }
 
