@@ -31,6 +31,7 @@ from modulos.solicitudes_cuenta.tabla import (
     SolicitudesRecuperacion,
     VerificacionesCorreoSolicitud,
 )
+from modulos.notificaciones.tabla import NotificacionesLeidas
 
 # Configuracion de Alembic
 config = context.config

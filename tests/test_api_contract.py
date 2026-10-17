@@ -7,6 +7,7 @@ def test_api_registra_los_modulos_academicos():
         '/aulas/', '/docentes/', '/carreras/', '/estudiantes/',
         '/asignaturas/', '/periodos/', '/secciones/', '/matriculas/',
         '/calificaciones/', '/reportes/matriculas', '/reportes/secciones',
+        '/notificaciones/docentes', '/notificaciones/docentes/{evento_id}/leida',
     }
     assert esperadas.issubset(rutas)
 

@@ -8,6 +8,8 @@ vi.mock('../services/api', () => ({
   iniciarSesion: vi.fn().mockResolvedValue({ autenticada: true }),
   cerrarSesion: vi.fn().mockResolvedValue(undefined),
   obtenerSesionActual: vi.fn().mockResolvedValue({ usuario: 'usuario-prueba', correo: null, rol: 'Administrador' }),
+  actualizarFotoPerfil: vi.fn().mockResolvedValue({ foto: '/uploads/profiles/perfil.jpg' }),
+  actualizarPerfil: vi.fn(),
 }))
 
 const wrapper = ({ children }: PropsWithChildren) => <AuthProvider>{children}</AuthProvider>

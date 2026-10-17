@@ -1,5 +1,9 @@
+from pathlib import Path
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from modulos.notificaciones.router import router as router_notificaciones
 from modulos.aulas.router import router as router_aulas
 from modulos.carreras.router import router as router_carreras
 from modulos.docentes.router import router as router_docentes
@@ -25,6 +29,8 @@ from utils.auth import permiso_admin
 from core.config import settings
 
 app = FastAPI()
+Path(settings.UPLOADS_DIR).mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=settings.UPLOADS_DIR), name="uploads")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -63,6 +69,7 @@ app.include_router(router_calificaciones)
 app.include_router(router_reportes)
 app.include_router(router_auditoria, dependencies=[Depends(permiso_admin)])
 app.include_router(router_login)
+app.include_router(router_notificaciones)
 app.include_router(router_solicitudes_cuenta)
 app.include_router(router_dashboard)
 eg.directorio(app)

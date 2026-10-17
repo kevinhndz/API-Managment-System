@@ -85,6 +85,7 @@ class SesionUsuarioResponse(BaseModel):
     nombre: Optional[str] = None
     correo: Optional[EmailStr]
     rol: str
+    foto: Optional[str] = None
 
 
 class PerfilUsuarioActualizar(BaseModel):
@@ -101,7 +102,8 @@ class PerfilUsuarioActualizar(BaseModel):
 
 class PerfilUsuarioResponse(BaseModel):
     nombre: str
-    correo: EmailStr
+    correo: Optional[EmailStr] = None
+    foto: Optional[str] = None
 
 
 class SolicitarRecuperacion(BaseModel):

@@ -1,10 +1,11 @@
-import { ChevronDown, ChevronLeft, ChevronRight, LogOut, Menu, Moon, Settings, Sun } from 'lucide-react'
+import { Bell, Check, ChevronDown, ChevronLeft, ChevronRight, LogOut, Menu, Moon, Settings, Sun } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 
 import { navigationItems } from '../../config/navigation'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
+import { listarNotificacionesDocentes, marcarNotificacionDocenteLeida, resolverFotoUrl, type NotificacionDocente } from '../../services/api'
 import { CampusFlowLogo } from '../brand/CampusFlowLogo'
 import './Navbar.css'
 
@@ -20,10 +21,16 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
   const { theme, toggleTheme } = useTheme()
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const [greetingIndex, setGreetingIndex] = useState(0)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [notifications, setNotifications] = useState<NotificacionDocente[]>([])
   const accountMenuRef = useRef<HTMLDivElement>(null)
+  const notificationsRef = useRef<HTMLDivElement>(null)
+  const esAdministrador = ['admin', 'administrador'].includes(user?.role.toLocaleLowerCase('es') ?? '')
+  const unreadCount = notifications.filter((notification) => !notification.leida).length + (user?.photo ? 0 : 1)
   const current = navigationItems.find((item) => item.path === pathname)
     ?? (pathname.startsWith('/configuracion') ? { label: 'Settings' } : navigationItems[0])
   const firstName = user?.name?.trim().split(/\s+/)[0] || 'bienvenido'
+  const initials = user?.name?.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'CF'
   const greetingCount = 3
   const dashboardGreetings = [
     { title: `¡Hola, ${firstName}!`, subtitle: 'Bienvenido al panel de control académico.' },
@@ -45,13 +52,13 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
   }, [pathname, greetingCount])
 
   useEffect(() => {
-    if (!accountMenuOpen) return
-
     const closeOnOutsideClick = (event: PointerEvent) => {
       if (!accountMenuRef.current?.contains(event.target as Node)) setAccountMenuOpen(false)
+      if (!notificationsRef.current?.contains(event.target as Node)) setNotificationsOpen(false)
     }
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setAccountMenuOpen(false)
+      if (event.key === 'Escape') setNotificationsOpen(false)
     }
 
     document.addEventListener('pointerdown', closeOnOutsideClick)
@@ -60,7 +67,33 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
       document.removeEventListener('pointerdown', closeOnOutsideClick)
       document.removeEventListener('keydown', closeOnEscape)
     }
-  }, [accountMenuOpen])
+  }, [])
+
+  useEffect(() => {
+    if (!esAdministrador) {
+      setNotifications([])
+      return
+    }
+    let mounted = true
+    const cargar = () => listarNotificacionesDocentes().then((items) => {
+      if (mounted) setNotifications(Array.isArray(items) ? items : [])
+    }).catch(() => undefined)
+    void cargar()
+    const interval = window.setInterval(cargar, 60_000)
+    return () => {
+      mounted = false
+      window.clearInterval(interval)
+    }
+  }, [esAdministrador])
+
+  async function marcarLeida(id: number) {
+    try {
+      await marcarNotificacionDocenteLeida(id)
+      setNotifications((items) => items.map((item) => item.id === id ? { ...item, leida: true } : item))
+    } catch {
+      // La lista se conserva si el servidor rechaza el cambio.
+    }
+  }
 
   return (
     <header className={`sticky top-0 z-20 flex min-h-[76px] items-center justify-between gap-4 border-b px-4 backdrop-blur-xl sm:px-8 lg:px-12 ${pathname === '/' ? 'border-[#e3e8ef]/80 bg-[#eef2f6]/90 dark:border-white/10 dark:bg-[#191625]/90' : 'border-[#e3e2df]/80 bg-[#faf9f6]/75 dark:border-[#39334b]/80 dark:bg-[#191625]/88'}`}>
@@ -87,6 +120,25 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
       <div className="flex items-center gap-3">
         <div className="hidden h-9 w-px bg-slate-200 sm:block dark:bg-[#39334b]" />
         <div className="flex items-center gap-3">
+          <div className="relative" ref={notificationsRef}>
+            <button className="focus-ring relative grid h-10 w-10 place-items-center rounded-full text-slate-600 transition hover:bg-black/5 dark:text-stone-200 dark:hover:bg-white/5" type="button" aria-label={`Notificaciones${unreadCount ? `, ${unreadCount} pendientes` : ''}`} aria-expanded={notificationsOpen} aria-controls="notifications-menu" onClick={() => setNotificationsOpen((open) => !open)}>
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && <span className="absolute right-0.5 top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#6b2bc1] px-1 text-[10px] font-bold text-white">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+            </button>
+            {notificationsOpen && <section id="notifications-menu" className="absolute right-0 top-full z-50 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-[#ead7d7] bg-[#fffaf8] shadow-xl dark:border-[#39334b] dark:bg-[#242033]" aria-label="Centro de notificaciones">
+              <div className="border-b border-[#ead7d7] px-4 py-3 dark:border-[#39334b]"><p className="font-semibold">Notificaciones</p><p className="text-xs text-slate-500 dark:text-stone-400">Avisos de tu cuenta y actividad docente</p></div>
+              <div className="max-h-[min(65vh,28rem)] overflow-y-auto p-2">
+                {!user?.photo && <Link to="/configuracion/perfil" onClick={() => setNotificationsOpen(false)} className="mb-1 flex gap-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-950 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-100 dark:hover:bg-amber-950/50"><span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-amber-500" /><span><strong className="block">Completa tu perfil</strong>Agrega una foto para identificar tu cuenta.</span></Link>}
+                {esAdministrador && notifications.map((notification) => <div key={notification.id} className={`mb-1 flex items-start gap-3 rounded-xl p-3 text-sm ${notification.leida ? 'opacity-65' : 'bg-violet-50 dark:bg-violet-950/25'}`}>
+                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.leida ? 'bg-slate-300' : 'bg-violet-500'}`} />
+                  <span className="min-w-0 flex-1"><strong className="block">{notification.usuario} · {notification.accion.toLocaleLowerCase('es')} {notification.modulo}</strong><span className="block text-xs text-slate-600 dark:text-stone-300">{notification.descripcion}{notification.registro_id ? ` (#${notification.registro_id})` : ''}</span><time className="mt-1 block text-[11px] text-slate-500">{new Date(notification.fecha).toLocaleString('es-HN')}</time></span>
+                  {!notification.leida && <button type="button" className="rounded-lg p-1.5 hover:bg-violet-100 dark:hover:bg-violet-900" aria-label="Marcar como leída" title="Marcar como leída" onClick={() => void marcarLeida(notification.id)}><Check className="h-4 w-4" /></button>}
+                </div>)}
+                {(!esAdministrador || notifications.length === 0) && user?.photo && <p className="px-3 py-6 text-center text-sm text-slate-500 dark:text-stone-400">No tienes notificaciones nuevas.</p>}
+              </div>
+              {esAdministrador && <Link to="/actividad" onClick={() => setNotificationsOpen(false)} className="block border-t border-[#ead7d7] px-4 py-3 text-center text-sm font-semibold text-[#6b1118] hover:bg-[#f4e8e8] dark:border-[#39334b] dark:text-violet-200 dark:hover:bg-[#302a43]">Ver actividad reciente</Link>}
+            </section>}
+          </div>
           <div className="relative" ref={accountMenuRef}>
             <button
               className="focus-ring flex items-center gap-2 rounded-full p-1 transition hover:bg-black/5 dark:hover:bg-white/5"
@@ -96,7 +148,10 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
               aria-expanded={accountMenuOpen}
               onClick={() => setAccountMenuOpen((open) => !open)}
             >
-              <img className="h-10 w-10 rounded-full border border-[#ead7d7] object-cover shadow-sm dark:border-stone-700" src="/avatar-campus.svg" alt="Avatar de cuenta" />
+              <span className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-[#ead7d7] bg-[#eee3f7] text-xs font-bold text-[#5e35b1] shadow-sm dark:border-stone-700 dark:bg-[#302a43] dark:text-violet-200" aria-label={user?.photo ? 'Foto de perfil' : 'Iniciales del usuario'}>
+                {!user?.photo && initials}
+                {resolverFotoUrl(user?.photo) && <img className="absolute inset-0 h-full w-full object-cover" src={resolverFotoUrl(user?.photo) ?? undefined} alt="" onError={(event) => { event.currentTarget.style.display = 'none' }} />}
+              </span>
               <span className="hidden text-left sm:block">
                 <span className="block max-w-40 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{user?.name}</span>
                 <span className="block max-w-40 truncate text-[11px] text-slate-500">{user?.role}</span>

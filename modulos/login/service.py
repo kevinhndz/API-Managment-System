@@ -21,6 +21,19 @@ from modulos.login.tabla import Usuarios
 
 class LoginService:
     @staticmethod
+    def buscar_usuario_service(db: Session, usuario_id: int):
+        registro = repo.buscar_por_id_repository(db, usuario_id)
+        if registro is None:
+            raise RecursoNoEncontradoError("No se encontro la cuenta.")
+        return registro
+
+    @staticmethod
+    def actualizar_foto_service(db: Session, usuario_id: int, foto: str):
+        registro = LoginService.buscar_usuario_service(db, usuario_id)
+        registro.foto = foto
+        return repo.guardar_cambios_perfil_repository(db, registro)
+
+    @staticmethod
     def actualizar_perfil_service(db: Session, usuario_id: int, json: PerfilUsuarioActualizar):
         registro = repo.buscar_por_id_repository(db, usuario_id)
         if registro is None:

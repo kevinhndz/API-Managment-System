@@ -12,6 +12,7 @@ class Usuarios(miClaseBase, PoderAuditor):
     usuario = Column(String(80), unique=True, nullable=False)
     nombre = Column(String(160), nullable=True)
     correo = Column(String(150), unique=True, nullable=True)
+    foto = Column(String(500), nullable=True)
     contrasena = Column(String(255), nullable=False)
     rol = Column(String(20), nullable=False)
     docente_id = Column(Integer, ForeignKey("docentes.id"), nullable=True)

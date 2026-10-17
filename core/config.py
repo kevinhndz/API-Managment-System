@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     SIGNUP_EMAIL_CODE_TTL_MINUTES: int = 10
     SIGNUP_EMAIL_CODE_RESEND_SECONDS: int = 60
     SIGNUP_EMAIL_CODE_MAX_ATTEMPTS: int = 5
+    UPLOADS_DIR: str = "uploads"
 
     # Configuracion de Pydantic para indicarle que lea el archivo .env automaticamente
     model_config = SettingsConfigDict(

@@ -39,6 +39,7 @@ class EstudianteResponse(BaseModel):
     id: int
     cuenta: str
     nombre: str
+    foto: Optional[str] = None
     correo: EmailStr
     telefono: Optional[str]
     fechaNacimiento: date

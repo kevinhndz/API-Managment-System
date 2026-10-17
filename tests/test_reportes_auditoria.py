@@ -15,6 +15,8 @@ from database.almacen import miClaseBase
 from modulos.auditoria.registro import usuario_actual
 from modulos.auditoria.tabla import EventoAuditoria
 from modulos.login.tabla import Usuarios
+from modulos.notificaciones.tabla import NotificacionesLeidas
+from modulos.notificaciones.service import listar_notificaciones_docentes, marcar_notificacion_leida
 from modulos.aulas.tabla import Aulas
 from modulos.calificaciones.tabla import Calificaciones
 from modulos.asignaturas.tabla import Asignaturas
@@ -54,6 +56,45 @@ def test_auditoria_registra_creacion_edicion_y_eliminacion():
     finally:
         usuario_actual.reset(contexto)
         motor.dispose()
+
+
+def test_notificaciones_muestran_cambios_docentes_y_recuerdan_lectura():
+    motor = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    Usuarios.__table__.create(motor)
+    EventoAuditoria.__table__.create(motor)
+    NotificacionesLeidas.__table__.create(motor)
+    with Session(motor) as db:
+        docente = Usuarios(id=19, usuario="docente", contrasena="hash", rol="Docente", activo=True)
+        admin = Usuarios(id=7, usuario="admin", contrasena="hash", rol="Administrador", activo=True)
+        admin_evento = EventoAuditoria(
+            usuario_id=admin.id,
+            usuario=admin.usuario,
+            accion="CREAR",
+            modulo="estudiantes",
+            registro_id=8,
+            descripcion="Crear registro en estudiantes",
+        )
+        db.add_all([docente, admin])
+        db.flush()
+        evento = EventoAuditoria(
+            usuario_id=docente.id,
+            usuario=docente.usuario,
+            accion="EDITAR",
+            modulo="calificaciones",
+            registro_id=31,
+            descripcion="Editar registro en calificaciones",
+        )
+        db.add_all([evento, admin_evento])
+        db.commit()
+
+        notificaciones = listar_notificaciones_docentes(db, admin.id)
+        assert len(notificaciones) == 1
+        assert notificaciones[0]["usuario"] == "docente"
+        assert notificaciones[0]["leida"] is False
+
+        marcar_notificacion_leida(db, admin.id, evento.id)
+        assert listar_notificaciones_docentes(db, admin.id)[0]["leida"] is True
+    motor.dispose()
 
 
 def test_exportaciones_generan_archivos_reales():

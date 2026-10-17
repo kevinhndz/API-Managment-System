@@ -11,6 +11,7 @@ class Docentes(miClaseBase, PoderAuditor):
     numero_empleado = Column(String(20), unique=True, nullable=False)
     nombres = Column(String(100), nullable=False)
     apellidos = Column(String(100), nullable=False)
+    foto = Column(String(500), nullable=True)
     correo = Column(String(150), unique=True, nullable=False)
     especialidad = Column(String(120), nullable=False)
     estado = Column(Boolean, default=True, nullable=False)

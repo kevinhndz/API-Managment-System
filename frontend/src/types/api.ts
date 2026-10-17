@@ -29,11 +29,12 @@ export interface Docente {
   numero_empleado: string
   nombres: string
   apellidos: string
+  foto: string | null
   correo: string
   estado: boolean
 }
 
-export type DocentePayload = Omit<Docente, 'id'>
+export type DocentePayload = Omit<Docente, 'id' | 'foto'>
 
 export interface Carrera {
   id: number
@@ -45,8 +46,8 @@ export interface Carrera {
 
 export type CarreraPayload = Omit<Carrera, 'id'>
 
-export interface Estudiante { id: number; cuenta: string; nombre: string; correo: string; telefono?: string | null; fechaNacimiento: string; carrera_id: number; estado: boolean }
-export type EstudiantePayload = Omit<Estudiante, 'id'>
+export interface Estudiante { id: number; cuenta: string; nombre: string; foto: string | null; correo: string; telefono?: string | null; fechaNacimiento: string; carrera_id: number; estado: boolean }
+export type EstudiantePayload = Omit<Estudiante, 'id' | 'foto'>
 export interface Asignatura { id: number; codigo: string; nombre: string; unidades_valorativas: number; carrera_id: number; requisito_id?: number | null; activo: boolean }
 export type AsignaturaPayload = Omit<Asignatura, 'id'>
 export interface Periodo { id: number; anio: number; numero: number; fecha_inicio: string; fecha_fin: string; activo: boolean }

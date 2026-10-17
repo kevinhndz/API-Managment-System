@@ -37,6 +37,7 @@ class DocenteResponse(BaseModel):
     numero_empleado: str
     nombres: str
     apellidos: str
+    foto: str | None = None
     correo: str
     especialidad: str
     estado: bool

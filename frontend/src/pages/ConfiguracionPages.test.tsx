@@ -18,11 +18,12 @@ describe('secciones de Settings', () => {
 
   it('muestra perfil y bandeja para administración y regreso al dashboard', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { name: 'admin', email: 'admin@campus.edu', role: 'Administrador' },
+      user: { name: 'admin', email: 'admin@campus.edu', role: 'Administrador', photo: null },
       isAuthenticated: true,
       isLoading: false,
       login: vi.fn(),
       updateProfile: vi.fn(),
+      updateProfilePhoto: vi.fn(),
       logout: vi.fn(),
     })
     render(<MemoryRouter><ConfiguracionPage /></MemoryRouter>)
@@ -36,11 +37,12 @@ describe('secciones de Settings', () => {
   it('guarda nombre y correo y ofrece recuperación dentro del perfil', async () => {
     const updateProfile = vi.fn().mockResolvedValue(undefined)
     vi.mocked(useAuth).mockReturnValue({
-      user: { name: 'admin', email: 'admin@campus.edu', role: 'Administrador' },
+      user: { name: 'admin', email: 'admin@campus.edu', role: 'Administrador', photo: null },
       isAuthenticated: true,
       isLoading: false,
       login: vi.fn(),
       updateProfile,
+      updateProfilePhoto: vi.fn(),
       logout: vi.fn(),
     })
     const user = userEvent.setup()
@@ -53,8 +55,29 @@ describe('secciones de Settings', () => {
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
 
     expect(updateProfile).toHaveBeenCalledWith('Ana Campus', 'ana@campus.edu')
-    expect(await screen.findByRole('status')).toHaveTextContent('Tu perfil se actualizó correctamente.')
+    expect(await screen.findByText('Tu perfil se actualizó correctamente.')).toHaveAttribute('role', 'status')
     expect(screen.getByRole('link', { name: /recuperación de contraseña/i })).toHaveAttribute('href', '/configuracion/recuperacion')
+  })
+
+  it('sube una foto permitida desde editar perfil', async () => {
+    const updateProfilePhoto = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(useAuth).mockReturnValue({
+      user: { name: 'Ana Campus', email: 'ana@campus.edu', role: 'Docente', photo: null },
+      isAuthenticated: true,
+      isLoading: false,
+      login: vi.fn(),
+      updateProfile: vi.fn(),
+      updateProfilePhoto,
+      logout: vi.fn(),
+    })
+    const user = userEvent.setup()
+    render(<MemoryRouter><PerfilPage /></MemoryRouter>)
+
+    await user.upload(screen.getByLabelText('Seleccionar foto de perfil'), new File(['image'], 'perfil.png', { type: 'image/png' }))
+
+    expect(updateProfilePhoto).toHaveBeenCalledOnce()
+    expect(updateProfilePhoto.mock.calls[0][0]).toBeInstanceOf(File)
+    expect(screen.getByText('Agrega una foto para completar tu perfil.')).toBeInTheDocument()
   })
 
   it('la recuperación incrustada regresa al perfil, no al login', () => {

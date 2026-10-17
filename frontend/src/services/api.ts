@@ -12,6 +12,11 @@ import type {
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')
 
+export function resolverFotoUrl(foto: string | null | undefined) {
+  if (!foto) return null
+  return foto.startsWith('/uploads/') ? `${API_URL}${foto}` : foto
+}
+
 
 export async function iniciarSesion(usuario: string, contrasena: string) {
   return request<{ autenticada: boolean }>('/login/sesion', { method: 'POST', body: JSON.stringify({ usuario, contrasena }) })
@@ -22,6 +27,7 @@ export interface SesionActual {
   nombre?: string | null
   correo: string | null
   rol: string
+  foto?: string | null
 }
 
 export function obtenerSesionActual() {
@@ -29,9 +35,17 @@ export function obtenerSesionActual() {
 }
 
 export function actualizarPerfil(datos: { nombre: string; correo: string }) {
-  return request<{ nombre: string; correo: string }>('/login/perfil', {
+  return request<{ nombre: string; correo: string | null; foto: string | null }>('/login/perfil', {
     method: 'PATCH',
     body: JSON.stringify(datos),
+  })
+}
+
+export function actualizarFotoPerfil(foto: File) {
+  return request<{ nombre: string; correo: string | null; foto: string | null }>('/login/perfil/foto', {
+    method: 'PUT',
+    headers: { 'Content-Type': foto.type },
+    body: foto,
   })
 }
 
@@ -233,6 +247,18 @@ export interface AuditEvent {
   registro_id: number | null
   descripcion: string
   fecha: string
+}
+
+export interface NotificacionDocente extends AuditEvent {
+  leida: boolean
+}
+
+export function listarNotificacionesDocentes() {
+  return request<NotificacionDocente[]>('/notificaciones/docentes')
+}
+
+export function marcarNotificacionDocenteLeida(id: number) {
+  return request<void>(`/notificaciones/docentes/${id}/leida`, { method: 'POST' })
 }
 
 function queryString<T extends object>(filters: T) {

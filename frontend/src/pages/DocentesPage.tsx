@@ -31,7 +31,7 @@ export function DocentesPage() {
         searchableText={(docente) => `${docente.numero_empleado} ${docente.nombres} ${docente.apellidos} ${docente.correo}`}
         columns={[
           { label: 'Empleado', render: (docente) => <strong className="font-semibold text-slate-800 dark:text-slate-100">{docente.numero_empleado}</strong> },
-          { label: 'Nombre', render: (docente) => `${docente.nombres} ${docente.apellidos}` },
+          { label: 'Nombre', render: (docente) => <span className="flex items-center gap-2"><img className="h-8 w-8 rounded-full object-cover" src={docente.foto ?? `/avatars/persona-${String((docente.id - 1) % 12 + 1).padStart(2, '0')}.jpg`} alt="" />{docente.nombres} {docente.apellidos}</span> },
           { label: 'Correo', render: (docente) => <a className="text-sage-600 hover:underline dark:text-sage-400" href={`mailto:${docente.correo}`}>{docente.correo}</a> },
           { label: 'Estado', render: (docente) => <StatusBadge active={docente.estado} /> },
         ]}

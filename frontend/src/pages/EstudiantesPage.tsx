@@ -37,7 +37,7 @@ export function EstudiantesPage() {
         filters={[{ key: 'carrera', label: 'Carrera', options: labels.carreraOptions, getValue: (item) => item.carrera_id }]}
         columns={[
           { label: 'Cuenta', render: (item) => <strong>{item.cuenta}</strong> },
-          { label: 'Nombre', render: (item) => item.nombre },
+          { label: 'Nombre', render: (item) => <span className="flex items-center gap-2"><img className="h-8 w-8 rounded-full object-cover" src={item.foto ?? `/avatars/persona-${String((item.id - 1) % 12 + 1).padStart(2, '0')}.jpg`} alt="" />{item.nombre}</span> },
           { label: 'Correo', render: (item) => item.correo },
           { label: 'Carrera', render: (item) => labels.carreras[item.carrera_id] ?? `Carrera #${item.carrera_id}` },
           { label: 'Estado', render: (item) => <StatusBadge active={item.estado} /> },

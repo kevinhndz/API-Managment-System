@@ -10,6 +10,7 @@ class Estudiantes(miClaseBase, PoderAuditor):
     id = Column(Integer, primary_key=True, index=True)
     cuenta = Column(String(20), unique=True, nullable=False)
     nombre = Column(String(150), nullable=False)
+    foto = Column(String(500), nullable=True)
     correo = Column(String(150), unique=True, nullable=False)
     telefono = Column(String(20), unique=True, nullable=True)
     fechaNacimiento = Column(Date)

@@ -214,12 +214,64 @@ def test_perfil_actualiza_solo_la_cuenta_autenticada_y_sus_datos_personales():
         })
 
         assert respuesta.status_code == 200, respuesta.text
-        assert respuesta.json() == {"nombre": "Kevin Hernandez", "correo": "kevin@uphn.edu"}
+        assert respuesta.json() == {"nombre": "Kevin Hernandez", "correo": "kevin@uphn.edu", "foto": None}
         with Session(motor) as db:
             cuenta = db.query(Usuarios).filter_by(id=31).one()
             otra = db.query(Usuarios).filter_by(id=32).one()
             assert (cuenta.usuario, cuenta.nombre, cuenta.correo, cuenta.rol) == ("admin-perfil", "Kevin Hernandez", "kevin@uphn.edu", "Administrador")
             assert (otra.usuario, otra.correo, otra.rol) == ("otra-cuenta", "otra@uphn.edu", "Docente")
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_usuario_subir_foto_de_perfil_guarda_ruta_y_archivo(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "UPLOADS_DIR", str(tmp_path))
+    cliente, motor = _cliente_con_bd_en_memoria()
+    with Session(motor) as db:
+        db.add(Usuarios(id=53, usuario="perfil-foto", correo="foto@uphn.edu", contrasena="hash", rol="Administrador", activo=True))
+        db.commit()
+    cliente.cookies.set("campusflow_session", crear_token("perfil-foto", 53, "Administrador"))
+
+    try:
+        respuesta = cliente.put(
+            "/login/perfil/foto",
+            content=b"\xff\xd8\xffdatos-jpeg",
+            headers={"content-type": "image/jpeg"},
+        )
+        assert respuesta.status_code == 200, respuesta.text
+        foto = respuesta.json()["foto"]
+        assert foto.startswith("/uploads/profiles/") and foto.endswith(".jpg")
+        assert (tmp_path / "profiles" / foto.rsplit("/", 1)[-1]).read_bytes() == b"\xff\xd8\xffdatos-jpeg"
+        with Session(motor) as db:
+            assert db.query(Usuarios).filter_by(id=53).one().foto == foto
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_usuario_sin_correo_puede_subir_foto_de_perfil(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "UPLOADS_DIR", str(tmp_path))
+    cliente, motor = _cliente_con_bd_en_memoria()
+    with Session(motor) as db:
+        db.add(Usuarios(id=54, usuario="perfil-sin-correo", correo=None, contrasena="hash", rol="Administrador", activo=True))
+        db.commit()
+    cliente.cookies.set("campusflow_session", crear_token("perfil-sin-correo", 54, "Administrador"))
+
+    try:
+        respuesta = cliente.put(
+            "/login/perfil/foto",
+            content=b"\xff\xd8\xffdatos-jpeg",
+            headers={"content-type": "image/jpeg"},
+        )
+        assert respuesta.status_code == 200, respuesta.text
+        assert respuesta.json()["correo"] is None
+        foto = respuesta.json()["foto"]
+        assert foto.startswith("/uploads/profiles/")
+        with Session(motor) as db:
+            assert db.query(Usuarios).filter_by(id=54).one().foto == foto
     finally:
         app.dependency_overrides.clear()
         cliente.close()
