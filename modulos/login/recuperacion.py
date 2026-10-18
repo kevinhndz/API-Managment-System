@@ -23,7 +23,7 @@ def _hash_token(token: str) -> str:
 
 
 def solicitar_recuperacion(db: Session, correo: str) -> None:
-    if not all((settings.SMTP_HOST, settings.SMTP_USER, settings.SMTP_PASSWORD, settings.SMTP_FROM)):
+    if not all((settings.SMTP_HOST, settings.SMTP_USER, settings.smtp_password, settings.SMTP_FROM)):
         raise RuntimeError("El envio de correo no esta configurado.")
 
     usuario = db.query(Usuarios).filter(

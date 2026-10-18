@@ -99,7 +99,7 @@ class LoginService:
 
     @staticmethod
     def _claves_intentos(usuario: str, direccion_ip: str | None):
-        secreto = settings.SECRET_KEY.encode("utf-8")
+        secreto = settings.SECRET_KEY.get_secret_value().encode("utf-8")
         usuario_normalizado = usuario.strip().casefold()
         material_cuenta = f"cuenta-ip:{usuario_normalizado}:{direccion_ip or 'sin-ip'}"
         clave_cuenta = hmac.new(secreto, material_cuenta.encode("utf-8"), hashlib.sha256).hexdigest()
