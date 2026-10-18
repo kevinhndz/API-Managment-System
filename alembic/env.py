@@ -10,6 +10,7 @@ sys.path.insert(
 from alembic import context
 from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
+from core.config import preparar_url_base_datos
 
 # 2. Cargar variables de entorno
 load_dotenv()
@@ -39,7 +40,9 @@ config = context.config
 # 4. Leer la URL de la base de datos desde el .env
 url_db = os.getenv("DATABASE_URL")
 if url_db:
-  config.set_main_option("sqlalchemy.url", url_db)
+  ambiente = os.getenv("APP_ENV", "development")
+  url_db = preparar_url_base_datos(url_db, ambiente)
+  config.set_main_option("sqlalchemy.url", url_db.replace("%", "%%"))
 
 if config.config_file_name is not None:
   fileConfig(config.config_file_name)

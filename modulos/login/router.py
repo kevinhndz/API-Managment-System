@@ -20,7 +20,7 @@ def _establecer_cookie_sesion(response: Response, token: str) -> None:
         value=token,
         max_age=30 * 60,
         httponly=True,
-        secure=settings.COOKIE_SECURE,
+        secure=settings.cookie_secure,
         samesite="lax",
         path="/",
     )
@@ -44,7 +44,7 @@ def cerrar_sesion(response: Response):
     response.delete_cookie(
         key="campusflow_session",
         httponly=True,
-        secure=settings.COOKIE_SECURE,
+        secure=settings.cookie_secure,
         samesite="lax",
         path="/",
     )

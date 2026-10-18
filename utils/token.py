@@ -3,7 +3,7 @@ from jose import jwt, JWTError
 from datetime import datetime, timezone, timedelta
 from core.excepciones import CredencialesInvalidasError
 
-LLAVE = traer.SECRET_KEY
+LLAVE = traer.SECRET_KEY.get_secret_value()
 
 def crear_token(user: str, user_id: int, rol: str, version_token: int = 0) -> str:
     

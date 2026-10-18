@@ -39,12 +39,12 @@ def _hash_secreto(valor: str) -> str:
 
 def _hash_codigo(verificacion_id: str, codigo: str) -> str:
     mensaje = f"{verificacion_id}:{codigo}".encode("utf-8")
-    return hmac.new(settings.SECRET_KEY.encode("utf-8"), mensaje, hashlib.sha256).hexdigest()
+    return hmac.new(settings.SECRET_KEY.get_secret_value().encode("utf-8"), mensaje, hashlib.sha256).hexdigest()
 
 
 def _hash_ip(ip: str) -> str:
     return hmac.new(
-        settings.SECRET_KEY.encode("utf-8"),
+        settings.SECRET_KEY.get_secret_value().encode("utf-8"),
         ip.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
@@ -55,7 +55,7 @@ def _verificar_hash(esperado: str, recibido: str) -> bool:
 
 
 def solicitar_codigo_correo(db: Session, correo: str, ip: str) -> dict[str, str]:
-    if not all((settings.SMTP_HOST, settings.SMTP_USER, settings.SMTP_PASSWORD, settings.SMTP_FROM)):
+    if not all((settings.SMTP_HOST, settings.SMTP_USER, settings.smtp_password, settings.SMTP_FROM)):
         raise ServicioCorreoNoDisponibleError("El envio de correo no esta configurado.")
 
     correo_normalizado = str(correo).strip().casefold()

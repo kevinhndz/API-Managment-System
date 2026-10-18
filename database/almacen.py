@@ -1,8 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker, DeclarativeBase
-from core.config import settings as traer
+from core.config import preparar_url_base_datos, settings as traer
 
-UBICACION_ALMACEN = traer.DATABASE_URL
+UBICACION_ALMACEN = preparar_url_base_datos(
+    traer.DATABASE_URL.get_secret_value(), traer.APP_ENV
+)
 
 #  el motor usa pool_pre_ping para reconectar automaticamente la bd si la conexion muere
 motor = create_engine(
@@ -28,4 +30,4 @@ def abrir_puerta_bd():
         db = llaves()  
         yield db       
     finally:
-        db.close()     
+        db.close()
