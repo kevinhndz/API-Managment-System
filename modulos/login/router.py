@@ -1,9 +1,11 @@
 from pathlib import Path
+import secrets
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 from core.config import settings
+from core.rate_limit_service import limitar_peticion_por_ip
 from database.almacen import abrir_puerta_bd
 from utils.auth import permiso_admin, el_vigilante, permiso_usuario
 from modulos.login.schema import LoginRequest, PerfilUsuarioActualizar, PerfilUsuarioResponse, Revisar_Json_Crear_Usuario, RestablecerContrasena, SesionResponse, SesionUsuarioResponse, SolicitarRecuperacion, SolicitarRecuperacionResponse, UsuarioResponse
@@ -21,9 +23,29 @@ def _establecer_cookie_sesion(response: Response, token: str) -> None:
         max_age=30 * 60,
         httponly=True,
         secure=settings.cookie_secure,
-        samesite="lax",
+        samesite=settings.COOKIE_SAMESITE,
         path="/",
     )
+
+
+def _establecer_cookie_csrf(response: Response, token: str) -> None:
+    response.set_cookie(
+        key="campusflow_csrf",
+        value=token,
+        max_age=30 * 60,
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite=settings.COOKIE_SAMESITE,
+        path="/",
+    )
+
+
+@router.get("/csrf")
+def obtener_token_csrf(request: Request, response: Response):
+    token = request.cookies.get("campusflow_csrf") or secrets.token_urlsafe(32)
+    _establecer_cookie_csrf(response, token)
+    response.headers["Cache-Control"] = "no-store"
+    return {"csrf_token": token}
 
 
 @router.post("/sesion", response_model=SesionResponse)
@@ -36,6 +58,7 @@ def iniciar_sesion_web(
     direccion_ip = request.client.host if request.client else None
     token = s.login_service(db, json, direccion_ip)
     _establecer_cookie_sesion(response, token)
+    _establecer_cookie_csrf(response, request.cookies.get("campusflow_csrf") or secrets.token_urlsafe(32))
     return SesionResponse()
 
 
@@ -45,7 +68,14 @@ def cerrar_sesion(response: Response):
         key="campusflow_session",
         httponly=True,
         secure=settings.cookie_secure,
-        samesite="lax",
+        samesite=settings.COOKIE_SAMESITE,
+        path="/",
+    )
+    response.delete_cookie(
+        key="campusflow_csrf",
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite=settings.COOKIE_SAMESITE,
         path="/",
     )
 
@@ -133,9 +163,17 @@ async def actualizar_foto_perfil(
 @router.post("/recuperacion", response_model=SolicitarRecuperacionResponse, status_code=status.HTTP_202_ACCEPTED)
 def solicitar_cambio_contrasena(
     json: SolicitarRecuperacion,
+    request: Request,
     db: Session = Depends(abrir_puerta_bd),
 ):
     try:
+        limitar_peticion_por_ip(
+            db,
+            "recuperacion-solicitud",
+            request.client.host if request.client else "sin-ip",
+            settings.RECOVERY_REQUEST_RATE_LIMIT_IP_ATTEMPTS,
+            settings.RECOVERY_RATE_LIMIT_WINDOW_SECONDS,
+        )
         solicitar_recuperacion(db, str(json.correo))
     except RuntimeError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
@@ -145,8 +183,16 @@ def solicitar_cambio_contrasena(
 @router.post("/recuperacion/confirmar")
 def confirmar_cambio_contrasena(
     json: RestablecerContrasena,
+    request: Request,
     db: Session = Depends(abrir_puerta_bd),
 ):
+    limitar_peticion_por_ip(
+        db,
+        "recuperacion-confirmacion",
+        request.client.host if request.client else "sin-ip",
+        settings.RECOVERY_CONFIRM_RATE_LIMIT_IP_ATTEMPTS,
+        settings.RECOVERY_RATE_LIMIT_WINDOW_SECONDS,
+    )
     confirmar_recuperacion(db, json.token, json.contrasena)
     return {"detail": "La contrasena se actualizo correctamente."}
 

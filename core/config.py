@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     SECRET_KEY: SecretStr
     FRONTEND_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
     COOKIE_SECURE: bool | None = None
+    COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
@@ -23,6 +24,11 @@ class Settings(BaseSettings):
     LOGIN_RATE_LIMIT_IP_ATTEMPTS: int = 100
     LOGIN_RATE_LIMIT_BASE_LOCK_SECONDS: int = 30
     LOGIN_RATE_LIMIT_MAX_LOCK_SECONDS: int = 1800
+    SIGNUP_RATE_LIMIT_WINDOW_SECONDS: int = 900
+    SIGNUP_RATE_LIMIT_IP_ATTEMPTS: int = 10
+    RECOVERY_RATE_LIMIT_WINDOW_SECONDS: int = 900
+    RECOVERY_REQUEST_RATE_LIMIT_IP_ATTEMPTS: int = 10
+    RECOVERY_CONFIRM_RATE_LIMIT_IP_ATTEMPTS: int = 20
     SIGNUP_EMAIL_CODE_TTL_MINUTES: int = 10
     SIGNUP_EMAIL_CODE_RESEND_SECONDS: int = 60
     SIGNUP_EMAIL_CODE_MAX_ATTEMPTS: int = 5
@@ -49,6 +55,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validar_configuracion_produccion(self):
+        if self.COOKIE_SAMESITE == "none" and not self.cookie_secure:
+            raise ValueError("COOKIE_SAMESITE=none requiere COOKIE_SECURE activado.")
         if self.APP_ENV != "production":
             return self
 
