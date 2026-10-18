@@ -392,7 +392,9 @@ def _cliente_con_bd_en_memoria():
             yield db
 
     app.dependency_overrides[abrir_puerta_bd] = abrir_bd_prueba
-    return TestClient(app), motor
+    cliente = TestClient(app, headers={"X-CSRF-Token": "token-csrf-pruebas"})
+    cliente.cookies.set("campusflow_csrf", "token-csrf-pruebas")
+    return cliente, motor
 
 
 def _solicitar_y_verificar_correo(cliente, monkeypatch, correo):
@@ -485,6 +487,156 @@ def test_codigo_de_correo_limita_intentos_y_reenvios(monkeypatch):
         )
         assert reenvio.status_code == 429
         assert int(reenvio.headers["retry-after"]) > 0
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_csrf_exige_token_valido_para_cambios_con_sesion():
+    cliente, motor = _cliente_con_bd_en_memoria()
+    with Session(motor) as db:
+        db.add(Usuarios(id=91, usuario="admin-csrf", contrasena="hash", rol="Administrador", activo=True))
+        db.commit()
+    cliente.cookies.set("campusflow_session", crear_token("admin-csrf", 91, "Administrador"))
+
+    try:
+        token = cliente.get("/login/csrf")
+        assert token.status_code == 200
+        assert token.json()["csrf_token"] == "token-csrf-pruebas"
+        assert "httponly" in token.headers["set-cookie"].lower()
+
+        rechazado = cliente.post("/login/cerrar", headers={"X-CSRF-Token": "incorrecto"})
+        assert rechazado.status_code == 403
+
+        cerrado = cliente.post("/login/cerrar")
+        assert cerrado.status_code == 204
+        assert 'campusflow_session=""' in cerrado.headers["set-cookie"]
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_csrf_rechaza_origen_no_autorizado():
+    cliente, motor = _cliente_con_bd_en_memoria()
+    with Session(motor) as db:
+        db.add(Usuarios(id=92, usuario="admin-origen", contrasena="hash", rol="Administrador", activo=True))
+        db.commit()
+    cliente.cookies.set("campusflow_session", crear_token("admin-origen", 92, "Administrador"))
+
+    try:
+        respuesta = cliente.post("/login/cerrar", headers={"Origin": "https://sitio-ajeno.example"})
+        assert respuesta.status_code == 403
+        assert respuesta.json()["detail"] == "Origen no permitido."
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_solicitud_de_navegador_necesita_token_csrf_aunque_no_haya_sesion():
+    cliente, motor = _cliente_con_bd_en_memoria()
+
+    try:
+        respuesta = cliente.post(
+            "/login/recuperacion",
+            json={"correo": "persona@uphn.edu"},
+            headers={"Origin": "http://localhost:5173", "X-CSRF-Token": ""},
+        )
+        assert respuesta.status_code == 403
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_origen_autorizado_y_token_csrf_pueden_enviar_solicitud_de_navegador():
+    cliente, motor = _cliente_con_bd_en_memoria()
+
+    try:
+        respuesta = cliente.post(
+            "/login/recuperacion",
+            json={"correo": "persona@uphn.edu"},
+            headers={"Origin": "http://localhost:5173"},
+        )
+        assert respuesta.status_code == 202
+        assert respuesta.headers["access-control-allow-origin"] == "http://localhost:5173"
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_registro_publico_limita_solicitudes_por_ip():
+    cliente, motor = _cliente_con_bd_en_memoria()
+    datos = {
+        "nombre_completo": "Persona de Prueba",
+        "correo": "persona@uphn.edu",
+        "usuario": "persona.prueba",
+        "contrasena": "clave-segura-de-prueba",
+        "ticket_verificacion": "ticket-falso-que-no-es-valido-y-tiene-longitud-suficiente",
+    }
+
+    try:
+        for _ in range(settings.SIGNUP_RATE_LIMIT_IP_ATTEMPTS - 1):
+            respuesta = cliente.post("/solicitudes-cuenta/", json=datos)
+            assert respuesta.status_code == 400
+
+        limitado = cliente.post("/solicitudes-cuenta/", json=datos)
+        assert limitado.status_code == 429
+        assert int(limitado.headers["retry-after"]) > 0
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_recuperacion_limita_envios_por_ip():
+    cliente, motor = _cliente_con_bd_en_memoria()
+
+    try:
+        for _ in range(settings.RECOVERY_REQUEST_RATE_LIMIT_IP_ATTEMPTS - 1):
+            respuesta = cliente.post("/login/recuperacion", json={"correo": "alguien@uphn.edu"})
+            assert respuesta.status_code == 202
+
+        limitado = cliente.post("/login/recuperacion", json={"correo": "alguien@uphn.edu"})
+        assert limitado.status_code == 429
+        assert int(limitado.headers["retry-after"]) > 0
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_recuperacion_limita_intentos_de_confirmacion_por_ip():
+    cliente, motor = _cliente_con_bd_en_memoria()
+    datos = {"token": "token-falso-de-recuperacion-suficientemente-largo", "contrasena": "clave-nueva-segura"}
+
+    try:
+        for _ in range(settings.RECOVERY_CONFIRM_RATE_LIMIT_IP_ATTEMPTS - 1):
+            respuesta = cliente.post("/login/recuperacion/confirmar", json=datos)
+            assert respuesta.status_code == 401
+
+        limitado = cliente.post("/login/recuperacion/confirmar", json=datos)
+        assert limitado.status_code == 429
+        assert int(limitado.headers["retry-after"]) > 0
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_usuario_docente_no_puede_entrar_a_bandeja_administrativa():
+    cliente, motor = _cliente_con_bd_en_memoria()
+    with Session(motor) as db:
+        db.add(Usuarios(id=93, usuario="docente-seguridad", contrasena="hash", rol="Docente", activo=True))
+        db.commit()
+    cliente.cookies.set("campusflow_session", crear_token("docente-seguridad", 93, "Docente"))
+
+    try:
+        respuesta = cliente.get("/solicitudes-cuenta/")
+        assert respuesta.status_code == 403
     finally:
         app.dependency_overrides.clear()
         cliente.close()

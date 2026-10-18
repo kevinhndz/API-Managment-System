@@ -28,6 +28,7 @@ def test_produccion_exige_clave_segura_https_cookie_y_postgresql():
     [
         {"SECRET_KEY": "clave-de-prueba"},
         {"COOKIE_SECURE": False},
+        {"COOKIE_SAMESITE": "none", "COOKIE_SECURE": False},
         {"FRONTEND_ORIGINS": "http://campus.example.test"},
         {"FRONTEND_ORIGINS": "https://localhost:5173"},
         {"FRONTEND_ORIGINS": "https://127.0.0.1:5173"},
