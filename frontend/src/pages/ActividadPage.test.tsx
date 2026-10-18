@@ -79,4 +79,28 @@ describe('ActividadPage', () => {
     expect(screen.getByRole('region', { name: 'Album de metricas del campus' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Actividad de Docentes' })).not.toBeInTheDocument()
   })
+
+  it('muestra entradas del usuario como texto y no como etiquetas HTML', async () => {
+    const usuario = '<img src=x onerror=alert(1)>'
+    const descripcion = '<svg onload=alert(1)>'
+    vi.mocked(listarActividad).mockResolvedValue([{
+      id: 16,
+      usuario,
+      accion: 'CREAR',
+      modulo: 'aulas',
+      registro_id: null,
+      descripcion,
+      fecha: '2026-10-14T12:00:00Z',
+    }])
+
+    const { container } = render(<ActividadPage />)
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Aulas: Cambios y registros' }))
+
+    await screen.findByRole('heading', { name: 'Actividad de Aulas' })
+    const textos = Array.from(container.querySelectorAll('p')).map((parrafo) => parrafo.textContent ?? '')
+
+    expect(textos.some((texto) => texto.includes(usuario))).toBe(true)
+    expect(textos.some((texto) => texto.includes(descripcion))).toBe(true)
+    expect(container.querySelector('img[src="x"]')).toBeNull()
+  })
 })
