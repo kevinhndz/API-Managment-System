@@ -13,7 +13,7 @@ from core.excepciones import (
 )
 from utils.hash import encriptar_contrasena, verificar_contrasena
 from utils.token import crear_token
-from modulos.login.repository import IntentosInicioSesionRepository as intentos_repo
+from core.rate_limit_repository import RateLimitRepository as intentos_repo
 from modulos.login.repository import UsuarioRepository as repo
 from modulos.login.schema import LoginRequest, PerfilUsuarioActualizar, Revisar_Json_Crear_Usuario
 from modulos.login.tabla import Usuarios
@@ -72,7 +72,7 @@ class LoginService:
         ahora = datetime.now(timezone.utc)
         claves_y_limites = LoginService._claves_intentos(json.usuario, direccion_ip)
         claves = [clave for clave, _ in claves_y_limites]
-        segundos_restantes = intentos_repo.buscar_bloqueo_repository(db, claves, ahora)
+        segundos_restantes = intentos_repo.buscar_bloqueo(db, claves, ahora)
         if segundos_restantes:
             raise IntentosInicioSesionLimitadosError(segundos_restantes)
 
@@ -82,7 +82,7 @@ class LoginService:
             or not usuario.activo
             or not verificar_contrasena(json.contrasena, usuario.contrasena)
         ):
-            segundos_restantes = intentos_repo.registrar_fallo_repository(
+            segundos_restantes = intentos_repo.registrar_intento(
                 db,
                 claves_y_limites,
                 ahora,
@@ -94,7 +94,7 @@ class LoginService:
                 raise IntentosInicioSesionLimitadosError(segundos_restantes)
             raise CredencialesInvalidasError("Usuario o contraseña incorrectos")
 
-        intentos_repo.limpiar_intentos_repository(db, [claves_y_limites[0][0]])
+        intentos_repo.limpiar(db, [claves_y_limites[0][0]])
         return crear_token(usuario.usuario, usuario.id, usuario.rol, usuario.version_token)
 
     @staticmethod
