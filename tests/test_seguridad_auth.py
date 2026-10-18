@@ -607,6 +607,28 @@ def test_cors_solo_refleja_origenes_configurados():
         motor.dispose()
 
 
+def test_busqueda_de_actividad_trata_el_texto_del_usuario_como_dato():
+    cliente, motor = _cliente_con_bd_en_memoria()
+    with Session(motor) as db:
+        db.add(Usuarios(id=81, usuario="admin-sql", contrasena="hash", rol="Administrador", activo=True))
+        db.add_all([
+            EventoAuditoria(usuario_id=81, usuario="admin-sql", accion="CREAR", modulo="aulas", descripcion="Aula creada"),
+            EventoAuditoria(usuario_id=81, usuario="docente", accion="EDITAR", modulo="aulas", descripcion="Aula editada"),
+        ])
+        db.commit()
+    cliente.cookies.set("campusflow_session", crear_token("admin-sql", 81, "Administrador"))
+
+    try:
+        respuesta = cliente.get("/auditoria/", params={"usuario": "' OR 1=1 --"})
+
+        assert respuesta.status_code == 200
+        assert respuesta.json() == []
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
 def test_la_sesion_se_rechaza_si_la_cuenta_se_desactiva():
     cliente, motor = _cliente_con_bd_en_memoria()
     with Session(motor) as db:

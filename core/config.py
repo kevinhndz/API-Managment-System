@@ -1,4 +1,6 @@
+from ipaddress import ip_address
 from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -69,8 +71,37 @@ class Settings(BaseSettings):
             raise ValueError("En producción, COOKIE_SECURE debe estar activado.")
 
         origenes = [origen.strip() for origen in self.FRONTEND_ORIGINS.split(",") if origen.strip()]
-        if not origenes or any(not origen.startswith("https://") for origen in origenes):
-            raise ValueError("En producción, todos los FRONTEND_ORIGINS deben usar HTTPS.")
+        if not origenes:
+            raise ValueError("En producción, debes configurar el dominio del frontend.")
+
+        for origen in origenes:
+            try:
+                partes = urlsplit(origen)
+            except ValueError:
+                partes = urlsplit("")
+            host = partes.hostname
+            host_local = (
+                not host
+                or host.casefold() == "localhost"
+                or host.casefold().endswith((".localhost", ".local"))
+            )
+            if host:
+                try:
+                    host_local = host_local or ip_address(host).is_loopback
+                except ValueError:
+                    pass
+
+            if (
+                partes.scheme != "https"
+                or not partes.netloc
+                or host_local
+                or partes.path
+                or partes.query
+                or partes.fragment
+            ):
+                raise ValueError(
+                    "En producción, FRONTEND_ORIGINS debe contener solo dominios HTTPS públicos, sin rutas locales."
+                )
 
         url_db = make_url(self.DATABASE_URL.get_secret_value())
         if url_db.get_backend_name() != "postgresql":
