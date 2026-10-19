@@ -30,9 +30,12 @@ class UsuarioRepository:
         ).first()
 
     @staticmethod
-    @staticmethod
     def guardar_cambios_perfil_repository(db: Session, usuario: Usuarios):
         db.add(usuario)
         db.commit()
         db.refresh(usuario)
         return usuario
+
+    @staticmethod
+    def deshacer_cambios_repository(db: Session):
+        db.rollback()

@@ -46,3 +46,13 @@ class ServicioCorreoNoDisponibleError(SuperPoder):
 
 class VerificacionCorreoInvalidaError(SuperPoder):
     """Representa HTTP 400 cuando el codigo o pase de correo no es valido."""
+
+
+class ArchivoPerfilInvalidoError(SuperPoder):
+    def __init__(self, mensaje: str, codigo_http: int):
+        super().__init__(mensaje)
+        self.codigo_http = codigo_http
+
+
+class DatosInvalidosError(SuperPoder):
+    """Datos que no cumplen las condiciones de la operacion."""

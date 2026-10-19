@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from core.excepciones import AccesoProhibidoError, CredencialesInvalidasError
 from database.almacen import abrir_puerta_bd
-from modulos.login.tabla import Usuarios
+from modulos.login.repository import UsuarioRepository
 from utils.token import verificar_token
 
 
@@ -21,7 +21,7 @@ def el_vigilante(
     if not token:
         raise CredencialesInvalidasError("Autorizacion requerida")
     datos = verificar_token(token)
-    usuario = db.query(Usuarios).filter(Usuarios.id == datos["user_id"]).first()
+    usuario = UsuarioRepository.buscar_por_id_repository(db, datos["user_id"])
     if (
         usuario is None
         or not usuario.activo
