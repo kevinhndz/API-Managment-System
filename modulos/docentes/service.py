@@ -12,7 +12,6 @@ from modulos.docentes.schema import (
     Revisar_Json_Editar_Docente,
 )
 from modulos.docentes.tabla import Docentes
-from modulos.secciones.tabla import Secciones
 
 
 class DocentesService:
@@ -95,7 +94,7 @@ class DocentesService:
         if check is None:
             raise RecursoNoEncontradoError("No existe este docente")
 
-        tiene_secciones = db.query(Secciones).filter(Secciones.docente_id == id).first()
+        tiene_secciones = repo.tiene_secciones_repository(db, id)
         if tiene_secciones is not None:
             check.estado = False
             repo.guardar_docente_repository(db, check)

@@ -1,9 +1,14 @@
 from sqlalchemy.orm import Session
 
 from modulos.docentes.tabla import Docentes
+from modulos.secciones.tabla import Secciones
 
 
 class DocenteRepository:
+    @staticmethod
+    def tiene_secciones_repository(db: Session, docente_id: int):
+        return db.query(Secciones).filter(Secciones.docente_id == docente_id).first()
+
     @staticmethod
     def check_repository(db: Session, json):
         return (

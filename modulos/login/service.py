@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import secrets
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
@@ -10,16 +11,52 @@ from core.excepciones import (
     IntentosInicioSesionLimitadosError,
     RecursoDuplicadoError,
     RecursoNoEncontradoError,
+    ServicioCorreoNoDisponibleError,
 )
 from utils.hash import encriptar_contrasena, verificar_contrasena
 from utils.token import crear_token
 from core.rate_limit_repository import RateLimitRepository as intentos_repo
 from modulos.login.repository import UsuarioRepository as repo
-from modulos.login.schema import LoginRequest, PerfilUsuarioActualizar, Revisar_Json_Crear_Usuario
+from modulos.login.schema import LoginRequest, PerfilUsuarioActualizar, Revisar_Json_Crear_Usuario, SesionUsuarioResponse
 from modulos.login.tabla import Usuarios
+from modulos.login.recuperacion import confirmar_recuperacion, solicitar_recuperacion
+from core.rate_limit_service import limitar_peticion_por_ip
 
 
 class LoginService:
+    @staticmethod
+    def preparar_token_csrf(token_actual: str | None) -> str:
+        return token_actual or secrets.token_urlsafe(32)
+
+    @staticmethod
+    def obtener_sesion_actual_service(db: Session, usuario_id: int):
+        registro = LoginService.buscar_usuario_service(db, usuario_id)
+        return SesionUsuarioResponse(
+            usuario=registro.usuario, nombre=registro.nombre, correo=registro.correo,
+            rol=registro.rol, foto=registro.foto,
+        )
+
+    @staticmethod
+    def solicitar_recuperacion_service(db: Session, correo: str, ip: str):
+        limitar_peticion_por_ip(
+            db, "recuperacion-solicitud", ip,
+            settings.RECOVERY_REQUEST_RATE_LIMIT_IP_ATTEMPTS,
+            settings.RECOVERY_RATE_LIMIT_WINDOW_SECONDS,
+        )
+        try:
+            solicitar_recuperacion(db, correo)
+        except RuntimeError as error:
+            raise ServicioCorreoNoDisponibleError(str(error)) from error
+
+    @staticmethod
+    def confirmar_recuperacion_service(db: Session, token: str, contrasena: str, ip: str):
+        limitar_peticion_por_ip(
+            db, "recuperacion-confirmacion", ip,
+            settings.RECOVERY_CONFIRM_RATE_LIMIT_IP_ATTEMPTS,
+            settings.RECOVERY_RATE_LIMIT_WINDOW_SECONDS,
+        )
+        confirmar_recuperacion(db, token, contrasena)
+
     @staticmethod
     def buscar_usuario_service(db: Session, usuario_id: int):
         registro = repo.buscar_por_id_repository(db, usuario_id)
@@ -49,7 +86,7 @@ class LoginService:
         try:
             return repo.guardar_cambios_perfil_repository(db, registro)
         except IntegrityError as error:
-            db.rollback()
+            repo.deshacer_cambios_repository(db)
             raise RecursoDuplicadoError("Ese correo ya esta asociado a otra cuenta.") from error
 
     @staticmethod

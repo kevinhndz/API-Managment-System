@@ -6,8 +6,6 @@ from sqlalchemy.orm import Session
 from database.almacen import abrir_puerta_bd
 from modulos.reportes.service import ReportesService as s
 from modulos.reportes.schema import ReporteMatriculaItem, ReporteSeccionItem, ReporteVistaPrevia
-from modulos.reportes.exportadores import exportar_csv, exportar_excel, exportar_json, exportar_pdf
-from modulos.auditoria.registro import registrar_evento
 from utils.auth import permiso_admin, permiso_usuario
 
 router = APIRouter(prefix="/reportes", tags=["Reportes"])
@@ -66,15 +64,6 @@ def descargar_reporte(
     db: Session = Depends(abrir_puerta_bd),
     usuario: dict = Depends(permiso_usuario),
 ):
-    registros = s.consultar_registros(db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta)
-
-    if formato == "xlsx":
-        respuesta = exportar_excel(modulo, registros)
-    elif formato == "pdf":
-        respuesta = exportar_pdf(modulo, registros)
-    elif formato == "csv":
-        respuesta = exportar_csv(modulo, registros)
-    else:
-        respuesta = exportar_json(modulo, registros)
-    registrar_evento(db, "EXPORTAR", modulo, f"Descargo reporte {formato.upper()} de {modulo} con {len(registros)} registros")
-    return respuesta
+    return s.descargar_reporte(
+        db, modulo, formato, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta,
+    )

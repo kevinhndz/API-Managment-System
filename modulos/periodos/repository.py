@@ -5,6 +5,13 @@ from modulos.periodos.tabla import Periodos
 
 class PeriodoRepository:
     @staticmethod
+    def buscar_activo_repository(db: Session, excluir_id: int | None = None):
+        consulta = db.query(Periodos).filter(Periodos.activo == True)
+        if excluir_id is not None:
+            consulta = consulta.filter(Periodos.id != excluir_id)
+        return consulta.first()
+
+    @staticmethod
     def check_repository(db: Session, json):
         return (
             db.query(Periodos)

@@ -5,10 +5,6 @@ from core.schema import RespuestaPaginada
 from modulos.matriculas.repository import MatriculaRepository as repo
 from modulos.matriculas.schema import *
 from modulos.matriculas.tabla import Matriculas
-from modulos.asignaturas.tabla import Asignaturas
-from modulos.calificaciones.tabla import Calificaciones
-from modulos.estudiantes.tabla import Estudiantes
-from modulos.secciones.tabla import Secciones
 
 
 class MatriculasService:
@@ -20,48 +16,25 @@ class MatriculasService:
         estado: str,
         excluir_id: int | None = None,
     ) -> None:
-        estudiante = (
-            db.query(Estudiantes)
-            .filter(Estudiantes.id == estudiante_id)
-            .with_for_update()
-            .first()
-        )
+        estudiante = repo.buscar_estudiante_bloqueado_repository(db, estudiante_id)
         if estudiante is None:
             raise RecursoNoEncontradoError("No existe este estudiante")
 
-        seccion = (
-            db.query(Secciones)
-            .filter(Secciones.id == seccion_id)
-            .with_for_update()
-            .first()
-        )
+        seccion = repo.buscar_seccion_bloqueada_repository(db, seccion_id)
         if seccion is None:
             raise RecursoNoEncontradoError("No existe esta seccion")
 
-        duplicada = db.query(Matriculas).filter(
-            Matriculas.estudiante_id == estudiante_id,
-            Matriculas.seccion_id == seccion_id,
-            Matriculas.id != excluir_id if excluir_id is not None else True,
-        ).first()
+        duplicada = repo.buscar_duplicada_repository(db, estudiante_id, seccion_id, excluir_id)
         if duplicada is not None:
             raise RecursoDuplicadoError("El estudiante ya esta matriculado en esta seccion")
 
-        asignatura = db.query(Asignaturas).filter(Asignaturas.id == seccion.asignatura_id).first()
+        asignatura = repo.buscar_asignatura_repository(db, seccion.asignatura_id)
         if asignatura is None:
             raise RecursoNoEncontradoError("No existe esta asignatura")
 
         if asignatura.requisito_id is not None:
-            requisito_aprobado = (
-                db.query(Calificaciones)
-                .join(Matriculas, Matriculas.id == Calificaciones.matricula_id)
-                .join(Secciones, Secciones.id == Matriculas.seccion_id)
-                .filter(
-                    Matriculas.estudiante_id == estudiante_id,
-                    Secciones.asignatura_id == asignatura.requisito_id,
-                    Matriculas.estado == "APROBADA",
-                    Calificaciones.nota_final >= 60,
-                )
-                .first()
+            requisito_aprobado = repo.buscar_requisito_aprobado_repository(
+                db, estudiante_id, asignatura.requisito_id,
             )
             if requisito_aprobado is None:
                 raise RecursoDuplicadoError(
@@ -69,11 +42,7 @@ class MatriculasService:
                 )
 
         if estado == "ACTIVA":
-            ocupados = db.query(Matriculas).filter(
-                Matriculas.seccion_id == seccion_id,
-                Matriculas.estado == "ACTIVA",
-                Matriculas.id != excluir_id if excluir_id is not None else True,
-            ).count()
+            ocupados = repo.contar_activas_repository(db, seccion_id, excluir_id)
             if ocupados >= seccion.cupo_maximo:
                 raise RecursoDuplicadoError("No hay cupos disponibles")
 

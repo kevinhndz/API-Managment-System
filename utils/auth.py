@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from core.excepciones import AccesoProhibidoError, CredencialesInvalidasError
 from database.almacen import abrir_puerta_bd
-from modulos.login.tabla import Usuarios
+from modulos.login.repository import UsuarioRepository
 from utils.token import verificar_token
 
 
@@ -21,7 +21,7 @@ def el_vigilante(
     if not token:
         raise CredencialesInvalidasError("Autorizacion requerida")
     datos = verificar_token(token)
-    usuario = db.query(Usuarios).filter(Usuarios.id == datos["user_id"]).first()
+    usuario = UsuarioRepository.buscar_por_id_repository(db, datos["user_id"])
     if (
         usuario is None
         or not usuario.activo
@@ -47,3 +47,9 @@ def permiso_usuario(json: dict = Depends(el_vigilante)) -> dict:
     if json.get("rol", "").casefold() == "docente" and json.get("docente_id") is None:
         raise AccesoProhibidoError("La cuenta docente no esta vinculada a un registro institucional")
     return json
+
+
+def alcance_docente(usuario: dict = Depends(permiso_usuario)) -> int | None:
+    if usuario["rol"].casefold() in {"admin", "administrador"}:
+        return None
+    return usuario["docente_id"]

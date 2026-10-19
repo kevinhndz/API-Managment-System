@@ -9,6 +9,8 @@ from core.excepciones import (
     IntentosVerificacionLimitadosError,
     ServicioCorreoNoDisponibleError,
     VerificacionCorreoInvalidaError,
+    ArchivoPerfilInvalidoError,
+    DatosInvalidosError,
 )
 
 
@@ -74,6 +76,8 @@ class ExcepcionesGlobales:
 
     @classmethod
     def directorio(cls, app: FastAPI) -> None:
+        app.add_exception_handler(ArchivoPerfilInvalidoError, cls.archivo_perfil_invalido)
+        app.add_exception_handler(DatosInvalidosError, cls.datos_invalidos)
         app.add_exception_handler(RecursoNoEncontradoError, cls.recurso_no_encontrado)
         app.add_exception_handler(RecursoDuplicadoError, cls.recurso_duplicado)
         app.add_exception_handler(CredencialesInvalidasError, cls.credenciales_invalidas)
@@ -82,6 +86,14 @@ class ExcepcionesGlobales:
         app.add_exception_handler(IntentosVerificacionLimitadosError, cls.intentos_verificacion_limitados)
         app.add_exception_handler(ServicioCorreoNoDisponibleError, cls.servicio_correo_no_disponible)
         app.add_exception_handler(VerificacionCorreoInvalidaError, cls.verificacion_correo_invalida)
+
+    @staticmethod
+    def archivo_perfil_invalido(request: Request, exc: ArchivoPerfilInvalidoError):
+        return JSONResponse(status_code=exc.codigo_http, content={"detail": exc.mensaje})
+
+    @staticmethod
+    def datos_invalidos(request: Request, exc: DatosInvalidosError):
+        return JSONResponse(status_code=422, content={"detail": exc.mensaje})
         
 """Cuando se lanza un error(se instacia la clase mejor dicho) FAST API revisa en  escuchadores
         y pregunta ¿Tengo registrado 'AccesoProhibidoError'? ──► 

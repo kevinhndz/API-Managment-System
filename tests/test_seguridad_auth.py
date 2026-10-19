@@ -252,6 +252,71 @@ def test_usuario_subir_foto_de_perfil_guarda_ruta_y_archivo(tmp_path, monkeypatc
         motor.dispose()
 
 
+@pytest.mark.parametrize("tipo,contenido,encabezados,codigo", [
+    ("text/html", b"<p>imagen falsa</p>", {}, 415),
+    ("image/jpeg", b"", {}, 400),
+    ("image/png", b"imagen falsa", {}, 415),
+    ("image/webp", b"RIFF0000FALSO", {}, 415),
+    ("image/jpeg", b"\xff\xd8\xffimagen", {"content-length": "incorrecto"}, 400),
+    ("image/jpeg", b"\xff\xd8\xffimagen", {"content-length": str(5 * 1024 * 1024 + 1)}, 413),
+])
+def test_foto_invalida_conserva_error_y_no_escribe_archivos(tmp_path, monkeypatch, tipo, contenido, encabezados, codigo):
+    monkeypatch.setattr(settings, "UPLOADS_DIR", str(tmp_path))
+    cliente, motor = _cliente_con_bd_en_memoria()
+    with Session(motor) as db:
+        db.add(Usuarios(id=53, usuario="perfil-foto", contrasena="hash", rol="Administrador", activo=True))
+        db.commit()
+    cliente.cookies.set("campusflow_session", crear_token("perfil-foto", 53, "Administrador"))
+    try:
+        respuesta = cliente.put(
+            "/login/perfil/foto", content=contenido,
+            headers={"content-type": tipo, **encabezados},
+        )
+        assert respuesta.status_code == codigo, respuesta.text
+        assert "detail" in respuesta.json()
+        assert list(tmp_path.rglob("*")) == []
+        with Session(motor) as db:
+            assert db.get(Usuarios, 53).foto is None
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_foto_nueva_se_elimina_si_falla_la_base_y_se_conserva_la_anterior(tmp_path, monkeypatch):
+    from modulos.login.repository import UsuarioRepository
+
+    monkeypatch.setattr(settings, "UPLOADS_DIR", str(tmp_path))
+    carpeta = tmp_path / "profiles"
+    carpeta.mkdir()
+    anterior = carpeta / "anterior.jpg"
+    anterior.write_bytes(b"foto anterior")
+    cliente, motor = _cliente_con_bd_en_memoria()
+    with Session(motor) as db:
+        db.add(Usuarios(
+            id=53, usuario="perfil-foto", contrasena="hash", rol="Administrador",
+            activo=True, foto="/uploads/profiles/anterior.jpg",
+        ))
+        db.commit()
+    cliente.cookies.set("campusflow_session", crear_token("perfil-foto", 53, "Administrador"))
+
+    def fallar_guardado(db, registro):
+        raise RuntimeError("Fallo de prueba al guardar")
+
+    monkeypatch.setattr(UsuarioRepository, "guardar_cambios_perfil_repository", fallar_guardado)
+    try:
+        with pytest.raises(RuntimeError, match="Fallo de prueba"):
+            cliente.put("/login/perfil/foto", content=b"\xff\xd8\xffimagen", headers={"content-type": "image/jpeg"})
+        assert list(carpeta.iterdir()) == [anterior]
+        assert anterior.read_bytes() == b"foto anterior"
+        with Session(motor) as db:
+            assert db.get(Usuarios, 53).foto == "/uploads/profiles/anterior.jpg"
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
 def test_usuario_sin_correo_puede_subir_foto_de_perfil(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "UPLOADS_DIR", str(tmp_path))
     cliente, motor = _cliente_con_bd_en_memoria()

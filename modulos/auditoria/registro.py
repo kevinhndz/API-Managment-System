@@ -4,6 +4,8 @@ from sqlalchemy import event, inspect
 from sqlalchemy.orm import Session
 
 from modulos.auditoria.tabla import EventoAuditoria
+from modulos.auditoria.repository import AuditoriaRepository as repo
+from modulos.auditoria.service import AuditoriaService
 from utils.token import verificar_token
 
 
@@ -29,19 +31,9 @@ def identificar_usuario(
 
 
 def registrar_evento(db: Session, accion: str, modulo: str, descripcion: str, registro_id: int | None = None):
-    usuario = usuario_actual.get()
-    if usuario is None:
-        return
-
-    db.add(EventoAuditoria(
-        usuario_id=usuario.get("user_id"),
-        usuario=usuario.get("user", "Desconocido"),
-        accion=accion,
-        modulo=modulo,
-        registro_id=registro_id,
-        descripcion=descripcion,
-    ))
-    db.commit()
+    AuditoriaService.registrar_evento(
+        db, usuario_actual.get(), accion, modulo, descripcion, registro_id
+    )
 
 
 @event.listens_for(Session, "after_flush")
@@ -70,4 +62,4 @@ def registrar_cambios(db: Session, flush_context):
             })
 
     if eventos:
-        db.connection().execute(EventoAuditoria.__table__.insert(), eventos)
+        repo.insertar_eventos_en_transaccion(db, eventos)

@@ -22,7 +22,7 @@ class PeriodosService:
             raise RecursoDuplicadoError("Ya existe este periodo")
         if (
             json.activo
-            and db.query(Periodos).filter(Periodos.activo == True).first() is not None
+            and repo.buscar_activo_repository(db) is not None
         ):
             raise RecursoDuplicadoError("Ya existe un periodo activo")
         nuevo_periodo = Periodos(
@@ -60,10 +60,7 @@ class PeriodosService:
             raise RecursoDuplicadoError("Ya existe este periodo")
         if (
             json.activo
-            and db.query(Periodos)
-            .filter(Periodos.activo == True, Periodos.id != id)
-            .first()
-            is not None
+            and repo.buscar_activo_repository(db, excluir_id=id) is not None
         ):
             raise RecursoDuplicadoError("Ya existe un periodo activo")
         check.anio = json.anio
@@ -80,10 +77,7 @@ class PeriodosService:
         check = PeriodosService.buscar_service(db, id)
         if (
             json.activo is True
-            and db.query(Periodos)
-            .filter(Periodos.activo == True, Periodos.id != id)
-            .first()
-            is not None
+            and repo.buscar_activo_repository(db, excluir_id=id) is not None
         ):
             raise RecursoDuplicadoError("Ya existe un periodo activo")
         if json.anio is not None:

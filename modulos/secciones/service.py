@@ -1,12 +1,10 @@
 from math import ceil
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from core.excepciones import RecursoDuplicadoError, RecursoNoEncontradoError
 from core.schema import RespuestaPaginada
 from modulos.aulas.tabla import Aulas
 from modulos.asignaturas.tabla import Asignaturas
 from modulos.docentes.tabla import Docentes
-from modulos.matriculas.tabla import Matriculas
 from modulos.periodos.tabla import Periodos
 from modulos.secciones.repository import SeccionRepository as repo
 from modulos.secciones.reglas import convertir_hora, normalizar_dias, normalizar_hora
@@ -17,10 +15,7 @@ from modulos.secciones.tabla import Secciones
 class SeccionesService:
     @staticmethod
     def _validar_registro(db: Session, valores: dict, excluir_id: int | None = None) -> None:
-        codigo_existente = db.query(Secciones).filter(
-            Secciones.codigo == valores["codigo"],
-            Secciones.id != excluir_id if excluir_id is not None else True,
-        ).first()
+        codigo_existente = repo.buscar_codigo_repository(db, valores["codigo"], excluir_id)
         if codigo_existente is not None:
             raise RecursoDuplicadoError("Ya existe esta seccion")
 
@@ -31,24 +26,16 @@ class SeccionesService:
             (Aulas, valores["aula_id"], "No existe esta aula"),
         )
         for modelo, referencia_id, mensaje in referencias:
-            referencia = (
-                db.query(modelo)
-                .filter(modelo.id == referencia_id)
-                .with_for_update()
-                .first()
-            )
+            referencia = repo.buscar_referencia_bloqueada_repository(db, modelo, referencia_id)
             if referencia is None:
                 raise RecursoNoEncontradoError(mensaje)
 
-        aula = db.query(Aulas).filter(Aulas.id == valores["aula_id"]).first()
+        aula = repo.buscar_aula_repository(db, valores["aula_id"])
         if valores["cupo_maximo"] > aula.capacidad:
             raise RecursoDuplicadoError("El cupo supera la capacidad del aula")
 
         if excluir_id is not None:
-            ocupados = db.query(Matriculas).filter(
-                Matriculas.seccion_id == excluir_id,
-                Matriculas.estado == "ACTIVA",
-            ).count()
+            ocupados = repo.contar_matriculas_activas_repository(db, excluir_id)
             if valores["cupo_maximo"] < ocupados:
                 raise RecursoDuplicadoError(
                     "El cupo no puede ser menor que las matriculas activas existentes"
@@ -62,14 +49,9 @@ class SeccionesService:
             )
 
         dias = normalizar_dias(valores["dias"])
-        conflictos = db.query(Secciones).filter(
-            Secciones.periodo_id == valores["periodo_id"],
-            or_(
-                Secciones.docente_id == valores["docente_id"],
-                Secciones.aula_id == valores["aula_id"],
-            ),
-            Secciones.id != excluir_id if excluir_id is not None else True,
-        ).all()
+        conflictos = repo.listar_posibles_conflictos_repository(
+            db, valores["periodo_id"], valores["docente_id"], valores["aula_id"], excluir_id,
+        )
 
         for existente in conflictos:
             if not dias.intersection(normalizar_dias(existente.dias)):

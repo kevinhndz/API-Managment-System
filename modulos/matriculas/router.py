@@ -4,7 +4,7 @@ from core.schema import RespuestaPaginada
 from database.almacen import abrir_puerta_bd
 from modulos.matriculas.schema import *
 from modulos.matriculas.service import MatriculasService as s
-from utils.auth import permiso_admin, permiso_usuario
+from utils.auth import permiso_admin, alcance_docente
 
 router = APIRouter(prefix="/matriculas", tags=["Matriculas"])
 
@@ -22,9 +22,8 @@ def listar_matriculas(
     pagina_actual: int = Query(1, ge=1),
     limite: int = Query(10, ge=1, le=100),
     db: Session = Depends(abrir_puerta_bd),
-    usuario: dict = Depends(permiso_usuario),
+    docente_id: int | None = Depends(alcance_docente),
 ):
-    docente_id = None if usuario["rol"].casefold() in {"admin", "administrador"} else usuario["docente_id"]
     return s.listar_service(db, pagina_actual, limite, docente_id)
 
 

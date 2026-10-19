@@ -1,18 +1,37 @@
 from sqlalchemy.orm import Session
 from modulos.reportes.repository import ReportesRepository as repo
-from modulos.reportes.exportadores import COLUMNAS, valor_json
-from core.excepciones import AccesoProhibidoError
-from fastapi import HTTPException
+from modulos.reportes.exportadores import COLUMNAS, valor_json, exportar_csv, exportar_excel, exportar_json, exportar_pdf
+from modulos.auditoria.registro import registrar_evento
+from core.excepciones import AccesoProhibidoError, DatosInvalidosError
 
 
 class ReportesService:
+    @staticmethod
+    def descargar_reporte(db: Session, modulo, formato, usuario, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None):
+        registros = ReportesService.consultar_registros(
+            db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta,
+        )
+        if formato == "xlsx":
+            respuesta = exportar_excel(modulo, registros)
+        elif formato == "pdf":
+            respuesta = exportar_pdf(modulo, registros)
+        elif formato == "csv":
+            respuesta = exportar_csv(modulo, registros)
+        else:
+            respuesta = exportar_json(modulo, registros)
+        registrar_evento(
+            db, "EXPORTAR", modulo,
+            f"Descargo reporte {formato.upper()} de {modulo} con {len(registros)} registros",
+        )
+        return respuesta
+
     @staticmethod
     def consultar_registros(db: Session, modulo: str, usuario: dict, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None):
         es_docente = usuario["rol"].casefold() == "docente"
         if es_docente and modulo != "calificaciones":
             raise AccesoProhibidoError("Los docentes solo pueden consultar reportes de sus calificaciones")
         if desde and hasta and desde > hasta:
-            raise HTTPException(status_code=422, detail="La fecha inicial no puede superar la fecha final")
+            raise DatosInvalidosError("La fecha inicial no puede superar la fecha final")
 
         if modulo == "matriculas":
             return repo.matriculas_repository(db, periodo_id, estudiante_id, estado, carrera_id, desde, hasta)

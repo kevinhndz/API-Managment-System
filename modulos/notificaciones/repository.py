@@ -1,4 +1,5 @@
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from modulos.auditoria.tabla import EventoAuditoria
@@ -23,19 +24,7 @@ def listar_cambios_docentes(db: Session, administrador_id: int, limite: int = 40
         .limit(limite)
         .all()
     )
-    return [
-        {
-            "id": evento.id,
-            "usuario": evento.usuario,
-            "accion": evento.accion,
-            "modulo": evento.modulo,
-            "registro_id": evento.registro_id,
-            "descripcion": evento.descripcion,
-            "fecha": evento.fecha,
-            "leida": evento_id is not None,
-        }
-        for evento, evento_id in filas
-    ]
+    return filas
 
 
 def buscar_cambio_docente(db: Session, evento_id: int):
@@ -62,4 +51,7 @@ def notificacion_leida(db: Session, administrador_id: int, evento_id: int) -> bo
 
 def guardar_notificacion_leida(db: Session, administrador_id: int, evento_id: int) -> None:
     db.add(NotificacionesLeidas(usuario_id=administrador_id, evento_id=evento_id))
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
