@@ -28,6 +28,25 @@ describe('aulasApi', () => {
     )
   })
 
+  it('solicita y adjunta el token CSRF en cambios de datos', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify({ csrf_token: 'token-de-prueba' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+
+    await aulasApi.remove(4)
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/login/csrf', { credentials: 'include' })
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/aulas/4',
+      expect.objectContaining({
+        method: 'DELETE',
+        credentials: 'include',
+        headers: expect.objectContaining({ 'X-CSRF-Token': 'token-de-prueba' }),
+      }),
+    )
+  })
+
   it('conecta los módulos que usan relaciones académicas', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(async () => new Response(JSON.stringify({ total: 0, pagina_actual: 1, limite: 100, total_paginas: 0, data: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
     await matriculasApi.list()

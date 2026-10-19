@@ -1,7 +1,9 @@
 from pathlib import Path
+import hmac
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from modulos.notificaciones.router import router as router_notificaciones
 from modulos.aulas.router import router as router_aulas
@@ -40,8 +42,32 @@ app.add_middleware(
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_headers=["Authorization", "Content-Type", "X-CSRF-Token"],
 )
+
+
+@app.middleware("http")
+async def proteger_cambios_con_cookie(request, call_next):
+    metodos_que_cambian_datos = {"POST", "PUT", "PATCH", "DELETE"}
+    usa_cookie = bool(request.cookies.get("campusflow_session"))
+    usa_token_bearer = request.headers.get("Authorization", "").lower().startswith("bearer ")
+    if request.method in metodos_que_cambian_datos:
+        origen = request.headers.get("origin")
+        origenes_permitidos = {
+            valor.strip().rstrip("/")
+            for valor in settings.FRONTEND_ORIGINS.split(",")
+            if valor.strip()
+        }
+        if origen and origen.rstrip("/") not in origenes_permitidos:
+            return JSONResponse(status_code=403, content={"detail": "Origen no permitido."})
+
+        requiere_token = (usa_cookie and not usa_token_bearer) or bool(origen)
+        if requiere_token:
+            token_cookie = request.cookies.get("campusflow_csrf", "")
+            token_encabezado = request.headers.get("X-CSRF-Token", "")
+            if not token_cookie or not token_encabezado or not hmac.compare_digest(token_cookie, token_encabezado):
+                return JSONResponse(status_code=403, content={"detail": "La solicitud de seguridad vencio. Recarga e intenta de nuevo."})
+    return await call_next(request)
 
 
 @app.middleware("http")

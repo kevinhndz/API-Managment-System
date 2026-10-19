@@ -12,6 +12,13 @@ import type {
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')
 
+async function obtenerTokenCsrf() {
+  const respuesta = await fetch(`${API_URL}/login/csrf`, { credentials: 'include' })
+  if (!respuesta.ok) throw new ApiError('No se pudo preparar la solicitud segura.', respuesta.status)
+  const datos = (await respuesta.json()) as { csrf_token: string }
+  return datos.csrf_token
+}
+
 export function resolverFotoUrl(foto: string | null | undefined) {
   if (!foto) return null
   return foto.startsWith('/uploads/') ? `${API_URL}${foto}` : foto
@@ -135,11 +142,15 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const metodo = (options.method ?? 'GET').toUpperCase()
+  const cambiaDatos = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(metodo)
+  const tokenCsrf = cambiaDatos ? await obtenerTokenCsrf() : null
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...(tokenCsrf ? { 'X-CSRF-Token': tokenCsrf } : {}),
       ...options.headers,
     },
   })
@@ -151,6 +162,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       await fetch(`${API_URL}/login/cerrar`, {
         method: 'POST',
         credentials: 'include',
+        headers: tokenCsrf ? { 'X-CSRF-Token': tokenCsrf } : {},
       }).catch(() => undefined)
       window.location.assign('/login')
     }
@@ -281,6 +293,7 @@ export async function descargarReporte(modulo: ReportModule, formato: ReportForm
       await fetch(`${API_URL}/login/cerrar`, {
         method: 'POST',
         credentials: 'include',
+        headers: { 'X-CSRF-Token': await obtenerTokenCsrf().catch(() => '') },
       }).catch(() => undefined)
       window.location.assign('/login')
     }

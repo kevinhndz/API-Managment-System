@@ -273,7 +273,8 @@ def test_docente_consulta_y_edita_estudiantes_y_descarga_solo_sus_calificaciones
             yield db
 
     app.dependency_overrides[abrir_puerta_bd] = base_de_prueba
-    cliente = TestClient(app)
+    cliente = TestClient(app, headers={"X-CSRF-Token": "token-csrf-pruebas"})
+    cliente.cookies.set("campusflow_csrf", "token-csrf-pruebas")
     cliente.cookies.set("campusflow_session", crear_token("ana-docente", usuario_id, "Docente"))
 
     try:
