@@ -53,12 +53,9 @@ class RecuperacionRepository:
         ).first()
 
     @staticmethod
-    def guardar_nueva_contrasena(db: Session, usuario: Usuarios, solicitud, contrasena_hash: str, ahora):
-        usuario.contrasena = contrasena_hash
-        usuario.version_token += 1
-        solicitud.usado_en = ahora
+    def guardar_recuperacion_confirmada(db: Session, usuario_id: int, ahora):
         db.query(SolicitudesRecuperacion).filter(
-            SolicitudesRecuperacion.usuario_id == usuario.id,
+            SolicitudesRecuperacion.usuario_id == usuario_id,
             SolicitudesRecuperacion.usado_en.is_(None),
         ).update({SolicitudesRecuperacion.usado_en: ahora})
         db.commit()

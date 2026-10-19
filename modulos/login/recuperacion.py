@@ -60,4 +60,7 @@ def confirmar_recuperacion(db: Session, token: str, contrasena: str) -> None:
     if usuario is None:
         raise CredencialesInvalidasError("El enlace es invalido o ya vencio.")
 
-    repo.guardar_nueva_contrasena(db, usuario, solicitud, encriptar_contrasena(contrasena), ahora)
+    usuario.contrasena = encriptar_contrasena(contrasena)
+    usuario.version_token += 1
+    solicitud.usado_en = ahora
+    repo.guardar_recuperacion_confirmada(db, usuario.id, ahora)
