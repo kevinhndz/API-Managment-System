@@ -6,6 +6,16 @@ from modulos.secciones.tabla import Secciones
 
 class CalificacionRepository:
     @staticmethod
+    def buscar_matricula_repository(db: Session, matricula_id: int):
+        return db.query(Matriculas).filter(Matriculas.id == matricula_id).first()
+
+    @staticmethod
+    def buscar_seccion_docente_repository(db: Session, seccion_id: int, docente_id: int):
+        return db.query(Secciones.id).filter(
+            Secciones.id == seccion_id, Secciones.docente_id == docente_id,
+        ).first()
+
+    @staticmethod
     def check_repository(db: Session, json):
         return (
             db.query(Calificaciones)
