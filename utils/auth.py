@@ -47,3 +47,9 @@ def permiso_usuario(json: dict = Depends(el_vigilante)) -> dict:
     if json.get("rol", "").casefold() == "docente" and json.get("docente_id") is None:
         raise AccesoProhibidoError("La cuenta docente no esta vinculada a un registro institucional")
     return json
+
+
+def alcance_docente(usuario: dict = Depends(permiso_usuario)) -> int | None:
+    if usuario["rol"].casefold() in {"admin", "administrador"}:
+        return None
+    return usuario["docente_id"]
