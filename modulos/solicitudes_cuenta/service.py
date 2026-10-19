@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 from core.config import settings
+from core.rate_limit_service import limitar_peticion_por_ip
 from core.excepciones import (
     IntentosVerificacionLimitadosError,
     RecursoDuplicadoError,
@@ -172,6 +173,15 @@ def crear_solicitud(db: Session, datos: SolicitudCuentaCrear) -> None:
         contrasena_hash=encriptar_contrasena(datos.contrasena),
     )
     repo.guardar_solicitud_y_consumir_ticket(db, solicitud, verificacion, ahora)
+
+
+def recibir_solicitud(db: Session, datos: SolicitudCuentaCrear, ip: str) -> None:
+    limitar_peticion_por_ip(
+        db, "registro-solicitud", ip,
+        settings.SIGNUP_RATE_LIMIT_IP_ATTEMPTS,
+        settings.SIGNUP_RATE_LIMIT_WINDOW_SECONDS,
+    )
+    crear_solicitud(db, datos)
 
 
 def listar_solicitudes(db: Session) -> list[SolicitudesCuenta]:

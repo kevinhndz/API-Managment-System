@@ -1,11 +1,7 @@
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 
-from core.excepciones import RecursoNoEncontradoError
-from core.config import settings
-from core.rate_limit_service import limitar_peticion_por_ip
 from database.almacen import abrir_puerta_bd
-from modulos.login.tabla import Usuarios
 from modulos.solicitudes_cuenta.schema import (
     AprobarSolicitudCuenta,
     ConfirmarVerificacionCorreo,
@@ -16,7 +12,7 @@ from modulos.solicitudes_cuenta.schema import (
 from modulos.solicitudes_cuenta.service import (
     aprobar_solicitud,
     confirmar_codigo_correo,
-    crear_solicitud,
+    recibir_solicitud,
     listar_solicitudes,
     rechazar_solicitud,
     solicitar_codigo_correo,
@@ -33,14 +29,7 @@ def solicitar_cuenta(
     request: Request,
     db: Session = Depends(abrir_puerta_bd),
 ):
-    limitar_peticion_por_ip(
-        db,
-        "registro-solicitud",
-        request.client.host if request.client else "sin-ip",
-        settings.SIGNUP_RATE_LIMIT_IP_ATTEMPTS,
-        settings.SIGNUP_RATE_LIMIT_WINDOW_SECONDS,
-    )
-    crear_solicitud(db, datos)
+    recibir_solicitud(db, datos, request.client.host if request.client else "sin-ip")
     return {"detail": "Solicitud recibida. Un administrador la revisara."}
 
 
