@@ -22,6 +22,8 @@ from modulos.auditoria.router import router as router_auditoria
 from modulos.auditoria.registro import identificar_usuario, usuario_actual
 from modulos.solicitudes_cuenta.router import router as router_solicitudes_cuenta
 from modulos.dashboard.router import router as router_dashboard
+from modulos.suscripciones.router import router as router_suscripcion
+from modulos.suscripciones.service import exigir_suscripcion
 from core.escuchadores import ExcepcionesGlobales as eg
 from modulos.carreras.tabla import Carreras
 from modulos.estudiantes.tabla import Estudiantes
@@ -94,10 +96,11 @@ app.include_router(router_periodos, dependencies=[Depends(permiso_admin)])
 app.include_router(router_secciones, dependencies=[Depends(permiso_admin)])
 app.include_router(router_matriculas)
 app.include_router(router_calificaciones)
-app.include_router(router_reportes)
-app.include_router(router_auditoria, dependencies=[Depends(permiso_admin)])
+app.include_router(router_reportes, dependencies=[Depends(exigir_suscripcion)])
+app.include_router(router_auditoria, dependencies=[Depends(permiso_admin), Depends(exigir_suscripcion)])
 app.include_router(router_login)
 app.include_router(router_notificaciones)
 app.include_router(router_solicitudes_cuenta)
 app.include_router(router_dashboard)
+app.include_router(router_suscripcion)
 eg.directorio(app)
