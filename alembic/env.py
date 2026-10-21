@@ -33,7 +33,7 @@ from modulos.solicitudes_cuenta.tabla import (
     VerificacionesCorreoSolicitud,
 )
 from modulos.notificaciones.tabla import NotificacionesLeidas
-from modulos.suscripciones.tabla import PagosSuscripcion, Suscripciones
+from modulos.suscripciones.tabla import EventosPaddle, PagosSuscripcion, Suscripciones
 from modulos.documentos.tabla import DocumentosEmitidos
 from modulos.finanzas.tabla import ObligacionFinanciera, PagoFinanciero
 

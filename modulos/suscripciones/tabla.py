@@ -2,7 +2,7 @@ from datetime import datetime
 
 from decimal import Decimal
 
-from sqlalchemy import CheckConstraint, DateTime, Integer, Numeric, String, UniqueConstraint, func
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, Numeric, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.almacen import miClaseBase
@@ -18,11 +18,20 @@ class Suscripciones(miClaseBase, EntidadInstitucional):
     inicia_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     vence_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     creada_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    actualizado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+    paddle_customer_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    paddle_subscription_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
+    paddle_transaction_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
+    paddle_price_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    periodo_actual_inicio: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    periodo_actual_fin: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    cancelar_al_fin_periodo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    ultimo_evento_paddle_en: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = (
         UniqueConstraint("institucion_id", name="uq_suscripciones_institucion_id"),
         CheckConstraint("vence_en > inicia_en", name="ck_suscripciones_fechas"),
-        CheckConstraint("estado IN ('PRUEBA', 'ACTIVA', 'SUSPENDIDA')", name="ck_suscripciones_estado"),
+        CheckConstraint("estado IN ('PRUEBA', 'ACTIVA', 'SUSPENDIDA', 'ATRASADA', 'CANCELADA', 'PAUSADA')", name="ck_suscripciones_estado"),
     )
 
 
@@ -41,3 +50,13 @@ class PagosSuscripcion(miClaseBase, EntidadInstitucional):
         UniqueConstraint("institucion_id", "referencia", name="uq_pagos_suscripcion_institucion_referencia"),
         CheckConstraint("monto > 0", name="ck_pagos_suscripcion_monto"),
     )
+
+
+class EventosPaddle(miClaseBase, EntidadInstitucional):
+    __tablename__ = "eventos_paddle"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    event_id: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    event_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    procesado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
