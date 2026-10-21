@@ -298,6 +298,45 @@ function queryString<T extends object>(filters: T) {
   return query.toString()
 }
 
+async function obtenerVistaArchivo(path: string): Promise<Blob> {
+  const response = await fetch(`${API_URL}${path}`, {
+    credentials: 'include',
+    headers: headersInstitucion(),
+  })
+  if (!response.ok) {
+    if (response.status === 401) window.location.assign('/login')
+    const error = (await response.json().catch(() => null)) as { detail?: string } | null
+    throw new ApiError(error?.detail ?? 'No se pudo preparar la vista previa.', response.status)
+  }
+  return response.blob()
+}
+
+export function previsualizarReporte(modulo: ReportModule, formato: ReportFormat, filtros: ReportFilters) {
+  return obtenerVistaArchivo(`/reportes/${modulo}/previsualizar/${formato}?${queryString(filtros)}`)
+}
+
+export function previsualizarHistorial(estudianteId: number) {
+  return obtenerVistaArchivo(`/documentos/historial-academico/${estudianteId}/vista-previa`)
+}
+
+export function urlLogoInstitucional(revision = 0) {
+  return `${API_URL}/documentos/logo?institucion=${encodeURIComponent(INSTITUTION_SLUG)}&v=${revision}`
+}
+
+export async function subirLogoInstitucional(archivo: File): Promise<void> {
+  const tokenCsrf = await obtenerTokenCsrf()
+  const response = await fetch(`${API_URL}/documentos/logo`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { ...headersInstitucion(), 'X-CSRF-Token': tokenCsrf, 'Content-Type': archivo.type },
+    body: archivo,
+  })
+  if (!response.ok) {
+    const error = (await response.json().catch(() => null)) as { detail?: string } | null
+    throw new ApiError(error?.detail ?? 'No se pudo guardar el logo.', response.status)
+  }
+}
+
 export async function descargarReporte(modulo: ReportModule, formato: ReportFormat, filtros: ReportFilters) {
   const response = await fetch(`${API_URL}/reportes/${modulo}/descargar/${formato}?${queryString(filtros)}`, {
     credentials: 'include',
