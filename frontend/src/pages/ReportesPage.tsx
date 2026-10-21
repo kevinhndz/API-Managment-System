@@ -21,6 +21,8 @@ const modulos: Array<{ value: ReportModule; label: string }> = [
   { value: 'ocupacion_secciones', label: 'Ocupacion y cupos' },
   { value: 'rendimiento_asignaturas', label: 'Rendimiento por asignatura' },
   { value: 'carga_docente', label: 'Carga docente' },
+  { value: 'actividad_usuario', label: 'Actividad por usuario' },
+  { value: 'cambios_sensibles', label: 'Cambios sensibles' },
 ]
 
 const estados: Record<ReportModule, Array<{ value: string; label: string }>> = {
@@ -33,6 +35,8 @@ const estados: Record<ReportModule, Array<{ value: string; label: string }>> = {
   ocupacion_secciones: [],
   rendimiento_asignaturas: [],
   carga_docente: [],
+  actividad_usuario: [],
+  cambios_sensibles: [],
 }
 
 const formatos: Array<{ value: ReportFormat; label: string }> = [
@@ -271,7 +275,7 @@ export function ReportesPage() {
           </select>
         </label>}
 
-        {!['docentes', 'carga_docente'].includes(moduloActivo) && <SelectorBuscable label="Carrera" options={labels.carreraOptions} value={filtros.carrera_id} placeholder="Buscar carrera por nombre o código" onChange={(value) => cambiarFiltro('carrera_id', value)} />}
+        {!['docentes', 'carga_docente', 'actividad_usuario', 'cambios_sensibles'].includes(moduloActivo) && <SelectorBuscable label="Carrera" options={labels.carreraOptions} value={filtros.carrera_id} placeholder="Buscar carrera por nombre o código" onChange={(value) => cambiarFiltro('carrera_id', value)} />}
 
         {['matriculas', 'secciones', 'calificaciones', 'matricula_carrera', 'ocupacion_secciones', 'rendimiento_asignaturas', 'carga_docente'].includes(moduloActivo) && <label className="text-sm font-medium">Período
           <select className={fieldClass} value={filtros.periodo_id ?? ''} onChange={(event) => cambiarFiltro('periodo_id', event.target.value)}>
@@ -282,7 +286,7 @@ export function ReportesPage() {
 
         {moduloActivo === 'matriculas' && <SelectorBuscable label="Estudiante" options={labels.estudianteOptions} value={filtros.estudiante_id} placeholder="Buscar por nombre o número de cuenta" onChange={(value) => cambiarFiltro('estudiante_id', value)} />}
 
-        {moduloActivo === 'matriculas' && <>
+        {['matriculas', 'actividad_usuario', 'cambios_sensibles'].includes(moduloActivo) && <>
           <label className="text-sm font-medium">Desde<input className={fieldClass} type="date" value={filtros.desde ?? ''} onChange={(event) => cambiarFiltro('desde', event.target.value)} /></label>
           <label className="text-sm font-medium">Hasta<input className={fieldClass} type="date" value={filtros.hasta ?? ''} min={filtros.desde} onChange={(event) => cambiarFiltro('hasta', event.target.value)} /></label>
         </>}
