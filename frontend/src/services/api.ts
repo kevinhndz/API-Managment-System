@@ -15,6 +15,31 @@ const HOSTNAME = typeof window === 'undefined' ? 'localhost' : window.location.h
 export const INSTITUTION_SLUG = import.meta.env.VITE_INSTITUTION_SLUG
   ?? (HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1' ? 'uphn' : HOSTNAME.split('.')[0])
 
+export interface SuscripcionInstitucional {
+  institucion_id: number
+  plan_name: string | null
+  status: string
+  active: boolean
+  current_period_start: string | null
+  current_period_end: string | null
+  cancel_at_period_end: boolean
+  has_paddle_subscription: boolean
+  checkout_pending: boolean
+  can_manage: boolean
+}
+
+export function obtenerSuscripcionInstitucional() {
+  return request<SuscripcionInstitucional>('/payments/subscription')
+}
+
+export function iniciarCheckoutInstitucional() {
+  return request<{ transaction_id: string; client_token: string; environment: 'sandbox' | 'production' }>('/payments/checkout', { method: 'POST' })
+}
+
+export function abrirPortalInstitucional() {
+  return request<{ url: string }>('/payments/portal', { method: 'POST' })
+}
+
 function headersInstitucion(): Record<string, string> {
   return { 'X-Institution-Slug': INSTITUTION_SLUG }
 }
