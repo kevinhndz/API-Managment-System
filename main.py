@@ -25,6 +25,7 @@ from modulos.auditoria.registro import identificar_usuario, usuario_actual
 from modulos.solicitudes_cuenta.router import router as router_solicitudes_cuenta
 from modulos.dashboard.router import router as router_dashboard
 from modulos.suscripciones.router import router as router_suscripcion
+from modulos.suscripciones.payments_router import router as router_payments
 from modulos.suscripciones.dependencias import exigir_suscripcion
 from modulos.documentos.router import router as router_documentos
 from modulos.finanzas.router import router as router_finanzas
@@ -76,6 +77,8 @@ async def proteger_cambios_con_cookie(request, call_next):
     usa_cookie = bool(request.cookies.get("campusflow_session"))
     usa_token_bearer = request.headers.get("Authorization", "").lower().startswith("bearer ")
     if request.method in metodos_que_cambian_datos:
+        if request.url.path in {"/payments/paddle/webhook", "/api/payments/paddle/webhook"}:
+            return await call_next(request)
         origen = request.headers.get("origin")
         origenes_permitidos = {
             valor.strip().rstrip("/")
@@ -124,6 +127,8 @@ app.include_router(router_notificaciones)
 app.include_router(router_solicitudes_cuenta)
 app.include_router(router_dashboard)
 app.include_router(router_suscripcion)
+app.include_router(router_payments, include_in_schema=False)
+app.include_router(router_payments, prefix="/api")
 app.include_router(router_documentos)
 app.include_router(router_finanzas)
 eg.directorio(app)
