@@ -34,6 +34,7 @@ from modulos.solicitudes_cuenta.tabla import (
 )
 from modulos.notificaciones.tabla import NotificacionesLeidas
 from modulos.suscripciones.tabla import Suscripciones
+from modulos.documentos.tabla import DocumentosEmitidos
 
 # Configuracion de Alembic
 config = context.config
