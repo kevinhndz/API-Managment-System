@@ -20,6 +20,9 @@ export const academicModuleCards: AcademicModuleCard[] = [
   { value: 'ocupacion_secciones', src: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=85', alt: 'Salon universitario', title: 'Ocupacion y cupos', subtitle: 'Demanda y capacidad' },
   { value: 'rendimiento_asignaturas', src: 'https://images.unsplash.com/photo-1453738773917-9c3eff1db985?auto=format&fit=crop&w=1200&q=85', alt: 'Notas academicas', title: 'Rendimiento por asignatura', subtitle: 'Promedios y extremos' },
   { value: 'carga_docente', src: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=85', alt: 'Docente en clase', title: 'Carga docente', subtitle: 'Secciones y alumnos' },
+  { value: 'asignaturas_sin_oferta', src: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=85', alt: 'Materias universitarias', title: 'Asignaturas sin oferta', subtitle: 'Materias sin seccion' },
+  { value: 'poblacion_carrera', src: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=85', alt: 'Estudiantes universitarios', title: 'Poblacion por carrera', subtitle: 'Activos e inactivos' },
+  { value: 'matricula_estado', src: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85', alt: 'Inscripcion universitaria', title: 'Matricula por estado', subtitle: 'Seguimiento de inscripciones' },
   { value: 'actividad_usuario', src: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=85', alt: 'Registro institucional', title: 'Actividad por usuario', subtitle: 'Operaciones por persona' },
   { value: 'cambios_sensibles', src: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=85', alt: 'Revision institucional', title: 'Cambios sensibles', subtitle: 'Antes y despues' },
 ]

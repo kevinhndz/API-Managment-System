@@ -21,6 +21,9 @@ const modulos: Array<{ value: ReportModule; label: string }> = [
   { value: 'ocupacion_secciones', label: 'Ocupacion y cupos' },
   { value: 'rendimiento_asignaturas', label: 'Rendimiento por asignatura' },
   { value: 'carga_docente', label: 'Carga docente' },
+  { value: 'asignaturas_sin_oferta', label: 'Asignaturas sin oferta' },
+  { value: 'poblacion_carrera', label: 'Poblacion por carrera' },
+  { value: 'matricula_estado', label: 'Matricula por estado' },
   { value: 'actividad_usuario', label: 'Actividad por usuario' },
   { value: 'cambios_sensibles', label: 'Cambios sensibles' },
 ]
@@ -35,6 +38,9 @@ const estados: Record<ReportModule, Array<{ value: string; label: string }>> = {
   ocupacion_secciones: [],
   rendimiento_asignaturas: [],
   carga_docente: [],
+  asignaturas_sin_oferta: [],
+  poblacion_carrera: [],
+  matricula_estado: [],
   actividad_usuario: [],
   cambios_sensibles: [],
 }
@@ -277,7 +283,7 @@ export function ReportesPage() {
 
         {!['docentes', 'carga_docente', 'actividad_usuario', 'cambios_sensibles'].includes(moduloActivo) && <SelectorBuscable label="Carrera" options={labels.carreraOptions} value={filtros.carrera_id} placeholder="Buscar carrera por nombre o código" onChange={(value) => cambiarFiltro('carrera_id', value)} />}
 
-        {['matriculas', 'secciones', 'calificaciones', 'matricula_carrera', 'ocupacion_secciones', 'rendimiento_asignaturas', 'carga_docente'].includes(moduloActivo) && <label className="text-sm font-medium">Período
+        {['matriculas', 'secciones', 'calificaciones', 'matricula_carrera', 'ocupacion_secciones', 'rendimiento_asignaturas', 'carga_docente', 'asignaturas_sin_oferta', 'matricula_estado'].includes(moduloActivo) && <label className="text-sm font-medium">Período
           <select className={fieldClass} value={filtros.periodo_id ?? ''} onChange={(event) => cambiarFiltro('periodo_id', event.target.value)}>
             <option value="">Todos los períodos</option>
             {labels.periodoOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
