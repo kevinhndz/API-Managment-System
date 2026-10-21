@@ -18,6 +18,6 @@ export const navigationItems: NavigationItem[] = [
   { label: 'Matrículas', path: '/matriculas', icon: ClipboardList },
   { label: 'Calificaciones', path: '/calificaciones', icon: Award },
   { label: 'Reportes', path: '/reportes', icon: FileDown },
-  { label: 'Finanzas', path: '/finanzas', icon: Wallet },
+  { label: 'Cobros y pagos', path: '/finanzas', icon: Wallet },
   { label: 'Actividad reciente', path: '/actividad', icon: History },
 ]

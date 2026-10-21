@@ -260,9 +260,30 @@ export interface CargaDocente {
   vigente: boolean
 }
 export function listarCargaDocente() { return request<CargaDocente[]>('/docentes/carga') }
+export function obtenerCargaDocente(id: number, periodoId?: number) {
+  const params = new URLSearchParams()
+  if (periodoId) params.set('periodo_id', String(periodoId))
+  return request<CargaDocente[]>(`/docentes/${id}/carga?${params}`)
+}
 export const carrerasApi = createCrudService<Carrera, CarreraPayload>('/carreras')
 export const estudiantesApi = createCrudService<Estudiante, EstudiantePayload>('/estudiantes')
 export const asignaturasApi = createCrudService<Asignatura, AsignaturaPayload>('/asignaturas')
+export interface EstudianteAsignatura {
+  codigo_asignatura: string
+  asignatura: string
+  cuenta: string
+  estudiante: string
+  seccion: string
+  anio: number
+  periodo: number
+  estado: string
+  fecha_matricula: string
+}
+export function listarEstudiantesAsignatura(id: number, periodoId?: number) {
+  const params = new URLSearchParams()
+  if (periodoId) params.set('periodo_id', String(periodoId))
+  return request<EstudianteAsignatura[]>(`/asignaturas/${id}/estudiantes?${params}`)
+}
 export const periodosApi = createCrudService<Periodo, PeriodoPayload>('/periodos')
 export const seccionesApi = createCrudService<Seccion, SeccionPayload>('/secciones')
 export const matriculasApi = createCrudService<Matricula, MatriculaPayload>('/matriculas')
@@ -274,13 +295,14 @@ export const dashboardApi = {
   },
 }
 
-export type ReportModule = 'matriculas' | 'secciones' | 'estudiantes' | 'docentes' | 'calificaciones' | 'matricula_carrera' | 'ocupacion_secciones' | 'rendimiento_asignaturas' | 'carga_docente' | 'detalle_carga_docente' | 'cobros_estudiantiles' | 'nomina_docente' | 'asignaturas_sin_oferta' | 'poblacion_carrera' | 'matricula_estado'
+export type ReportModule = 'matriculas' | 'secciones' | 'estudiantes' | 'docentes' | 'calificaciones' | 'matricula_carrera' | 'ocupacion_secciones' | 'rendimiento_asignaturas' | 'carga_docente' | 'detalle_carga_docente' | 'estudiantes_asignatura' | 'cobros_estudiantiles' | 'nomina_docente' | 'asignaturas_sin_oferta' | 'poblacion_carrera' | 'matricula_estado'
 export type ReportFormat = 'xlsx' | 'pdf' | 'csv' | 'json'
 
 export interface ReportFilters {
   periodo_id?: number
   estudiante_id?: number
   docente_id?: number
+  asignatura_id?: number
   mes?: string
   estado?: string
   carrera_id?: number
