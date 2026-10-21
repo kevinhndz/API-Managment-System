@@ -24,6 +24,8 @@ COLUMNAS = {
     "ocupacion_secciones": [("Anio", "anio"), ("Periodo", "periodo"), ("Carrera", "carrera"), ("Codigo asignatura", "codigo_asignatura"), ("Asignatura", "asignatura"), ("Seccion", "seccion"), ("Cupo", "cupo"), ("Inscritos", "inscritos"), ("Cupos libres", "cupos_libres"), ("Ocupacion %", "ocupacion_pct")],
     "rendimiento_asignaturas": [("Anio", "anio"), ("Periodo", "periodo"), ("Carrera", "carrera"), ("Codigo asignatura", "codigo_asignatura"), ("Asignatura", "asignatura"), ("Calificados", "calificados"), ("Promedio", "promedio"), ("Nota minima", "nota_minima"), ("Nota maxima", "nota_maxima")],
     "carga_docente": [("Anio", "anio"), ("Periodo", "periodo"), ("Empleado", "numero_empleado"), ("Nombres", "nombres"), ("Apellidos", "apellidos"), ("Secciones", "secciones"), ("Estudiantes inscritos", "estudiantes_inscritos")],
+    "actividad_usuario": [("Usuario", "usuario"), ("Modulo", "modulo"), ("Accion", "accion"), ("Operaciones", "operaciones"), ("Ultima actividad", "ultima_actividad")],
+    "cambios_sensibles": [("Fecha", "fecha"), ("Usuario", "usuario"), ("Modulo", "modulo"), ("Registro", "registro_id"), ("Campos", "campos"), ("Antes", "antes"), ("Despues", "despues"), ("IP", "ip_origen")],
 }
 
 

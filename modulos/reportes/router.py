@@ -38,7 +38,7 @@ def reporte_secciones(
 
 @router.get("/{modulo}/vista-previa", response_model=ReporteVistaPrevia)
 def vista_previa_reporte(
-    modulo: Literal["matriculas", "secciones", "estudiantes", "docentes", "calificaciones", "matricula_carrera", "ocupacion_secciones", "rendimiento_asignaturas", "carga_docente"],
+    modulo: Literal["matriculas", "secciones", "estudiantes", "docentes", "calificaciones", "matricula_carrera", "ocupacion_secciones", "rendimiento_asignaturas", "carga_docente", "actividad_usuario", "cambios_sensibles"],
     periodo_id: int | None = None,
     estudiante_id: int | None = None,
     estado: str | None = None,
@@ -53,7 +53,7 @@ def vista_previa_reporte(
 
 @router.get("/{modulo}/descargar/{formato}")
 def descargar_reporte(
-    modulo: Literal["matriculas", "secciones", "estudiantes", "docentes", "calificaciones", "matricula_carrera", "ocupacion_secciones", "rendimiento_asignaturas", "carga_docente"],
+    modulo: Literal["matriculas", "secciones", "estudiantes", "docentes", "calificaciones", "matricula_carrera", "ocupacion_secciones", "rendimiento_asignaturas", "carga_docente", "actividad_usuario", "cambios_sensibles"],
     formato: Literal["xlsx", "pdf", "csv", "json"],
     periodo_id: int | None = None,
     estudiante_id: int | None = None,
