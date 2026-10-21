@@ -4,7 +4,7 @@ import { IdCard } from 'lucide-react'
 import { EntityPage, StatusBadge } from '../components/crud/EntityPage'
 import { PersonCarnetDialog, type PersonCarnetData } from '../components/people/PersonCarnetDialog'
 import { FolderFloat } from '../components/ui/FolderFloat'
-import { descargarDocumento, estudiantesApi } from '../services/api'
+import { estudiantesApi } from '../services/api'
 import type { Estudiante, EstudiantePayload } from '../types/api'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
 import { useAuth } from '../contexts/AuthContext'
@@ -18,12 +18,10 @@ export function EstudiantesPage() {
   const { theme } = useTheme()
   const esAdministrador = ['admin', 'administrador'].includes(user?.role.toLocaleLowerCase('es') ?? '')
   const [carnet, setCarnet] = useState<PersonCarnetData | null>(null)
-  const [errorDocumento, setErrorDocumento] = useState('')
   const closeCarnet = useCallback(() => setCarnet(null), [])
 
   return (
     <>
-      {errorDocumento && <p role="alert" className="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{errorDocumento}</p>}
       <EntityPage<Estudiante, EstudiantePayload>
         title="Estudiantes"
         singular="Estudiante"
@@ -69,11 +67,10 @@ export function EstudiantesPage() {
             area: labels.carreras[item.carrera_id] ?? `Carrera #${item.carrera_id}`,
           }),
         })}
-        renderActions={(estudiante, handlers) => (
+        renderActions={(_estudiante, handlers) => (
           <FolderFloat
             items={[
               { label: 'Ver carnet', value: 'carnet' },
-              ...(esAdministrador ? [{ label: 'Historial academico', value: 'historial' }] : []),
               ...(esAdministrador ? [
                 { label: 'Editar', value: 'editar' },
                 { label: 'Eliminar', value: 'eliminar' },
@@ -100,12 +97,6 @@ export function EstudiantesPage() {
             className="folder-float--compact"
             onSelect={(value) => {
               if (value === 'carnet') handlers.onExtraAction?.()
-              if (value === 'historial') {
-                setErrorDocumento('')
-                void descargarDocumento('historial-academico', estudiante.id).catch((error: unknown) => {
-                  setErrorDocumento(error instanceof Error ? error.message : 'No se pudo emitir el historial.')
-                })
-              }
               if (value === 'editar') handlers.onEdit()
               if (value === 'eliminar') handlers.onDelete()
             }}

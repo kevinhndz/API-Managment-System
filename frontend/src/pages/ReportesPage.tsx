@@ -2,16 +2,19 @@ import { ArrowLeft, ArrowRight, ChevronDown, Search } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { AnimatedDownloadButton } from '../components/ui/AnimatedDownloadButton'
+import { VistaArchivoDialog, type ArchivoEnVista } from '../components/reportes/VistaArchivoDialog'
 import { StatusBadge } from '../components/ui/StatusBadge'
 import { AcademicStatusBadge } from '../components/ui/AcademicStatusBadge'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
 import type { CatalogOption } from '../hooks/useAcademicLabels'
 import { academicModuleCards } from '../data/academicModuleCards'
-import { descargarReporte, INSTITUTION_SLUG, type ReportFilters, type ReportFormat, type ReportModule } from '../services/api'
+import { descargarDocumento, descargarReporte, INSTITUTION_SLUG, previsualizarHistorial, previsualizarReporte, subirLogoInstitucional, urlLogoInstitucional, type ReportFilters, type ReportFormat, type ReportModule } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import type { ResultadoVistaPrevia, VistaPreviaReporte } from '../workers/reportePreview.types'
 
-const modulos: Array<{ value: ReportModule; label: string }> = [
+type ModuloPagina = ReportModule | 'historial_academico'
+
+const modulos: Array<{ value: ModuloPagina; label: string }> = [
   { value: 'matriculas', label: 'Matrículas' },
   { value: 'secciones', label: 'Secciones' },
   { value: 'estudiantes', label: 'Estudiantes' },
@@ -26,9 +29,10 @@ const modulos: Array<{ value: ReportModule; label: string }> = [
   { value: 'matricula_estado', label: 'Matricula por estado' },
   { value: 'actividad_usuario', label: 'Actividad por usuario' },
   { value: 'cambios_sensibles', label: 'Cambios sensibles' },
+  { value: 'historial_academico', label: 'Historial academico' },
 ]
 
-const estados: Record<ReportModule, Array<{ value: string; label: string }>> = {
+const estados: Record<ModuloPagina, Array<{ value: string; label: string }>> = {
   matriculas: [{ value: 'ACTIVA', label: 'Activas' }, { value: 'CANCELADA', label: 'Canceladas' }, { value: 'APROBADA', label: 'Aprobadas' }, { value: 'REPROBADA', label: 'Reprobadas' }],
   secciones: [{ value: 'ABIERTA', label: 'Abiertas' }, { value: 'CERRADA', label: 'Cerradas' }, { value: 'CANCELADA', label: 'Canceladas' }],
   estudiantes: [{ value: 'ACTIVO', label: 'Activos' }, { value: 'INACTIVO', label: 'Inactivos' }],
@@ -43,6 +47,7 @@ const estados: Record<ReportModule, Array<{ value: string; label: string }>> = {
   matricula_estado: [],
   actividad_usuario: [],
   cambios_sensibles: [],
+  historial_academico: [],
 }
 
 const formatos: Array<{ value: ReportFormat; label: string }> = [
@@ -146,23 +151,54 @@ function mostrarValor(valor: string | number | boolean | null) {
   return String(valor)
 }
 
+function leerTexto(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const lector = new FileReader()
+    lector.onload = () => resolve(String(lector.result ?? ''))
+    lector.onerror = () => reject(new Error('No se pudo leer la vista previa.'))
+    lector.readAsText(blob)
+  })
+}
+
 export function ReportesPage() {
   const labels = useAcademicLabels()
   const { user } = useAuth()
   const esDocente = user?.role.toLocaleLowerCase('es') === 'docente'
-  const [moduloActivo, setModuloActivo] = useState<ReportModule | null>(null)
+  const [moduloActivo, setModuloActivo] = useState<ModuloPagina | null>(null)
   const [filtros, setFiltros] = useState<ReportFilters>({})
   const [descargando, setDescargando] = useState<ReportFormat | null>(null)
   const [error, setError] = useState('')
   const [vista, setVista] = useState<VistaPreviaReporte | null>(null)
   const [consultando, setConsultando] = useState(false)
   const [errorVista, setErrorVista] = useState('')
+  const [archivo, setArchivo] = useState<ArchivoEnVista | null>(null)
+  const [confirmando, setConfirmando] = useState(false)
+  const [errorArchivo, setErrorArchivo] = useState('')
+  const [logoRevision, setLogoRevision] = useState(0)
+  const [logoDisponible, setLogoDisponible] = useState(true)
+  const [guardandoLogo, setGuardandoLogo] = useState(false)
   const trabajador = useRef<Worker | null>(null)
   const solicitudActual = useRef(0)
+  const solicitudArchivo = useRef(0)
+  const urlArchivo = useRef<string | null>(null)
+  const seleccionArchivo = useRef<{ modulo: ModuloPagina; filtros: ReportFilters; formato: ReportFormat } | null>(null)
 
-  useEffect(() => () => trabajador.current?.terminate(), [])
+  useEffect(() => () => {
+    trabajador.current?.terminate()
+    if (urlArchivo.current) URL.revokeObjectURL(urlArchivo.current)
+  }, [])
+
+  const cerrarArchivo = () => {
+    solicitudArchivo.current += 1
+    if (urlArchivo.current) URL.revokeObjectURL(urlArchivo.current)
+    urlArchivo.current = null
+    seleccionArchivo.current = null
+    setArchivo(null)
+    setErrorArchivo('')
+  }
 
   const invalidarVista = () => {
+    cerrarArchivo()
     solicitudActual.current += 1
     trabajador.current?.terminate()
     trabajador.current = null
@@ -177,7 +213,7 @@ export function ReportesPage() {
   }
 
   const consultarVista = () => {
-    if (!moduloActivo) return
+    if (!moduloActivo || moduloActivo === 'historial_academico') return
     const id = ++solicitudActual.current
     setVista(null)
     setErrorVista('')
@@ -213,7 +249,7 @@ export function ReportesPage() {
     }
   }
 
-  const seleccionarModulo = (modulo: ReportModule) => {
+  const seleccionarModulo = (modulo: ModuloPagina) => {
     invalidarVista()
     setModuloActivo(modulo)
     setFiltros({})
@@ -227,16 +263,72 @@ export function ReportesPage() {
     setError('')
   }
 
-  const descargar = async (formato: ReportFormat) => {
+  const abrirVistaArchivo = async (formato: ReportFormat) => {
     if (!moduloActivo) return
+    if (moduloActivo === 'historial_academico' && !filtros.estudiante_id) {
+      setError('Selecciona un estudiante por su numero de cuenta antes de preparar el historial.')
+      return
+    }
+    cerrarArchivo()
+    const id = solicitudArchivo.current
+    const modulo = moduloActivo
+    const filtrosAplicados = { ...filtros }
     setError('')
     setDescargando(formato)
     try {
-      await descargarReporte(moduloActivo, formato, filtros)
+      const blob = modulo === 'historial_academico'
+        ? await previsualizarHistorial(filtrosAplicados.estudiante_id!)
+        : await previsualizarReporte(modulo, formato, filtrosAplicados)
+      if (id !== solicitudArchivo.current) return
+      seleccionArchivo.current = { modulo, filtros: filtrosAplicados, formato }
+      const titulo = modulos.find((item) => item.value === modulo)?.label ?? modulo
+      if (formato === 'csv' || formato === 'json') {
+        const texto = await leerTexto(blob)
+        if (id !== solicitudArchivo.current) return
+        setArchivo({ titulo, formato, texto })
+      } else {
+        const url = URL.createObjectURL(blob)
+        urlArchivo.current = url
+        setArchivo({ titulo, formato, url })
+      }
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'No se pudo descargar el reporte.')
+      if (id === solicitudArchivo.current) setError(reason instanceof Error ? reason.message : 'No se pudo preparar la vista previa.')
     } finally {
-      setDescargando(null)
+      if (id === solicitudArchivo.current) setDescargando(null)
+    }
+  }
+
+  const confirmarDescarga = async () => {
+    const seleccion = seleccionArchivo.current
+    if (!seleccion) return
+    setConfirmando(true)
+    setErrorArchivo('')
+    try {
+      if (seleccion.modulo === 'historial_academico') {
+        await descargarDocumento('historial-academico', seleccion.filtros.estudiante_id!)
+      } else {
+        await descargarReporte(seleccion.modulo, seleccion.formato, seleccion.filtros)
+      }
+      cerrarArchivo()
+    } catch (reason) {
+      setErrorArchivo(reason instanceof Error ? reason.message : 'No se pudo descargar el archivo.')
+    } finally {
+      setConfirmando(false)
+    }
+  }
+
+  const actualizarLogo = async (archivoLogo?: File) => {
+    if (!archivoLogo) return
+    setError('')
+    setGuardandoLogo(true)
+    try {
+      await subirLogoInstitucional(archivoLogo)
+      setLogoDisponible(true)
+      setLogoRevision(Date.now())
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'No se pudo guardar el logo.')
+    } finally {
+      setGuardandoLogo(false)
     }
   }
 
@@ -281,7 +373,7 @@ export function ReportesPage() {
           </select>
         </label>}
 
-        {!['docentes', 'carga_docente', 'actividad_usuario', 'cambios_sensibles'].includes(moduloActivo) && <SelectorBuscable label="Carrera" options={labels.carreraOptions} value={filtros.carrera_id} placeholder="Buscar carrera por nombre o código" onChange={(value) => cambiarFiltro('carrera_id', value)} />}
+        {!['docentes', 'carga_docente', 'actividad_usuario', 'cambios_sensibles', 'historial_academico'].includes(moduloActivo) && <SelectorBuscable label="Carrera" options={labels.carreraOptions} value={filtros.carrera_id} placeholder="Buscar carrera por nombre o código" onChange={(value) => cambiarFiltro('carrera_id', value)} />}
 
         {['matriculas', 'secciones', 'calificaciones', 'matricula_carrera', 'ocupacion_secciones', 'rendimiento_asignaturas', 'carga_docente', 'asignaturas_sin_oferta', 'matricula_estado'].includes(moduloActivo) && <label className="text-sm font-medium">Período
           <select className={fieldClass} value={filtros.periodo_id ?? ''} onChange={(event) => cambiarFiltro('periodo_id', event.target.value)}>
@@ -291,6 +383,7 @@ export function ReportesPage() {
         </label>}
 
         {moduloActivo === 'matriculas' && <SelectorBuscable label="Estudiante" options={labels.estudianteOptions} value={filtros.estudiante_id} placeholder="Buscar por nombre o número de cuenta" onChange={(value) => cambiarFiltro('estudiante_id', value)} />}
+        {moduloActivo === 'historial_academico' && <SelectorBuscable label="Estudiante" options={labels.estudianteOptions} value={filtros.estudiante_id} placeholder="Buscar por nombre o numero de cuenta" onChange={(value) => cambiarFiltro('estudiante_id', value)} />}
 
         {['matriculas', 'actividad_usuario', 'cambios_sensibles'].includes(moduloActivo) && <>
           <label className="text-sm font-medium">Desde<input className={fieldClass} type="date" value={filtros.desde ?? ''} onChange={(event) => cambiarFiltro('desde', event.target.value)} /></label>
@@ -302,22 +395,27 @@ export function ReportesPage() {
       </section>
 
       <section aria-label="Vista previa y descarga" className="rounded-2xl border bg-[#fffdf8] p-6 shadow-panel dark:border-[#39334b] dark:bg-[#242033]">
+      {moduloActivo === 'historial_academico' && <div className="mb-6 flex flex-wrap items-center gap-4 rounded-xl border bg-[#faf7f0] p-4 dark:border-white/10 dark:bg-[#191625]">
+        {logoDisponible ? <img className="h-16 w-20 rounded-lg bg-white object-contain p-1" src={urlLogoInstitucional(logoRevision)} alt="Logo institucional" onError={() => setLogoDisponible(false)} /> : <div className="grid h-16 w-20 place-items-center rounded-lg bg-white text-sm font-bold text-[#5b0309]">{INSTITUTION_SLUG.toUpperCase()}</div>}
+        <div className="min-w-48 flex-1"><p className="text-sm font-semibold">Logo del historial academico</p><p className="text-xs text-slate-500">El PDF usara el logo de esta universidad. Si aun no existe, se mostrara su sigla.</p></div>
+        <label className="focus-ring cursor-pointer rounded-lg border px-3 py-2 text-xs font-semibold dark:border-white/20">{guardandoLogo ? 'Guardando logo...' : 'Cargar logo PNG o JPG'}<input className="sr-only" type="file" accept="image/png,image/jpeg" disabled={guardandoLogo} onChange={(event) => { void actualizarLogo(event.target.files?.[0]); event.target.value = '' }} /></label>
+      </div>}
       <div className="flex flex-wrap gap-3">
-        {formatos.map(({ value: formato, label }) => (
+        {(moduloActivo === 'historial_academico' ? formatos.filter((item) => item.value === 'pdf') : formatos).map(({ value: formato, label }) => (
           <AnimatedDownloadButton
             key={formato}
             label={label}
             loading={descargando === formato}
             disabled={descargando !== null}
-            onClick={() => void descargar(formato)}
+            onClick={() => void abrirVistaArchivo(formato)}
           />
         ))}
       </div>
       <p className="mt-3 text-xs text-slate-500" role="note">
-        Los archivos se descargan en la ubicación configurada en tu navegador. CSV puede abrirse en una hoja de cálculo; JSON conserva los datos estructurados.
+        Primero se abrira una vista previa. El archivo se descargara solo cuando confirmes.
       </p>
 
-      <div className="mt-7 border-t pt-5">
+      {moduloActivo !== 'historial_academico' && <div className="mt-7 border-t pt-5">
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" onClick={consultarVista} className="focus-ring rounded-xl border px-4 py-2 text-sm font-semibold hover:bg-slate-50 dark:border-[#39334b] dark:hover:bg-[#302a42]">
             {consultando ? 'Actualizar consulta' : 'Consultar vista previa'}
@@ -334,7 +432,7 @@ export function ReportesPage() {
             </table>
           </div>
         </div>}
-      </div>
+      </div>}
 
       {esDocente && <p className="mt-5 rounded-xl border border-sage-200 bg-sage-50 p-3 text-sm text-sage-900 dark:border-sage-800 dark:bg-sage-950/30 dark:text-sage-200">
         El reporte incluye solo tus secciones asignadas. Si no aparecen datos, pide al administrador que te asigne secciones y verifica que tengan calificaciones registradas.
@@ -342,5 +440,6 @@ export function ReportesPage() {
       </section>
       </div>
     </section>}
+    {archivo && <VistaArchivoDialog archivo={archivo} descargando={confirmando} error={errorArchivo} onClose={cerrarArchivo} onDownload={() => void confirmarDescarga()} />}
   </div>
 }

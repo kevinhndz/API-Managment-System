@@ -25,4 +25,5 @@ export const academicModuleCards: AcademicModuleCard[] = [
   { value: 'matricula_estado', src: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85', alt: 'Inscripcion universitaria', title: 'Matricula por estado', subtitle: 'Seguimiento de inscripciones' },
   { value: 'actividad_usuario', src: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=85', alt: 'Registro institucional', title: 'Actividad por usuario', subtitle: 'Operaciones por persona' },
   { value: 'cambios_sensibles', src: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=85', alt: 'Revision institucional', title: 'Cambios sensibles', subtitle: 'Antes y despues' },
+  { value: 'historial_academico', src: 'https://images.unsplash.com/photo-1453738773917-9c3eff1db985?auto=format&fit=crop&w=1200&q=85', alt: 'Expediente academico', title: 'Historial academico', subtitle: 'Documento por estudiante' },
 ]
