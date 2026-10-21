@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from modulos.reportes.repository import ReportesRepository as repo
+from modulos.reportes.estrategicos import CONSULTAS
 from modulos.reportes.exportadores import COLUMNAS, valor_json, exportar_csv, exportar_excel, exportar_json, exportar_pdf
 from modulos.auditoria.registro import registrar_evento
 from core.excepciones import AccesoProhibidoError, DatosInvalidosError
@@ -32,6 +33,13 @@ class ReportesService:
             raise AccesoProhibidoError("Los docentes solo pueden consultar reportes de sus calificaciones")
         if desde and hasta and desde > hasta:
             raise DatosInvalidosError("La fecha inicial no puede superar la fecha final")
+
+        if modulo in CONSULTAS:
+            if es_docente:
+                raise AccesoProhibidoError("Este reporte requiere permiso de administrador")
+            if modulo == "carga_docente":
+                return CONSULTAS[modulo](db, periodo_id)
+            return CONSULTAS[modulo](db, periodo_id, carrera_id)
 
         if modulo == "matriculas":
             return repo.matriculas_repository(db, periodo_id, estudiante_id, estado, carrera_id, desde, hasta)

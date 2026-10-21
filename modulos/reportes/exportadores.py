@@ -20,6 +20,10 @@ COLUMNAS = {
     "estudiantes": [("Cuenta", "cuenta"), ("Nombre", "nombre"), ("Correo", "correo"), ("Carrera", "carrera"), ("Activo", "estado")],
     "docentes": [("Empleado", "numero_empleado"), ("Nombres", "nombres"), ("Apellidos", "apellidos"), ("Correo", "correo"), ("Activo", "estado")],
     "calificaciones": [("Cuenta", "cuenta"), ("Estudiante", "estudiante"), ("Asignatura", "asignatura"), ("Seccion", "seccion"), ("Periodo", "periodo"), ("Primer parcial", "primer_parcial"), ("Segundo parcial", "segundo_parcial"), ("Tercer parcial", "tercer_parcial"), ("Nota final", "nota_final")],
+    "matricula_carrera": [("Anio", "anio"), ("Periodo", "periodo"), ("Codigo carrera", "codigo_carrera"), ("Carrera", "carrera"), ("Matriculas", "matriculas"), ("Estudiantes", "estudiantes")],
+    "ocupacion_secciones": [("Anio", "anio"), ("Periodo", "periodo"), ("Carrera", "carrera"), ("Codigo asignatura", "codigo_asignatura"), ("Asignatura", "asignatura"), ("Seccion", "seccion"), ("Cupo", "cupo"), ("Inscritos", "inscritos"), ("Cupos libres", "cupos_libres"), ("Ocupacion %", "ocupacion_pct")],
+    "rendimiento_asignaturas": [("Anio", "anio"), ("Periodo", "periodo"), ("Carrera", "carrera"), ("Codigo asignatura", "codigo_asignatura"), ("Asignatura", "asignatura"), ("Calificados", "calificados"), ("Promedio", "promedio"), ("Nota minima", "nota_minima"), ("Nota maxima", "nota_maxima")],
+    "carga_docente": [("Anio", "anio"), ("Periodo", "periodo"), ("Empleado", "numero_empleado"), ("Nombres", "nombres"), ("Apellidos", "apellidos"), ("Secciones", "secciones"), ("Estudiantes inscritos", "estudiantes_inscritos")],
 }
 
 
