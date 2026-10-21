@@ -239,6 +239,26 @@ function createCrudService<T, TPayload>(path: string): CrudService<T, TPayload> 
 
 export const aulasApi = createCrudService<Aula, AulaPayload>('/aulas')
 export const docentesApi = createCrudService<Docente, DocentePayload>('/docentes')
+export interface CargaDocente {
+  docente_id: number
+  numero_empleado: string
+  nombres: string
+  apellidos: string
+  tipo_contrato: string | null
+  departamento: string | null
+  seccion: string
+  estado_seccion: string
+  dias: string
+  hora_inicio: string
+  hora_fin: string
+  asignatura_id: number
+  codigo_asignatura: string
+  asignatura: string
+  periodo_id: number
+  anio: number
+  numero: number
+}
+export function listarCargaDocente() { return request<CargaDocente[]>('/docentes/carga') }
 export const carrerasApi = createCrudService<Carrera, CarreraPayload>('/carreras')
 export const estudiantesApi = createCrudService<Estudiante, EstudiantePayload>('/estudiantes')
 export const asignaturasApi = createCrudService<Asignatura, AsignaturaPayload>('/asignaturas')
@@ -253,12 +273,14 @@ export const dashboardApi = {
   },
 }
 
-export type ReportModule = 'matriculas' | 'secciones' | 'estudiantes' | 'docentes' | 'calificaciones' | 'matricula_carrera' | 'ocupacion_secciones' | 'rendimiento_asignaturas' | 'carga_docente' | 'asignaturas_sin_oferta' | 'poblacion_carrera' | 'matricula_estado' | 'actividad_usuario' | 'cambios_sensibles'
+export type ReportModule = 'matriculas' | 'secciones' | 'estudiantes' | 'docentes' | 'calificaciones' | 'matricula_carrera' | 'ocupacion_secciones' | 'rendimiento_asignaturas' | 'carga_docente' | 'detalle_carga_docente' | 'cobros_estudiantiles' | 'nomina_docente' | 'asignaturas_sin_oferta' | 'poblacion_carrera' | 'matricula_estado'
 export type ReportFormat = 'xlsx' | 'pdf' | 'csv' | 'json'
 
 export interface ReportFilters {
   periodo_id?: number
   estudiante_id?: number
+  docente_id?: number
+  mes?: string
   estado?: string
   carrera_id?: number
   desde?: string
@@ -315,8 +337,12 @@ export function previsualizarReporte(modulo: ReportModule, formato: ReportFormat
   return obtenerVistaArchivo(`/reportes/${modulo}/previsualizar/${formato}?${queryString(filtros)}`)
 }
 
+export function previsualizarDocumento(tipo: 'historial-academico' | 'constancia-estudiantil' | 'constancia-laboral', id: number) {
+  return obtenerVistaArchivo(`/documentos/${tipo}/${id}/vista-previa`)
+}
+
 export function previsualizarHistorial(estudianteId: number) {
-  return obtenerVistaArchivo(`/documentos/historial-academico/${estudianteId}/vista-previa`)
+  return previsualizarDocumento('historial-academico', estudianteId)
 }
 
 export function urlLogoInstitucional(revision = 0) {
@@ -371,7 +397,7 @@ export async function descargarReporte(modulo: ReportModule, formato: ReportForm
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-export async function descargarDocumento(tipo: 'historial-academico' | 'constancia-laboral', id: number) {
+export async function descargarDocumento(tipo: 'historial-academico' | 'constancia-laboral' | 'constancia-estudiantil', id: number) {
   const tokenCsrf = await obtenerTokenCsrf()
   const response = await fetch(`${API_URL}/documentos/${tipo}/${id}`, {
     method: 'POST',
@@ -394,4 +420,43 @@ export async function descargarDocumento(tipo: 'historial-academico' | 'constanc
 
 export function listarActividad(filtros: { modulo?: string; accion?: string; usuario?: string; desde?: string; hasta?: string } = {}) {
   return request<AuditEvent[]>(`/auditoria/?${queryString(filtros)}`)
+}
+
+export interface ObligacionFinanciera {
+  id: number
+  tipo: 'ESTUDIANTE' | 'DOCENTE'
+  sujeto_id: number
+  codigo: string
+  persona: string
+  mes: string
+  concepto: string
+  monto: string
+  pagado: string
+  saldo: string
+  moneda: string
+  vence_en: string
+  estado: 'PENDIENTE' | 'VENCIDO' | 'PARCIAL' | 'PAGADO'
+}
+
+export interface CrearObligacionFinanciera {
+  tipo: 'ESTUDIANTE' | 'DOCENTE'
+  estudiante_id?: number
+  docente_id?: number
+  mes: string
+  concepto: string
+  monto: number
+  moneda: string
+  vence_en: string
+}
+
+export const finanzasApi = {
+  listar(filtros: { tipo?: string; mes?: string; estado?: string } = {}) {
+    return request<ObligacionFinanciera[]>(`/finanzas/obligaciones?${queryString(filtros)}`)
+  },
+  crear(datos: CrearObligacionFinanciera) {
+    return request<ObligacionFinanciera>('/finanzas/obligaciones', { method: 'POST', body: JSON.stringify(datos) })
+  },
+  registrarPago(id: number, datos: { referencia: string; monto: number; fecha: string; metodo: string }) {
+    return request<{ id: number }>(`/finanzas/obligaciones/${id}/pagos`, { method: 'POST', body: JSON.stringify(datos) })
+  },
 }

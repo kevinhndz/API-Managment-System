@@ -8,11 +8,13 @@ import { AcademicStatusBadge } from '../components/ui/AcademicStatusBadge'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
 import type { CatalogOption } from '../hooks/useAcademicLabels'
 import { academicModuleCards } from '../data/academicModuleCards'
-import { descargarDocumento, descargarReporte, INSTITUTION_SLUG, previsualizarHistorial, previsualizarReporte, subirLogoInstitucional, urlLogoInstitucional, type ReportFilters, type ReportFormat, type ReportModule } from '../services/api'
+import { descargarDocumento, descargarReporte, INSTITUTION_SLUG, previsualizarDocumento, previsualizarHistorial, previsualizarReporte, subirLogoInstitucional, urlLogoInstitucional, type ReportFilters, type ReportFormat, type ReportModule } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import type { ResultadoVistaPrevia, VistaPreviaReporte } from '../workers/reportePreview.types'
 
-type ModuloPagina = ReportModule | 'historial_academico'
+type ModuloDocumento = 'historial_academico' | 'constancia_estudiantil' | 'constancia_laboral'
+type ModuloPagina = ReportModule | ModuloDocumento
+const esDocumento = (modulo: ModuloPagina): modulo is ModuloDocumento => ['historial_academico', 'constancia_estudiantil', 'constancia_laboral'].includes(modulo)
 
 const modulos: Array<{ value: ModuloPagina; label: string }> = [
   { value: 'matriculas', label: 'Matrículas' },
@@ -24,12 +26,15 @@ const modulos: Array<{ value: ModuloPagina; label: string }> = [
   { value: 'ocupacion_secciones', label: 'Ocupacion y cupos' },
   { value: 'rendimiento_asignaturas', label: 'Rendimiento por asignatura' },
   { value: 'carga_docente', label: 'Carga docente' },
+  { value: 'detalle_carga_docente', label: 'Materias y secciones por docente' },
+  { value: 'cobros_estudiantiles', label: 'Cobros estudiantiles' },
+  { value: 'nomina_docente', label: 'Nomina docente' },
   { value: 'asignaturas_sin_oferta', label: 'Asignaturas sin oferta' },
   { value: 'poblacion_carrera', label: 'Poblacion por carrera' },
   { value: 'matricula_estado', label: 'Matricula por estado' },
-  { value: 'actividad_usuario', label: 'Actividad por usuario' },
-  { value: 'cambios_sensibles', label: 'Cambios sensibles' },
   { value: 'historial_academico', label: 'Historial academico' },
+  { value: 'constancia_estudiantil', label: 'Constancia estudiantil' },
+  { value: 'constancia_laboral', label: 'Constancia laboral' },
 ]
 
 const estados: Record<ModuloPagina, Array<{ value: string; label: string }>> = {
@@ -42,12 +47,15 @@ const estados: Record<ModuloPagina, Array<{ value: string; label: string }>> = {
   ocupacion_secciones: [],
   rendimiento_asignaturas: [],
   carga_docente: [],
+  detalle_carga_docente: [],
+  cobros_estudiantiles: [{ value: 'PAGADO', label: 'Pagados' }, { value: 'PARCIAL', label: 'Parciales' }, { value: 'VENCIDO', label: 'Vencidos' }, { value: 'PENDIENTE', label: 'Pendientes' }],
+  nomina_docente: [{ value: 'PAGADO', label: 'Pagados' }, { value: 'PARCIAL', label: 'Parciales' }, { value: 'VENCIDO', label: 'Vencidos' }, { value: 'PENDIENTE', label: 'Pendientes' }],
   asignaturas_sin_oferta: [],
   poblacion_carrera: [],
   matricula_estado: [],
-  actividad_usuario: [],
-  cambios_sensibles: [],
   historial_academico: [],
+  constancia_estudiantil: [],
+  constancia_laboral: [],
 }
 
 const formatos: Array<{ value: ReportFormat; label: string }> = [
@@ -209,11 +217,11 @@ export function ReportesPage() {
 
   const cambiarFiltro = (key: keyof ReportFilters, value: string) => {
     invalidarVista()
-    setFiltros((current) => ({ ...current, [key]: value === '' ? undefined : ['periodo_id', 'estudiante_id', 'carrera_id'].includes(key) ? Number(value) : value }))
+    setFiltros((current) => ({ ...current, [key]: value === '' ? undefined : ['periodo_id', 'estudiante_id', 'docente_id', 'carrera_id'].includes(key) ? Number(value) : value }))
   }
 
   const consultarVista = () => {
-    if (!moduloActivo || moduloActivo === 'historial_academico') return
+    if (!moduloActivo || esDocumento(moduloActivo)) return
     const id = ++solicitudActual.current
     setVista(null)
     setErrorVista('')
@@ -265,8 +273,8 @@ export function ReportesPage() {
 
   const abrirVistaArchivo = async (formato: ReportFormat) => {
     if (!moduloActivo) return
-    if (moduloActivo === 'historial_academico' && !filtros.estudiante_id) {
-      setError('Selecciona un estudiante por su numero de cuenta antes de preparar el historial.')
+    if (esDocumento(moduloActivo) && !(moduloActivo === 'constancia_laboral' ? filtros.docente_id : filtros.estudiante_id)) {
+      setError('Selecciona una persona antes de preparar el documento.')
       return
     }
     cerrarArchivo()
@@ -276,8 +284,9 @@ export function ReportesPage() {
     setError('')
     setDescargando(formato)
     try {
-      const blob = modulo === 'historial_academico'
-        ? await previsualizarHistorial(filtrosAplicados.estudiante_id!)
+      const blob = modulo === 'historial_academico' ? await previsualizarHistorial(filtrosAplicados.estudiante_id!)
+        : esDocumento(modulo)
+        ? await previsualizarDocumento(modulo.replaceAll('_', '-') as 'constancia-estudiantil' | 'constancia-laboral', (modulo === 'constancia_laboral' ? filtrosAplicados.docente_id : filtrosAplicados.estudiante_id)!)
         : await previsualizarReporte(modulo, formato, filtrosAplicados)
       if (id !== solicitudArchivo.current) return
       seleccionArchivo.current = { modulo, filtros: filtrosAplicados, formato }
@@ -304,8 +313,8 @@ export function ReportesPage() {
     setConfirmando(true)
     setErrorArchivo('')
     try {
-      if (seleccion.modulo === 'historial_academico') {
-        await descargarDocumento('historial-academico', seleccion.filtros.estudiante_id!)
+      if (esDocumento(seleccion.modulo)) {
+        await descargarDocumento(seleccion.modulo.replaceAll('_', '-') as 'historial-academico' | 'constancia-estudiantil' | 'constancia-laboral', (seleccion.modulo === 'constancia_laboral' ? seleccion.filtros.docente_id : seleccion.filtros.estudiante_id)!)
       } else {
         await descargarReporte(seleccion.modulo, seleccion.formato, seleccion.filtros)
       }
@@ -373,19 +382,21 @@ export function ReportesPage() {
           </select>
         </label>}
 
-        {!['docentes', 'carga_docente', 'actividad_usuario', 'cambios_sensibles', 'historial_academico'].includes(moduloActivo) && <SelectorBuscable label="Carrera" options={labels.carreraOptions} value={filtros.carrera_id} placeholder="Buscar carrera por nombre o código" onChange={(value) => cambiarFiltro('carrera_id', value)} />}
+        {!['docentes', 'carga_docente', 'detalle_carga_docente', 'historial_academico', 'constancia_estudiantil', 'constancia_laboral', 'cobros_estudiantiles', 'nomina_docente'].includes(moduloActivo) && <SelectorBuscable label="Carrera" options={labels.carreraOptions} value={filtros.carrera_id} placeholder="Buscar carrera por nombre o código" onChange={(value) => cambiarFiltro('carrera_id', value)} />}
 
-        {['matriculas', 'secciones', 'calificaciones', 'matricula_carrera', 'ocupacion_secciones', 'rendimiento_asignaturas', 'carga_docente', 'asignaturas_sin_oferta', 'matricula_estado'].includes(moduloActivo) && <label className="text-sm font-medium">Período
+        {['matriculas', 'secciones', 'calificaciones', 'matricula_carrera', 'ocupacion_secciones', 'rendimiento_asignaturas', 'carga_docente', 'detalle_carga_docente', 'asignaturas_sin_oferta', 'matricula_estado'].includes(moduloActivo) && <label className="text-sm font-medium">Período
           <select className={fieldClass} value={filtros.periodo_id ?? ''} onChange={(event) => cambiarFiltro('periodo_id', event.target.value)}>
             <option value="">Todos los períodos</option>
             {labels.periodoOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </label>}
 
+        {['cobros_estudiantiles', 'nomina_docente'].includes(moduloActivo) && <label className="text-sm font-medium">Mes<input className={fieldClass} type="month" value={filtros.mes ?? ''} onChange={(event) => cambiarFiltro('mes', event.target.value)} /></label>}
         {moduloActivo === 'matriculas' && <SelectorBuscable label="Estudiante" options={labels.estudianteOptions} value={filtros.estudiante_id} placeholder="Buscar por nombre o número de cuenta" onChange={(value) => cambiarFiltro('estudiante_id', value)} />}
-        {moduloActivo === 'historial_academico' && <SelectorBuscable label="Estudiante" options={labels.estudianteOptions} value={filtros.estudiante_id} placeholder="Buscar por nombre o numero de cuenta" onChange={(value) => cambiarFiltro('estudiante_id', value)} />}
+        {moduloActivo === 'constancia_laboral' && <SelectorBuscable label="Docente" options={labels.docenteOptions} value={filtros.docente_id} placeholder="Buscar por nombre o numero de empleado" onChange={(value) => cambiarFiltro('docente_id', value)} />}
+        {['historial_academico', 'constancia_estudiantil'].includes(moduloActivo) && <SelectorBuscable label="Estudiante" options={labels.estudianteOptions} value={filtros.estudiante_id} placeholder="Buscar por nombre o numero de cuenta" onChange={(value) => cambiarFiltro('estudiante_id', value)} />}
 
-        {['matriculas', 'actividad_usuario', 'cambios_sensibles'].includes(moduloActivo) && <>
+        {moduloActivo === 'matriculas' && <>
           <label className="text-sm font-medium">Desde<input className={fieldClass} type="date" value={filtros.desde ?? ''} onChange={(event) => cambiarFiltro('desde', event.target.value)} /></label>
           <label className="text-sm font-medium">Hasta<input className={fieldClass} type="date" value={filtros.hasta ?? ''} min={filtros.desde} onChange={(event) => cambiarFiltro('hasta', event.target.value)} /></label>
         </>}
@@ -395,13 +406,13 @@ export function ReportesPage() {
       </section>
 
       <section aria-label="Vista previa y descarga" className="rounded-2xl border bg-[#fffdf8] p-6 shadow-panel dark:border-[#39334b] dark:bg-[#242033]">
-      {moduloActivo === 'historial_academico' && <div className="mb-6 flex flex-wrap items-center gap-4 rounded-xl border bg-[#faf7f0] p-4 dark:border-white/10 dark:bg-[#191625]">
+      {esDocumento(moduloActivo) && <div className="mb-6 flex flex-wrap items-center gap-4 rounded-xl border bg-[#faf7f0] p-4 dark:border-white/10 dark:bg-[#191625]">
         {logoDisponible ? <img className="h-16 w-20 rounded-lg bg-white object-contain p-1" src={urlLogoInstitucional(logoRevision)} alt="Logo institucional" onError={() => setLogoDisponible(false)} /> : <div className="grid h-16 w-20 place-items-center rounded-lg bg-white text-sm font-bold text-[#5b0309]">{INSTITUTION_SLUG.toUpperCase()}</div>}
-        <div className="min-w-48 flex-1"><p className="text-sm font-semibold">Logo del historial academico</p><p className="text-xs text-slate-500">El PDF usara el logo de esta universidad. Si aun no existe, se mostrara su sigla.</p></div>
+        <div className="min-w-48 flex-1"><p className="text-sm font-semibold">Logo del documento institucional</p><p className="text-xs text-slate-500">El PDF usara el logo de esta universidad. Si aun no existe, se mostrara su sigla.</p></div>
         <label className="focus-ring cursor-pointer rounded-lg border px-3 py-2 text-xs font-semibold dark:border-white/20">{guardandoLogo ? 'Guardando logo...' : 'Cargar logo PNG o JPG'}<input className="sr-only" type="file" accept="image/png,image/jpeg" disabled={guardandoLogo} onChange={(event) => { void actualizarLogo(event.target.files?.[0]); event.target.value = '' }} /></label>
       </div>}
       <div className="flex flex-wrap gap-3">
-        {(moduloActivo === 'historial_academico' ? formatos.filter((item) => item.value === 'pdf') : formatos).map(({ value: formato, label }) => (
+        {(esDocumento(moduloActivo) ? formatos.filter((item) => item.value === 'pdf') : formatos).map(({ value: formato, label }) => (
           <AnimatedDownloadButton
             key={formato}
             label={label}
@@ -415,7 +426,7 @@ export function ReportesPage() {
         Primero se abrira una vista previa. El archivo se descargara solo cuando confirmes.
       </p>
 
-      {moduloActivo !== 'historial_academico' && <div className="mt-7 border-t pt-5">
+      {!esDocumento(moduloActivo) && <div className="mt-7 border-t pt-5">
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" onClick={consultarVista} className="focus-ring rounded-xl border px-4 py-2 text-sm font-semibold hover:bg-slate-50 dark:border-[#39334b] dark:hover:bg-[#302a42]">
             {consultando ? 'Actualizar consulta' : 'Consultar datos'}

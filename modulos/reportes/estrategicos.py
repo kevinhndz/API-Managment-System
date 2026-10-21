@@ -162,6 +162,32 @@ def carga_docente(db: Session, periodo_id=None):
     )
 
 
+def detalle_carga_docente(db: Session, periodo_id=None):
+    inscritos = func.count(Matriculas.id)
+    consulta = (
+        db.query(
+            Periodos.anio.label("anio"), Periodos.numero.label("periodo"),
+            Docentes.numero_empleado.label("numero_empleado"),
+            Docentes.nombres.label("nombres"), Docentes.apellidos.label("apellidos"),
+            Docentes.tipo_contrato.label("tipo_contrato"),
+            Asignaturas.codigo.label("codigo_asignatura"), Asignaturas.nombre.label("asignatura"),
+            Secciones.codigo.label("seccion"), Secciones.estado.label("estado"),
+            Secciones.dias.label("dias"), Secciones.hora_inicio.label("hora_inicio"),
+            Secciones.hora_fin.label("hora_fin"), Secciones.cupo_maximo.label("cupo"),
+            inscritos.label("inscritos"),
+        ).select_from(Secciones)
+        .join(Docentes, Docentes.id == Secciones.docente_id)
+        .join(Asignaturas, Asignaturas.id == Secciones.asignatura_id)
+        .join(Periodos, Periodos.id == Secciones.periodo_id)
+        .outerjoin(Matriculas, and_(Matriculas.seccion_id == Secciones.id, Matriculas.estado != "CANCELADA"))
+        .filter(Secciones.institucion_id == _institucion(db))
+    )
+    if periodo_id is not None:
+        consulta = consulta.filter(Periodos.id == periodo_id)
+    return (consulta.group_by(Secciones.id, Docentes.id, Asignaturas.id, Periodos.id)
+            .order_by(Periodos.anio.desc(), Periodos.numero.desc(), Docentes.apellidos, Secciones.codigo).all())
+
+
 def asignaturas_sin_oferta(db: Session, periodo_id=None, carrera_id=None):
     relacion = Secciones.asignatura_id == Asignaturas.id
     if periodo_id is not None:
@@ -243,6 +269,7 @@ CONSULTAS = {
     "ocupacion_secciones": ocupacion_de_secciones,
     "rendimiento_asignaturas": rendimiento_por_asignatura,
     "carga_docente": carga_docente,
+    "detalle_carga_docente": detalle_carga_docente,
     "asignaturas_sin_oferta": asignaturas_sin_oferta,
     "poblacion_carrera": poblacion_por_carrera,
     "matricula_estado": matricula_por_estado,

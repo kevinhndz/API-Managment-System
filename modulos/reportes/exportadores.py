@@ -24,8 +24,9 @@ COLUMNAS = {
     "ocupacion_secciones": [("Anio", "anio"), ("Periodo", "periodo"), ("Carrera", "carrera"), ("Codigo asignatura", "codigo_asignatura"), ("Asignatura", "asignatura"), ("Seccion", "seccion"), ("Cupo", "cupo"), ("Inscritos", "inscritos"), ("Cupos libres", "cupos_libres"), ("Ocupacion %", "ocupacion_pct")],
     "rendimiento_asignaturas": [("Anio", "anio"), ("Periodo", "periodo"), ("Carrera", "carrera"), ("Codigo asignatura", "codigo_asignatura"), ("Asignatura", "asignatura"), ("Calificados", "calificados"), ("Promedio", "promedio"), ("Nota minima", "nota_minima"), ("Nota maxima", "nota_maxima")],
     "carga_docente": [("Anio", "anio"), ("Periodo", "periodo"), ("Empleado", "numero_empleado"), ("Nombres", "nombres"), ("Apellidos", "apellidos"), ("Secciones", "secciones"), ("Estudiantes inscritos", "estudiantes_inscritos")],
-    "actividad_usuario": [("Usuario", "usuario"), ("Modulo", "modulo"), ("Accion", "accion"), ("Operaciones", "operaciones"), ("Ultima actividad", "ultima_actividad")],
-    "cambios_sensibles": [("Fecha", "fecha"), ("Usuario", "usuario"), ("Modulo", "modulo"), ("Registro", "registro_id"), ("Campos", "campos"), ("Antes", "antes"), ("Despues", "despues"), ("IP", "ip_origen")],
+    "detalle_carga_docente": [("Anio", "anio"), ("Periodo", "periodo"), ("Empleado", "numero_empleado"), ("Nombres", "nombres"), ("Apellidos", "apellidos"), ("Contrato", "tipo_contrato"), ("Codigo", "codigo_asignatura"), ("Asignatura", "asignatura"), ("Seccion", "seccion"), ("Estado", "estado"), ("Dias", "dias"), ("Inicio", "hora_inicio"), ("Fin", "hora_fin"), ("Cupo", "cupo"), ("Inscritos", "inscritos")],
+    "cobros_estudiantiles": [("Cuenta", "codigo"), ("Estudiante", "persona"), ("Mes", "mes"), ("Concepto", "concepto"), ("Monto", "monto"), ("Pagado", "pagado"), ("Saldo", "saldo"), ("Moneda", "moneda"), ("Vence", "vence_en"), ("Estado", "estado")],
+    "nomina_docente": [("Empleado", "codigo"), ("Docente", "persona"), ("Mes", "mes"), ("Concepto", "concepto"), ("Monto", "monto"), ("Pagado", "pagado"), ("Saldo", "saldo"), ("Moneda", "moneda"), ("Vence", "vence_en"), ("Estado", "estado")],
     "asignaturas_sin_oferta": [("Carrera", "carrera"), ("Codigo", "codigo_asignatura"), ("Asignatura", "asignatura"), ("UV", "unidades_valorativas")],
     "poblacion_carrera": [("Codigo", "codigo_carrera"), ("Carrera", "carrera"), ("Estudiantes", "estudiantes"), ("Activos", "activos"), ("Inactivos", "inactivos")],
     "matricula_estado": [("Anio", "anio"), ("Periodo", "periodo"), ("Codigo carrera", "codigo_carrera"), ("Carrera", "carrera"), ("Estado", "estado"), ("Matriculas", "matriculas"), ("Estudiantes", "estudiantes")],
@@ -33,7 +34,7 @@ COLUMNAS = {
 
 
 def valor(item, campo):
-    dato = getattr(item, campo, None)
+    dato = item.get(campo) if isinstance(item, dict) else getattr(item, campo, None)
     if dato is None:
         return ""
     if isinstance(dato, bool):
@@ -42,7 +43,7 @@ def valor(item, campo):
 
 
 def valor_json(item, campo):
-    dato = getattr(item, campo, None)
+    dato = item.get(campo) if isinstance(item, dict) else getattr(item, campo, None)
     if isinstance(dato, (date, datetime)):
         return dato.isoformat()
     if isinstance(dato, Decimal):
