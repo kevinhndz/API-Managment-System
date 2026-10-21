@@ -31,6 +31,7 @@ class ObligacionFinanciera(miClaseBase, EntidadInstitucional):
         CheckConstraint("length(mes) = 7 AND substr(mes, 5, 1) = '-' AND substr(mes, 6, 2) BETWEEN '01' AND '12'", name="ck_obligacion_mes"),
         Index("uq_obligacion_estudiante_mes_concepto", "institucion_id", "estudiante_id", "mes", "concepto", unique=True),
         Index("uq_obligacion_docente_mes_concepto", "institucion_id", "docente_id", "mes", "concepto", unique=True),
+        Index("ix_obligaciones_financieras_institucion_tipo_mes", "institucion_id", "tipo", "mes"),
     )
 
 

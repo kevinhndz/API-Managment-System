@@ -1,3 +1,6 @@
+from datetime import date
+
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from modulos.docentes.tabla import Docentes
@@ -16,6 +19,8 @@ class DocenteRepository:
             Secciones.hora_fin, Asignaturas.id.label("asignatura_id"),
             Asignaturas.codigo.label("codigo_asignatura"), Asignaturas.nombre.label("asignatura"),
             Periodos.id.label("periodo_id"), Periodos.anio, Periodos.numero,
+            and_(Periodos.activo.is_(True), Periodos.fecha_inicio <= date.today(),
+                 Periodos.fecha_fin >= date.today(), Secciones.estado == "ABIERTA").label("vigente"),
         ).select_from(Secciones)
          .join(Docentes, Docentes.id == Secciones.docente_id)
          .join(Asignaturas, Asignaturas.id == Secciones.asignatura_id)

@@ -40,7 +40,7 @@ export function DocentesPage() {
     { key: 'asignatura', label: 'Asignatura', options: [...new Map(carga.map((item) => [item.asignatura_id, { value: String(item.asignatura_id), label: `${item.codigo_asignatura} · ${item.asignatura}` }])).values()], getValue: (item: Docente) => carga.filter((registro) => registro.docente_id === item.id).map((registro) => registro.asignatura_id) },
     { key: 'seccion', label: 'Seccion', options: [...new Set(carga.map((item) => item.seccion))].map((value) => ({ value, label: value })), getValue: (item: Docente) => carga.filter((registro) => registro.docente_id === item.id).map((registro) => registro.seccion) },
     { key: 'periodo', label: 'Periodo', options: [...new Map(carga.map((item) => [item.periodo_id, { value: String(item.periodo_id), label: `${item.anio} · periodo ${item.numero}` }])).values()], getValue: (item: Docente) => carga.filter((registro) => registro.docente_id === item.id).map((registro) => registro.periodo_id) },
-    { key: 'secciones', label: 'Numero de secciones', options: [{ value: '0', label: 'Sin secciones' }, { value: '1', label: '1 seccion' }, { value: '2', label: '2 secciones' }, { value: '3', label: '3 o mas' }], getValue: (item: Docente) => { const total = carga.filter((registro) => registro.docente_id === item.id).length; return total >= 3 ? 3 : total } },
+    { key: 'secciones', label: 'Secciones actuales', options: [{ value: '0', label: 'Sin secciones' }, { value: '1', label: '1 seccion' }, { value: '2', label: '2 secciones' }, { value: '3', label: '3 o mas' }], getValue: (item: Docente) => { const total = carga.filter((registro) => registro.docente_id === item.id && registro.vigente).length; return total >= 3 ? 3 : total } },
   ], [carga, catalogoDocentes])
   const closeCarnet = useCallback(() => setCarnet(null), [])
 
@@ -62,7 +62,7 @@ export function DocentesPage() {
           { label: 'Nombre', render: (docente) => <span className="flex items-center gap-2"><img className="h-8 w-8 rounded-full object-cover" src={docente.foto ?? `/avatars/persona-${String((docente.id - 1) % 12 + 1).padStart(2, '0')}.jpg`} alt="" />{docente.nombres} {docente.apellidos}</span> },
           { label: 'Correo', render: (docente) => <a className="text-sage-600 hover:underline dark:text-sage-400" href={`mailto:${docente.correo}`}>{docente.correo}</a> },
           { label: 'Contrato', render: (docente) => docente.tipo_contrato || 'Sin registrar' },
-          { label: 'Secciones', render: (docente) => carga.filter((item) => item.docente_id === docente.id).length },
+          { label: 'Secciones actuales', render: (docente) => carga.filter((item) => item.docente_id === docente.id && item.vigente).length },
           { label: 'Estado', render: (docente) => <StatusBadge active={docente.estado} /> },
         ]}
         fields={[

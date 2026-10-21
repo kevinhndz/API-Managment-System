@@ -36,20 +36,17 @@ def registrar_pago(db: Session, obligacion_id: int, datos: RegistrarPago):
 
 def listar_saldos(db: Session, tipo: str | None = None, mes: str | None = None, estado: str | None = None):
     resultados = []
-    for obligacion in repo.listar_obligaciones(db, tipo, mes):
+    for obligacion, cuenta, estudiante, empleado, nombres, apellidos, total_pagado in repo.listar_obligaciones(db, tipo, mes):
         sujeto_id = obligacion.estudiante_id if obligacion.tipo == "ESTUDIANTE" else obligacion.docente_id
-        sujeto = repo.buscar_sujeto(db, obligacion.tipo, sujeto_id)
-        if sujeto is None:
-            continue
-        pagado = Decimal(repo.total_pagado(db, obligacion.id))
+        pagado = Decimal(total_pagado)
         saldo = obligacion.monto - pagado
         estado_real = "PAGADO" if saldo == 0 else "PARCIAL" if pagado > 0 else "VENCIDO" if obligacion.vence_en < date.today() else "PENDIENTE"
         if estado and estado_real != estado:
             continue
         resultados.append({
             "id": obligacion.id, "tipo": obligacion.tipo, "sujeto_id": sujeto_id,
-            "codigo": sujeto.cuenta if obligacion.tipo == "ESTUDIANTE" else sujeto.numero_empleado,
-            "persona": sujeto.nombre if obligacion.tipo == "ESTUDIANTE" else f"{sujeto.nombres} {sujeto.apellidos}",
+            "codigo": cuenta if obligacion.tipo == "ESTUDIANTE" else empleado,
+            "persona": estudiante if obligacion.tipo == "ESTUDIANTE" else f"{nombres} {apellidos}",
             "mes": obligacion.mes, "concepto": obligacion.concepto, "monto": obligacion.monto,
             "pagado": pagado, "saldo": saldo, "moneda": obligacion.moneda,
             "vence_en": obligacion.vence_en, "estado": estado_real,

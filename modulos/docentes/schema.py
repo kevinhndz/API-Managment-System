@@ -78,3 +78,4 @@ class CargaDocenteResponse(BaseModel):
     periodo_id: int
     anio: int
     numero: int
+    vigente: bool
