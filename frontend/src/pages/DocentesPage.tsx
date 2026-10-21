@@ -11,6 +11,11 @@ const emptyDocente: DocentePayload = {
   nombres: '',
   apellidos: '',
   correo: '',
+  especialidad: '',
+  cargo: null,
+  departamento: null,
+  tipo_contrato: null,
+  fecha_ingreso: null,
   estado: true,
 }
 
@@ -27,7 +32,7 @@ export function DocentesPage() {
         description="Administra el directorio y estado del personal docente."
         service={docentesApi}
         emptyPayload={emptyDocente}
-        toPayload={({ numero_empleado, nombres, apellidos, correo, estado }) => ({ numero_empleado, nombres, apellidos, correo, estado })}
+        toPayload={({ numero_empleado, nombres, apellidos, correo, especialidad, cargo, departamento, tipo_contrato, fecha_ingreso, estado }) => ({ numero_empleado, nombres, apellidos, correo, especialidad, cargo, departamento, tipo_contrato, fecha_ingreso, estado })}
         searchableText={(docente) => `${docente.numero_empleado} ${docente.nombres} ${docente.apellidos} ${docente.correo}`}
         columns={[
           { label: 'Empleado', render: (docente) => <strong className="font-semibold text-slate-800 dark:text-slate-100">{docente.numero_empleado}</strong> },
@@ -40,6 +45,11 @@ export function DocentesPage() {
           { key: 'nombres', label: 'Nombres', placeholder: 'Nombres' },
           { key: 'apellidos', label: 'Apellidos', placeholder: 'Apellidos' },
           { key: 'correo', label: 'Correo electrónico', type: 'email', placeholder: 'docente@campus.edu' },
+          { key: 'especialidad', label: 'Especialidad', placeholder: 'Ej. Matematicas' },
+          { key: 'cargo', label: 'Cargo', placeholder: 'Ej. Docente titular', required: false },
+          { key: 'departamento', label: 'Departamento', placeholder: 'Ej. Ciencias basicas', required: false },
+          { key: 'tipo_contrato', label: 'Tipo de contrato', placeholder: 'Ej. Tiempo completo', required: false },
+          { key: 'fecha_ingreso', label: 'Fecha de ingreso', type: 'date', required: false },
           { key: 'estado', label: 'Docente activo', type: 'checkbox' },
         ]}
         statusOptions={[{ value: 'activo', label: 'Activos' }, { value: 'inactivo', label: 'Inactivos' }]}

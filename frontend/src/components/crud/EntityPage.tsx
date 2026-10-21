@@ -178,7 +178,9 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   }
 
   const updateField = (field: Field<TPayload>, value: string | boolean) => {
-    const nextValue = field.type === 'number' || field.valueType === 'number' ? value === '' && field.required === false ? null : Number(value) : value
+    const nextValue = field.type === 'number' || field.valueType === 'number'
+      ? value === '' && field.required === false ? null : Number(value)
+      : field.type === 'date' && value === '' && field.required === false ? null : value
     setForm((current) => ({ ...current, [field.key]: nextValue }))
   }
 
