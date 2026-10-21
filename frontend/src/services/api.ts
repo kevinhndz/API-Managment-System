@@ -253,7 +253,7 @@ export const dashboardApi = {
   },
 }
 
-export type ReportModule = 'matriculas' | 'secciones' | 'estudiantes' | 'docentes' | 'calificaciones'
+export type ReportModule = 'matriculas' | 'secciones' | 'estudiantes' | 'docentes' | 'calificaciones' | 'matricula_carrera' | 'ocupacion_secciones' | 'rendimiento_asignaturas' | 'carga_docente'
 export type ReportFormat = 'xlsx' | 'pdf' | 'csv' | 'json'
 
 export interface ReportFilters {

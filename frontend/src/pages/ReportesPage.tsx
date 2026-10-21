@@ -17,6 +17,10 @@ const modulos: Array<{ value: ReportModule; label: string }> = [
   { value: 'estudiantes', label: 'Estudiantes' },
   { value: 'docentes', label: 'Docentes' },
   { value: 'calificaciones', label: 'Calificaciones' },
+  { value: 'matricula_carrera', label: 'Matricula por carrera' },
+  { value: 'ocupacion_secciones', label: 'Ocupacion y cupos' },
+  { value: 'rendimiento_asignaturas', label: 'Rendimiento por asignatura' },
+  { value: 'carga_docente', label: 'Carga docente' },
 ]
 
 const estados: Record<ReportModule, Array<{ value: string; label: string }>> = {
@@ -25,6 +29,10 @@ const estados: Record<ReportModule, Array<{ value: string; label: string }>> = {
   estudiantes: [{ value: 'ACTIVO', label: 'Activos' }, { value: 'INACTIVO', label: 'Inactivos' }],
   docentes: [{ value: 'ACTIVO', label: 'Activos' }, { value: 'INACTIVO', label: 'Inactivos' }],
   calificaciones: [],
+  matricula_carrera: [],
+  ocupacion_secciones: [],
+  rendimiento_asignaturas: [],
+  carga_docente: [],
 }
 
 const formatos: Array<{ value: ReportFormat; label: string }> = [
@@ -263,9 +271,9 @@ export function ReportesPage() {
           </select>
         </label>}
 
-        {moduloActivo !== 'docentes' && <SelectorBuscable label="Carrera" options={labels.carreraOptions} value={filtros.carrera_id} placeholder="Buscar carrera por nombre o código" onChange={(value) => cambiarFiltro('carrera_id', value)} />}
+        {!['docentes', 'carga_docente'].includes(moduloActivo) && <SelectorBuscable label="Carrera" options={labels.carreraOptions} value={filtros.carrera_id} placeholder="Buscar carrera por nombre o código" onChange={(value) => cambiarFiltro('carrera_id', value)} />}
 
-        {['matriculas', 'secciones', 'calificaciones'].includes(moduloActivo) && <label className="text-sm font-medium">Período
+        {['matriculas', 'secciones', 'calificaciones', 'matricula_carrera', 'ocupacion_secciones', 'rendimiento_asignaturas', 'carga_docente'].includes(moduloActivo) && <label className="text-sm font-medium">Período
           <select className={fieldClass} value={filtros.periodo_id ?? ''} onChange={(event) => cambiarFiltro('periodo_id', event.target.value)}>
             <option value="">Todos los períodos</option>
             {labels.periodoOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}

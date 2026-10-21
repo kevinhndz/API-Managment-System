@@ -16,4 +16,8 @@ export const academicModuleCards: AcademicModuleCard[] = [
   { value: 'secciones', src: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=85', alt: 'Salón de clases', title: 'Secciones', subtitle: 'Cambios y registros' },
   { value: 'matriculas', src: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85', alt: 'Documentos de matrícula', title: 'Matrículas', subtitle: 'Cambios y registros' },
   { value: 'calificaciones', src: 'https://images.unsplash.com/photo-1453738773917-9c3eff1db985?auto=format&fit=crop&w=1200&q=85', alt: 'Calificaciones académicas', title: 'Calificaciones', subtitle: 'Cambios y registros' },
+  { value: 'matricula_carrera', src: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85', alt: 'Documentos academicos', title: 'Matricula por carrera', subtitle: 'Evolucion por periodo' },
+  { value: 'ocupacion_secciones', src: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=85', alt: 'Salon universitario', title: 'Ocupacion y cupos', subtitle: 'Demanda y capacidad' },
+  { value: 'rendimiento_asignaturas', src: 'https://images.unsplash.com/photo-1453738773917-9c3eff1db985?auto=format&fit=crop&w=1200&q=85', alt: 'Notas academicas', title: 'Rendimiento por asignatura', subtitle: 'Promedios y extremos' },
+  { value: 'carga_docente', src: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=85', alt: 'Docente en clase', title: 'Carga docente', subtitle: 'Secciones y alumnos' },
 ]
