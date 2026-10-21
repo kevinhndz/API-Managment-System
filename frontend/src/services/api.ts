@@ -272,6 +272,9 @@ export interface AuditEvent {
   modulo: string
   registro_id: number | null
   descripcion: string
+  ip_origen?: string | null
+  datos_anteriores?: Record<string, unknown> | null
+  datos_nuevos?: Record<string, unknown> | null
   fecha: string
 }
 
