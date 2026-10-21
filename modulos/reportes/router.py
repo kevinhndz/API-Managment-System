@@ -38,7 +38,7 @@ def reporte_secciones(
 
 @router.get("/{modulo}/vista-previa", response_model=ReporteVistaPrevia)
 def vista_previa_reporte(
-    modulo: Literal["matriculas", "secciones", "estudiantes", "docentes", "calificaciones", "matricula_carrera", "ocupacion_secciones", "rendimiento_asignaturas", "carga_docente", "detalle_carga_docente", "cobros_estudiantiles", "nomina_docente", "asignaturas_sin_oferta", "poblacion_carrera", "matricula_estado"],
+    modulo: Literal["matriculas", "secciones", "estudiantes", "docentes", "calificaciones", "matricula_carrera", "ocupacion_secciones", "rendimiento_asignaturas", "carga_docente", "detalle_carga_docente", "estudiantes_asignatura", "cobros_estudiantiles", "nomina_docente", "asignaturas_sin_oferta", "poblacion_carrera", "matricula_estado"],
     periodo_id: int | None = None,
     estudiante_id: int | None = None,
     estado: str | None = None,
@@ -46,15 +46,17 @@ def vista_previa_reporte(
     desde: date | None = None,
     hasta: date | None = None,
     mes: str | None = None,
+    docente_id: int | None = None,
+    asignatura_id: int | None = None,
     db: Session = Depends(abrir_puerta_bd),
     usuario: dict = Depends(permiso_usuario),
 ):
-    return s.vista_previa(db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes)
+    return s.vista_previa(db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes, docente_id, asignatura_id)
 
 
 @router.get("/{modulo}/descargar/{formato}")
 def descargar_reporte(
-    modulo: Literal["matriculas", "secciones", "estudiantes", "docentes", "calificaciones", "matricula_carrera", "ocupacion_secciones", "rendimiento_asignaturas", "carga_docente", "detalle_carga_docente", "cobros_estudiantiles", "nomina_docente", "asignaturas_sin_oferta", "poblacion_carrera", "matricula_estado"],
+    modulo: Literal["matriculas", "secciones", "estudiantes", "docentes", "calificaciones", "matricula_carrera", "ocupacion_secciones", "rendimiento_asignaturas", "carga_docente", "detalle_carga_docente", "estudiantes_asignatura", "cobros_estudiantiles", "nomina_docente", "asignaturas_sin_oferta", "poblacion_carrera", "matricula_estado"],
     formato: Literal["xlsx", "pdf", "csv", "json"],
     periodo_id: int | None = None,
     estudiante_id: int | None = None,
@@ -63,17 +65,19 @@ def descargar_reporte(
     desde: date | None = None,
     hasta: date | None = None,
     mes: str | None = None,
+    docente_id: int | None = None,
+    asignatura_id: int | None = None,
     db: Session = Depends(abrir_puerta_bd),
     usuario: dict = Depends(permiso_usuario),
 ):
     return s.descargar_reporte(
-        db, modulo, formato, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes,
+        db, modulo, formato, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes, docente_id, asignatura_id,
     )
 
 
 @router.get("/{modulo}/previsualizar/{formato}")
 def previsualizar_archivo(
-    modulo: Literal["matriculas", "secciones", "estudiantes", "docentes", "calificaciones", "matricula_carrera", "ocupacion_secciones", "rendimiento_asignaturas", "carga_docente", "detalle_carga_docente", "cobros_estudiantiles", "nomina_docente", "asignaturas_sin_oferta", "poblacion_carrera", "matricula_estado"],
+    modulo: Literal["matriculas", "secciones", "estudiantes", "docentes", "calificaciones", "matricula_carrera", "ocupacion_secciones", "rendimiento_asignaturas", "carga_docente", "detalle_carga_docente", "estudiantes_asignatura", "cobros_estudiantiles", "nomina_docente", "asignaturas_sin_oferta", "poblacion_carrera", "matricula_estado"],
     formato: Literal["xlsx", "pdf", "csv", "json"],
     periodo_id: int | None = None,
     estudiante_id: int | None = None,
@@ -82,9 +86,11 @@ def previsualizar_archivo(
     desde: date | None = None,
     hasta: date | None = None,
     mes: str | None = None,
+    docente_id: int | None = None,
+    asignatura_id: int | None = None,
     db: Session = Depends(abrir_puerta_bd),
     usuario: dict = Depends(permiso_usuario),
 ):
     return s.previsualizar_archivo(
-        db, modulo, formato, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes,
+        db, modulo, formato, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes, docente_id, asignatura_id,
     )

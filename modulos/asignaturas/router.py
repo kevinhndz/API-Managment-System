@@ -32,6 +32,11 @@ def buscar_asignatura(id: int, db: Session = Depends(abrir_puerta_bd)):
     return s.buscar_service(db, id)
 
 
+@router.get("/{id}/estudiantes", response_model=list[EstudianteAsignaturaResponse])
+def estudiantes_de_asignatura(id: int, periodo_id: int | None = Query(None), db: Session = Depends(abrir_puerta_bd)):
+    return s.estudiantes_service(db, id, periodo_id)
+
+
 @router.put("/{id}", response_model=AsignaturaResponse)
 def editar_asignatura(
     id: int,

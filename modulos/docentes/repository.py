@@ -11,8 +11,8 @@ from modulos.periodos.tabla import Periodos
 
 class DocenteRepository:
     @staticmethod
-    def carga_repository(db: Session):
-        return (db.query(
+    def carga_repository(db: Session, docente_id: int | None = None, periodo_id: int | None = None):
+        consulta = (db.query(
             Docentes.id.label("docente_id"), Docentes.numero_empleado, Docentes.nombres, Docentes.apellidos,
             Docentes.tipo_contrato, Docentes.departamento, Secciones.codigo.label("seccion"),
             Secciones.estado.label("estado_seccion"), Secciones.dias, Secciones.hora_inicio,
@@ -25,9 +25,12 @@ class DocenteRepository:
          .join(Docentes, Docentes.id == Secciones.docente_id)
          .join(Asignaturas, Asignaturas.id == Secciones.asignatura_id)
          .join(Periodos, Periodos.id == Secciones.periodo_id)
-         .filter(Secciones.institucion_id == db.info["institucion_id"])
-         .order_by(Periodos.anio.desc(), Periodos.numero.desc(), Docentes.apellidos, Secciones.codigo)
-         .all())
+         .filter(Secciones.institucion_id == db.info["institucion_id"]))
+        if docente_id is not None:
+            consulta = consulta.filter(Docentes.id == docente_id)
+        if periodo_id is not None:
+            consulta = consulta.filter(Periodos.id == periodo_id)
+        return consulta.order_by(Periodos.anio.desc(), Periodos.numero.desc(), Docentes.apellidos, Secciones.codigo).all()
     @staticmethod
     def tiene_secciones_repository(db: Session, docente_id: int):
         return db.query(Secciones).filter(Secciones.docente_id == docente_id).first()

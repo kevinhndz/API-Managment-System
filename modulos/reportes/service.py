@@ -9,9 +9,9 @@ from core.excepciones import AccesoProhibidoError, DatosInvalidosError
 
 class ReportesService:
     @staticmethod
-    def previsualizar_archivo(db: Session, modulo, formato, usuario, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None, mes=None):
+    def previsualizar_archivo(db: Session, modulo, formato, usuario, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None, mes=None, docente_id=None, asignatura_id=None):
         registros = ReportesService.consultar_registros(
-            db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes,
+            db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes, docente_id, asignatura_id,
         )
         if formato == "xlsx":
             return previsualizar_excel(modulo, registros)
@@ -26,9 +26,9 @@ class ReportesService:
         return respuesta
 
     @staticmethod
-    def descargar_reporte(db: Session, modulo, formato, usuario, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None, mes=None):
+    def descargar_reporte(db: Session, modulo, formato, usuario, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None, mes=None, docente_id=None, asignatura_id=None):
         registros = ReportesService.consultar_registros(
-            db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes,
+            db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes, docente_id, asignatura_id,
         )
         if formato == "xlsx":
             respuesta = exportar_excel(modulo, registros)
@@ -45,7 +45,7 @@ class ReportesService:
         return respuesta
 
     @staticmethod
-    def consultar_registros(db: Session, modulo: str, usuario: dict, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None, mes=None):
+    def consultar_registros(db: Session, modulo: str, usuario: dict, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None, mes=None, docente_id=None, asignatura_id=None):
         es_docente = usuario["rol"].casefold() == "docente"
         if es_docente and modulo != "calificaciones":
             raise AccesoProhibidoError("Los docentes solo pueden consultar reportes de sus calificaciones")
@@ -59,7 +59,9 @@ class ReportesService:
             if es_docente:
                 raise AccesoProhibidoError("Este reporte requiere permiso de administrador")
             if modulo in {"carga_docente", "detalle_carga_docente"}:
-                return CONSULTAS[modulo](db, periodo_id)
+                return CONSULTAS[modulo](db, periodo_id, docente_id)
+            if modulo == "estudiantes_asignatura":
+                return CONSULTAS[modulo](db, periodo_id, asignatura_id)
             if modulo == "poblacion_carrera":
                 return CONSULTAS[modulo](db, carrera_id)
             return CONSULTAS[modulo](db, periodo_id, carrera_id)
@@ -72,12 +74,12 @@ class ReportesService:
             return repo.estudiantes_repository(db, estado, carrera_id)
         if modulo == "docentes":
             return repo.docentes_repository(db, estado)
-        docente_id = usuario["docente_id"] if es_docente else None
+        docente_id = usuario["docente_id"] if es_docente else docente_id
         return repo.calificaciones_repository(db, periodo_id, carrera_id, docente_id)
 
     @staticmethod
-    def vista_previa(db: Session, modulo: str, usuario: dict, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None, mes=None):
-        registros = ReportesService.consultar_registros(db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes)
+    def vista_previa(db: Session, modulo: str, usuario: dict, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None, mes=None, docente_id=None, asignatura_id=None):
+        registros = ReportesService.consultar_registros(db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes, docente_id, asignatura_id)
         columnas = COLUMNAS[modulo]
         return {
             "modulo": modulo,
@@ -90,7 +92,7 @@ class ReportesService:
         }
 
     @staticmethod
-    def reporte_matriculas_service(db: Session, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None, mes=None):
+    def reporte_matriculas_service(db: Session, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None):
         return repo.matriculas_repository(db, periodo_id, estudiante_id, estado, carrera_id, desde, hasta)
 
     @staticmethod

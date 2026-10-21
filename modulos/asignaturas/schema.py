@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -40,3 +41,17 @@ class AsignaturaResponse(BaseModel):
     carrera_id: int
     requisito_id: Optional[int]
     activo: bool
+
+
+class EstudianteAsignaturaResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    codigo_asignatura: str
+    asignatura: str
+    cuenta: str
+    estudiante: str
+    seccion: str
+    anio: int
+    periodo: int
+    estado: str
+    fecha_matricula: date

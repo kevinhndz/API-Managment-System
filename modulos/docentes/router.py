@@ -20,6 +20,11 @@ def consultar_carga_docente(db: Session = Depends(abrir_puerta_bd)):
     return s.carga_service(db)
 
 
+@router.get("/{id}/carga", response_model=list[CargaDocenteResponse])
+def consultar_carga_de_un_docente(id: int, periodo_id: int | None = Query(default=None), db: Session = Depends(abrir_puerta_bd)):
+    return s.carga_service(db, id, periodo_id)
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=DocenteResponse)
 def crear_docente(
     json: Revisar_Json_Crear_Docente, db: Session = Depends(abrir_puerta_bd)

@@ -22,6 +22,7 @@ from modulos.login.tabla import Usuarios
 from modulos.matriculas.tabla import Matriculas
 from modulos.periodos.tabla import Periodos
 from modulos.reportes.service import ReportesService
+from modulos.reportes.estrategicos import estudiantes_por_asignatura
 from modulos.secciones.tabla import Secciones
 
 
@@ -65,6 +66,28 @@ def test_constancias_previa_no_emite_folio_y_carga_docente(datos):
     contenido, _ = constancia_estudiantil(db, estudiante.id, 1)
     assert contenido.startswith(b"%PDF")
     assert db.query(DocumentosEmitidos).count() == 1
+
+
+def test_docente_y_asignatura_se_pueden_consultar_por_id(datos):
+    db, estudiante, docente = datos
+    seccion = db.query(Secciones).one()
+    asignatura_id = seccion.asignatura_id
+
+    carga = DocenteRepository.carga_repository(db, docente_id=docente.id)
+    assert len(carga) == 1
+    assert carga[0].asignatura == "Matematicas"
+    assert DocenteRepository.carga_repository(db, docente_id=docente.id + 1) == []
+
+    inscritos = estudiantes_por_asignatura(db, asignatura_id=asignatura_id)
+    assert len(inscritos) == 1
+    assert inscritos[0].cuenta == estudiante.cuenta
+    assert inscritos[0].seccion == seccion.codigo
+    assert estudiantes_por_asignatura(db, asignatura_id=asignatura_id + 1) == []
+
+    vista = ReportesService.vista_previa(db, "detalle_carga_docente", {"rol": "admin"}, docente_id=docente.id)
+    assert vista["total_registros"] == 1
+    vista = ReportesService.vista_previa(db, "estudiantes_asignatura", {"rol": "admin"}, asignatura_id=asignatura_id)
+    assert vista["total_registros"] == 1
 
 
 def test_obligaciones_y_pagos_saldos_referencias(datos):

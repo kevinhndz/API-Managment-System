@@ -16,8 +16,10 @@ from modulos.docentes.tabla import Docentes
 
 class DocentesService:
     @staticmethod
-    def carga_service(db: Session):
-        return repo.carga_repository(db)
+    def carga_service(db: Session, docente_id: int | None = None, periodo_id: int | None = None):
+        if docente_id is not None:
+            DocentesService.buscar_service(db, docente_id)
+        return repo.carga_repository(db, docente_id, periodo_id)
     @staticmethod
     def crear_service(db: Session, json: Revisar_Json_Crear_Docente):
         check = repo.check_repository(db, json)

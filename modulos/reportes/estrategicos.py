@@ -128,7 +128,7 @@ def rendimiento_por_asignatura(db: Session, periodo_id=None, carrera_id=None):
     )
 
 
-def carga_docente(db: Session, periodo_id=None):
+def carga_docente(db: Session, periodo_id=None, docente_id=None):
     secciones = func.count(func.distinct(Secciones.id))
     inscritos = func.count(Matriculas.id)
     consulta = (
@@ -155,6 +155,8 @@ def carga_docente(db: Session, periodo_id=None):
     )
     if periodo_id is not None:
         consulta = consulta.filter(Periodos.id == periodo_id)
+    if docente_id is not None:
+        consulta = consulta.filter(Docentes.id == docente_id)
     return (
         consulta.group_by(Periodos.id, Docentes.id)
         .order_by(Periodos.anio.desc(), Periodos.numero.desc(), Docentes.apellidos)
@@ -162,7 +164,7 @@ def carga_docente(db: Session, periodo_id=None):
     )
 
 
-def detalle_carga_docente(db: Session, periodo_id=None):
+def detalle_carga_docente(db: Session, periodo_id=None, docente_id=None):
     inscritos = func.count(Matriculas.id)
     consulta = (
         db.query(
@@ -184,8 +186,32 @@ def detalle_carga_docente(db: Session, periodo_id=None):
     )
     if periodo_id is not None:
         consulta = consulta.filter(Periodos.id == periodo_id)
+    if docente_id is not None:
+        consulta = consulta.filter(Docentes.id == docente_id)
     return (consulta.group_by(Secciones.id, Docentes.id, Asignaturas.id, Periodos.id)
             .order_by(Periodos.anio.desc(), Periodos.numero.desc(), Docentes.apellidos, Secciones.codigo).all())
+
+
+def estudiantes_por_asignatura(db: Session, periodo_id=None, asignatura_id=None):
+    consulta = (
+        db.query(
+            Asignaturas.codigo.label("codigo_asignatura"), Asignaturas.nombre.label("asignatura"),
+            Estudiantes.cuenta.label("cuenta"), Estudiantes.nombre.label("estudiante"),
+            Secciones.codigo.label("seccion"), Periodos.anio.label("anio"),
+            Periodos.numero.label("periodo"), Matriculas.estado.label("estado"),
+            Matriculas.fecha_matricula.label("fecha_matricula"),
+        ).select_from(Matriculas)
+        .join(Estudiantes, Estudiantes.id == Matriculas.estudiante_id)
+        .join(Secciones, Secciones.id == Matriculas.seccion_id)
+        .join(Asignaturas, Asignaturas.id == Secciones.asignatura_id)
+        .join(Periodos, Periodos.id == Secciones.periodo_id)
+        .filter(Matriculas.institucion_id == _institucion(db), Matriculas.estado != "CANCELADA")
+    )
+    if periodo_id is not None:
+        consulta = consulta.filter(Periodos.id == periodo_id)
+    if asignatura_id is not None:
+        consulta = consulta.filter(Asignaturas.id == asignatura_id)
+    return consulta.order_by(Periodos.anio.desc(), Periodos.numero.desc(), Asignaturas.codigo, Secciones.codigo, Estudiantes.nombre).all()
 
 
 def asignaturas_sin_oferta(db: Session, periodo_id=None, carrera_id=None):
@@ -270,6 +296,7 @@ CONSULTAS = {
     "rendimiento_asignaturas": rendimiento_por_asignatura,
     "carga_docente": carga_docente,
     "detalle_carga_docente": detalle_carga_docente,
+    "estudiantes_asignatura": estudiantes_por_asignatura,
     "asignaturas_sin_oferta": asignaturas_sin_oferta,
     "poblacion_carrera": poblacion_por_carrera,
     "matricula_estado": matricula_por_estado,
