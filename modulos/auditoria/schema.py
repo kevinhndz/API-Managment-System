@@ -13,4 +13,7 @@ class EventoResponse(BaseModel):
     modulo: str
     registro_id: int | None
     descripcion: str
+    ip_origen: str | None = None
+    datos_anteriores: dict | None = None
+    datos_nuevos: dict | None = None
     fecha: datetime
