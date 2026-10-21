@@ -18,7 +18,7 @@ CAMPOS_AUDITABLES = {
     "asignaturas": {"codigo", "nombre", "unidades_valorativas", "carrera_id", "requisito_id", "activo"},
     "calificaciones": {"matricula_id", "primer_parcial", "segundo_parcial", "tercer_parcial", "nota_final", "observacion"},
     "carreras": {"codigo", "nombre", "duracion_anios", "activo"},
-    "docentes": {"especialidad", "estado"},
+    "docentes": {"especialidad", "cargo", "departamento", "tipo_contrato", "fecha_ingreso", "estado"},
     "estudiantes": {"carrera_id", "estado"},
     "matriculas": {"estudiante_id", "seccion_id", "fecha_matricula", "estado"},
     "periodos": {"anio", "numero", "fecha_inicio", "fecha_fin", "activo"},
