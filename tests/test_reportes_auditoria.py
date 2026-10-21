@@ -2,7 +2,7 @@ from io import BytesIO
 import asyncio
 import csv
 import json
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from types import SimpleNamespace
 
 from openpyxl import load_workbook
@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from database.almacen import miClaseBase
+from modulos.suscripciones.tabla import Suscripciones
 from modulos.auditoria.registro import usuario_actual
 from modulos.auditoria.tabla import EventoAuditoria
 from modulos.login.tabla import Usuarios
@@ -203,6 +204,7 @@ def test_filtros_de_matriculas_y_secciones():
     miClaseBase.metadata.create_all(motor)
 
     with Session(motor) as db:
+        db.info["institucion_id"] = 1
         carrera = Carreras(codigo="C-1", nombre="Ingenieria", duracion_anios=4, activo=True)
         docente = Docentes(numero_empleado="D-1", nombres="Ana", apellidos="Lopez", correo="ana@example.com", especialidad="Matematicas", estado=True)
         aula = Aulas(codigo="A-1", edificio="Edificio Norte", capacidad=30, activo=True)
@@ -234,6 +236,9 @@ def test_docente_consulta_y_edita_estudiantes_y_descarga_solo_sus_calificaciones
     miClaseBase.metadata.create_all(motor)
 
     with Session(motor) as db:
+        db.info["institucion_id"] = 1
+        ahora = datetime.now(timezone.utc)
+        db.add(Suscripciones(institucion_id=1, plan="PILOTO", estado="PRUEBA", inicia_en=ahora, vence_en=ahora + timedelta(days=30)))
         carrera = Carreras(codigo="C-DOC", nombre="Carrera docente", duracion_anios=4, activo=True)
         docente = Docentes(numero_empleado="DOC-DUE", nombres="Ana", apellidos="Docente", correo="ana.docente@example.com", especialidad="", estado=True)
         otro_docente = Docentes(numero_empleado="DOC-OTRO", nombres="Luis", apellidos="Docente", correo="luis.docente@example.com", especialidad="", estado=True)
@@ -270,6 +275,7 @@ def test_docente_consulta_y_edita_estudiantes_y_descarga_solo_sus_calificaciones
 
     def base_de_prueba():
         with Session(motor) as db:
+            db.info["institucion_id"] = 1
             yield db
 
     app.dependency_overrides[abrir_puerta_bd] = base_de_prueba
@@ -345,13 +351,18 @@ def test_peticion_autenticada_registra_actividad():
     Aulas.__table__.create(motor)
     EventoAuditoria.__table__.create(motor)
     Usuarios.__table__.create(motor)
+    Suscripciones.__table__.create(motor)
 
     with Session(motor) as db:
+        db.info["institucion_id"] = 1
+        ahora = datetime.now(timezone.utc)
+        db.add(Suscripciones(institucion_id=1, plan="PILOTO", estado="PRUEBA", inicia_en=ahora, vence_en=ahora + timedelta(days=30)))
         db.add(Usuarios(id=7, usuario="admin", contrasena="hash", rol="Administrador", activo=True))
         db.commit()
 
     def base_de_prueba():
         with Session(motor) as db:
+            db.info["institucion_id"] = 1
             yield db
 
     app.dependency_overrides[abrir_puerta_bd] = base_de_prueba
