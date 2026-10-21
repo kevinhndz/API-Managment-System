@@ -25,7 +25,7 @@ from modulos.auditoria.registro import identificar_usuario, usuario_actual
 from modulos.solicitudes_cuenta.router import router as router_solicitudes_cuenta
 from modulos.dashboard.router import router as router_dashboard
 from modulos.suscripciones.router import router as router_suscripcion
-from modulos.suscripciones.service import exigir_suscripcion
+from modulos.suscripciones.dependencias import exigir_suscripcion
 from modulos.documentos.router import router as router_documentos
 from core.escuchadores import ExcepcionesGlobales as eg
 from modulos.carreras.tabla import Carreras
