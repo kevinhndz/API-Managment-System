@@ -31,7 +31,7 @@ async function obtenerTokenCsrf() {
 
 export function resolverFotoUrl(foto: string | null | undefined) {
   if (!foto) return null
-  return foto.startsWith('/uploads/') ? `${API_URL}${foto}` : foto
+  return foto.startsWith('/uploads/profiles/') ? `${API_URL}${foto}?institucion=${encodeURIComponent(INSTITUTION_SLUG)}` : foto
 }
 
 

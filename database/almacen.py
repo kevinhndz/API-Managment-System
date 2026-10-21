@@ -84,8 +84,10 @@ def validar_institucion_de_cambios(db, flush_context, instances):
 def abrir_puerta_bd(request: Request):
     db = llaves()
     try:
-        slug = request.headers.get(
-            "X-Institution-Slug", traer.DEFAULT_INSTITUTION_SLUG
+        slug = (
+            request.headers.get("X-Institution-Slug")
+            or request.query_params.get("institucion")
+            or traer.DEFAULT_INSTITUTION_SLUG
         ).strip().casefold()
         institucion = db.query(Instituciones).filter(
             Instituciones.slug == slug,

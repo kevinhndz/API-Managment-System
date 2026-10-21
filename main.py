@@ -1,10 +1,12 @@
 from pathlib import Path
 import hmac
+import re
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
+from sqlalchemy.orm import Session
+from database.almacen import abrir_puerta_bd
 from modulos.notificaciones.router import router as router_notificaciones
 from modulos.aulas.router import router as router_aulas
 from modulos.carreras.router import router as router_carreras
@@ -30,12 +32,28 @@ from modulos.carreras.tabla import Carreras
 from modulos.estudiantes.tabla import Estudiantes
 from modulos.aulas.tabla import Aulas
 from modulos.docentes.tabla import Docentes
-from utils.auth import permiso_admin
+from utils.auth import permiso_admin, permiso_usuario
 from core.config import settings
 
 app = FastAPI()
 Path(settings.UPLOADS_DIR).mkdir(parents=True, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=settings.UPLOADS_DIR), name="uploads")
+
+
+@app.get("/uploads/profiles/{nombre}")
+def servir_foto_perfil(
+    nombre: str,
+    usuario: dict = Depends(permiso_usuario),
+    db: Session = Depends(abrir_puerta_bd),
+):
+    if not re.fullmatch(r"[0-9a-f]{32}\.(?:jpg|png|webp)", nombre):
+        return JSONResponse(status_code=404, content={"detail": "Foto no encontrada"})
+    cuenta = db.query(Usuarios).filter(Usuarios.id == usuario["user_id"]).first()
+    if cuenta is None or cuenta.foto != f"/uploads/profiles/{nombre}":
+        return JSONResponse(status_code=404, content={"detail": "Foto no encontrada"})
+    archivo = Path(settings.UPLOADS_DIR).resolve() / "profiles" / nombre
+    if not archivo.is_file():
+        return JSONResponse(status_code=404, content={"detail": "Foto no encontrada"})
+    return FileResponse(archivo)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
