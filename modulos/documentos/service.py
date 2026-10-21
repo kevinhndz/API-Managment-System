@@ -7,9 +7,9 @@ from uuid import uuid4
 from PIL import Image as ImagenPIL, UnidentifiedImageError
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.utils import ImageReader
-from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import HRFlowable, Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from sqlalchemy.orm import Session
 
 from core.excepciones import DatosInvalidosError, RecursoNoEncontradoError
@@ -33,23 +33,46 @@ def _pdf(titulo: str, institucion: Instituciones, logo: bytes | None, folio: str
     archivo = BytesIO()
     estilos = getSampleStyleSheet()
     documento = SimpleDocTemplate(archivo, pagesize=A4, leftMargin=42, rightMargin=42)
+    color_marca = colors.HexColor("#5b0309")
+    nombre_estilo = ParagraphStyle("NombreInstitucion", parent=estilos["Heading2"], textColor=color_marca, fontSize=15, leading=19)
+    subtitulo_estilo = ParagraphStyle("AreaDocumento", parent=estilos["Normal"], textColor=colors.HexColor("#667085"), fontSize=9)
+    titulo_estilo = ParagraphStyle("TituloDocumento", parent=estilos["Title"], textColor=color_marca, fontSize=19, leading=24)
     if logo:
         ancho, alto = ImageReader(BytesIO(logo)).getSize()
-        escala = min(140 / ancho, 68 / alto)
-        encabezado = [Image(BytesIO(logo), width=ancho * escala, height=alto * escala)]
+        escala = min(80 / ancho, 62 / alto)
+        marca = Image(BytesIO(logo), width=ancho * escala, height=alto * escala)
     else:
-        encabezado = [Paragraph(_texto(institucion.slug.upper()), estilos["Heading1"])]
+        marca = Paragraph(_texto(institucion.slug.upper()), nombre_estilo)
+    encabezado = Table([[
+        marca,
+        [Paragraph(_texto(institucion.nombre), nombre_estilo), Paragraph("SECRETARIA ACADEMICA", subtitulo_estilo)],
+    ]], colWidths=[90, A4[0] - 174])
+    encabezado.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+    ]))
     elementos = [
-        *encabezado,
-        Paragraph(_texto(institucion.nombre), estilos["Heading2"]),
-        Paragraph(_texto(titulo), estilos["Title"]),
+        encabezado,
+        HRFlowable(width="100%", thickness=1.5, color=color_marca),
+        Spacer(1, 22),
+        Paragraph(_texto(titulo), titulo_estilo),
         Paragraph(f"Folio: {_texto(folio)} | Emitido: {fecha:%Y-%m-%d %H:%M} UTC", estilos["Normal"]),
         Spacer(1, 20),
         *cuerpo,
         Spacer(1, 18),
         Paragraph("Documento generado con los datos registrados por la institucion a la fecha de emision.", estilos["Italic"]),
     ]
-    documento.build(elementos)
+    def pie_pagina(lienzo, doc):
+        lienzo.setStrokeColor(colors.HexColor("#d8c6c6"))
+        lienzo.line(42, 38, A4[0] - 42, 38)
+        lienzo.setFont("Helvetica", 8)
+        lienzo.setFillColor(colors.HexColor("#667085"))
+        lienzo.drawString(42, 27, "Documento institucional verificable por folio")
+        lienzo.drawRightString(A4[0] - 42, 27, f"Pagina {doc.page}")
+
+    documento.build(elementos, onFirstPage=pie_pagina, onLaterPages=pie_pagina)
     return archivo.getvalue()
 
 
