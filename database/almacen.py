@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Request
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, UniqueConstraint, create_engine, event, func, true
-from sqlalchemy.orm import Session, sessionmaker, DeclarativeBase, with_loader_criteria
+from sqlalchemy import Boolean, Column, DateTime, Integer, LargeBinary, String, UniqueConstraint, create_engine, event, func, true
+from sqlalchemy.orm import Session, sessionmaker, DeclarativeBase, deferred, with_loader_criteria
 from core.config import preparar_url_base_datos, settings as traer
 from database.base import EntidadInstitucional
 from utils.token import verificar_token
@@ -33,6 +33,7 @@ class Instituciones(miClaseBase):
     id = Column(Integer, primary_key=True)
     slug = Column(String(80), nullable=False)
     nombre = Column(String(200), nullable=False)
+    logo_png = deferred(Column(LargeBinary, nullable=True))
     activa = Column(Boolean, nullable=False, default=True, server_default=true())
     creada_en = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
