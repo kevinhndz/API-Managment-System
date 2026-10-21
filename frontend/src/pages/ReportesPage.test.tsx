@@ -14,11 +14,13 @@ vi.mock('../hooks/useAcademicLabels', () => ({
     periodoOptions: [{ value: '2', label: '2026 · período 2' }],
     estudianteOptions: [{ value: '17', label: '20260017 · Ana López' }, { value: '18', label: '20260018 · Luis Díaz' }],
     docenteOptions: [{ value: '7', label: 'DOC-007 · Carlos Perez' }],
+    asignaturaOptions: [{ value: '4', label: 'MAT-1 · Matematicas' }],
   }),
 }))
 
 vi.mock('../services/api', () => ({
   descargarReporte: vi.fn(),
+  obtenerCargaDocente: vi.fn(),
   descargarDocumento: vi.fn(),
   previsualizarReporte: vi.fn(),
   previsualizarHistorial: vi.fn(),
@@ -41,6 +43,7 @@ describe('ReportesPage', () => {
     render(<ReportesPage />)
 
     expect(screen.queryByRole('combobox', { name: 'Módulo' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Matriculas y secciones: abrir grupo de reportes' }))
     fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
     expect(screen.getByRole('button', { name: 'Descargar Excel' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Descargar PDF' })).toBeInTheDocument()
@@ -76,6 +79,7 @@ describe('ReportesPage', () => {
     vi.mocked(descargarDocumento).mockResolvedValue(undefined)
     render(<ReportesPage />)
 
+    fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir grupo de reportes' }))
     fireEvent.click(screen.getByRole('button', { name: 'Historial academico: abrir reporte académico' }))
     expect(screen.queryByRole('button', { name: 'Descargar Excel' })).not.toBeInTheDocument()
     fireEvent.change(screen.getByRole('combobox', { name: 'Estudiante' }), { target: { value: '20260017' } })
@@ -98,6 +102,7 @@ describe('ReportesPage', () => {
     vi.mocked(previsualizarDocumento).mockResolvedValue(new Blob(['%PDF'], { type: 'application/pdf' }))
     vi.mocked(descargarDocumento).mockResolvedValue(undefined)
     render(<ReportesPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Docentes: abrir grupo de reportes' }))
     fireEvent.click(screen.getByRole('button', { name: 'Constancia laboral: abrir reporte académico' }))
     fireEvent.change(screen.getByRole('combobox', { name: 'Docente' }), { target: { value: 'DOC-007' } })
     fireEvent.click(screen.getByRole('option', { name: 'DOC-007 · Carlos Perez' }))
@@ -110,11 +115,12 @@ describe('ReportesPage', () => {
 
   it('abre el reporte elegido y permite regresar a la cuadrícula', () => {
     render(<ReportesPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir grupo de reportes' }))
     fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir reporte académico' }))
     expect(screen.getByRole('heading', { name: 'Estudiantes' })).toBeInTheDocument()
     expect(screen.queryByRole('combobox', { name: 'Módulo' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Elegir otro reporte' }))
-    expect(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Historial academico: abrir reporte académico' })).toBeInTheDocument()
   })
 
   it('mantiene los filtros activos y descarta respuestas antiguas del hilo', async () => {
@@ -138,6 +144,7 @@ describe('ReportesPage', () => {
     vi.stubGlobal('Worker', TrabajadorDePrueba)
     render(<ReportesPage />)
 
+    fireEvent.click(screen.getByRole('button', { name: 'Matriculas y secciones: abrir grupo de reportes' }))
     fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
     fireEvent.click(screen.getByRole('button', { name: 'Consultar datos' }))
     expect(screen.getByRole('status')).toHaveTextContent('Consultando en segundo plano')
@@ -169,6 +176,7 @@ describe('ReportesPage', () => {
     vi.stubGlobal('Worker', TrabajadorDePrueba)
 
     render(<ReportesPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir grupo de reportes' }))
     fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir reporte académico' }))
     fireEvent.click(screen.getByRole('button', { name: 'Consultar datos' }))
     trabajadores[0].onmessage?.({ data: { id: 2, estado: 'completada', datos: {
@@ -191,6 +199,7 @@ describe('ReportesPage', () => {
     vi.stubGlobal('Worker', TrabajadorDePrueba)
 
     render(<ReportesPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Matriculas y secciones: abrir grupo de reportes' }))
     fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
     fireEvent.click(screen.getByRole('button', { name: 'Consultar datos' }))
     trabajadores[0].onmessage?.({ data: { id: 2, estado: 'completada', datos: {
