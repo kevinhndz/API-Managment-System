@@ -7,7 +7,7 @@ import { AcademicStatusBadge } from '../components/ui/AcademicStatusBadge'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
 import type { CatalogOption } from '../hooks/useAcademicLabels'
 import { academicModuleCards } from '../data/academicModuleCards'
-import { descargarReporte, type ReportFilters, type ReportFormat, type ReportModule } from '../services/api'
+import { descargarReporte, INSTITUTION_SLUG, type ReportFilters, type ReportFormat, type ReportModule } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import type { ResultadoVistaPrevia, VistaPreviaReporte } from '../workers/reportePreview.types'
 
@@ -188,7 +188,7 @@ export function ReportesPage() {
         trabajador.current = nuevoTrabajador
       }
 
-      trabajador.current.postMessage({ id, modulo: moduloActivo, filtros })
+      trabajador.current.postMessage({ id, modulo: moduloActivo, filtros, institucion: INSTITUTION_SLUG })
     } catch {
       setConsultando(false)
       setErrorVista('Este navegador no pudo iniciar la consulta en segundo plano.')

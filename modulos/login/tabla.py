@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, ForeignKeyConstraint, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from database.almacen import miClaseBase
 from database.base import PoderAuditor
@@ -9,15 +9,26 @@ from database.base import PoderAuditor
 class Usuarios(miClaseBase, PoderAuditor):
     __tablename__ = "usuarios"
     id = Column(Integer, primary_key=True, index=True)
-    usuario = Column(String(80), unique=True, nullable=False)
+    usuario = Column(String(80), nullable=False)
     nombre = Column(String(160), nullable=True)
-    correo = Column(String(150), unique=True, nullable=True)
+    correo = Column(String(150), nullable=True)
     foto = Column(String(500), nullable=True)
     contrasena = Column(String(255), nullable=False)
     rol = Column(String(20), nullable=False)
-    docente_id = Column(Integer, ForeignKey("docentes.id"), nullable=True)
+    docente_id = Column(Integer, nullable=True)
     activo = Column(Boolean, default=True, nullable=False)
     version_token = Column(Integer, default=0, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("institucion_id", "usuario", name="uq_usuarios_institucion_usuario"),
+        UniqueConstraint("institucion_id", "correo", name="uq_usuarios_institucion_correo"),
+        UniqueConstraint("institucion_id", "id", name="uq_usuarios_institucion_id"),
+        ForeignKeyConstraint(
+            ["institucion_id", "docente_id"],
+            ["docentes.institucion_id", "docentes.id"],
+            name="fk_usuarios_docente_institucion",
+        ),
+    )
 
 
 class IntentosInicioSesion(miClaseBase):

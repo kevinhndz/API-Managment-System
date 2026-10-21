@@ -7,7 +7,7 @@ self.addEventListener('message', async (event: MessageEvent<SolicitudVistaPrevia
   consultaActual?.abort()
   const control = new AbortController()
   consultaActual = control
-  const { id, modulo, filtros } = event.data
+  const { id, modulo, filtros, institucion } = event.data
   const parametros = new URLSearchParams()
 
   Object.entries(filtros).forEach(([campo, valor]) => {
@@ -17,6 +17,7 @@ self.addEventListener('message', async (event: MessageEvent<SolicitudVistaPrevia
   try {
     const respuesta = await fetch(`${API_URL}/reportes/${modulo}/vista-previa?${parametros}`, {
       credentials: 'include',
+      headers: { 'X-Institution-Slug': institucion },
       signal: control.signal,
     })
     if (!respuesta.ok) {

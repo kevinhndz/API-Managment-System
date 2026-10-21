@@ -21,11 +21,14 @@ def el_vigilante(
     if not token:
         raise CredencialesInvalidasError("Autorizacion requerida")
     datos = verificar_token(token)
+    if datos.get("institucion_id") != db.info.get("institucion_id"):
+        raise CredencialesInvalidasError("La sesion no corresponde a esta institución")
     usuario = UsuarioRepository.buscar_por_id_repository(db, datos["user_id"])
     if (
         usuario is None
         or not usuario.activo
         or datos.get("version_token", 0) != usuario.version_token
+        or usuario.institucion_id != datos.get("institucion_id")
     ):
         raise CredencialesInvalidasError("La cuenta no existe o esta desactivada")
 
