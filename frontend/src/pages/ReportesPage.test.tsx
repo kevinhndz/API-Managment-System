@@ -18,6 +18,7 @@ vi.mock('../hooks/useAcademicLabels', () => ({
 
 vi.mock('../services/api', () => ({
   descargarReporte: vi.fn(),
+  INSTITUTION_SLUG: 'uphn',
 }))
 
 describe('ReportesPage', () => {
@@ -86,7 +87,7 @@ describe('ReportesPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
     fireEvent.click(screen.getByRole('button', { name: 'Consultar vista previa' }))
     expect(screen.getByRole('status')).toHaveTextContent('Consultando en segundo plano')
-    expect(trabajadores[0].postMessage).toHaveBeenCalledWith({ id: 2, modulo: 'matriculas', filtros: {} })
+    expect(trabajadores[0].postMessage).toHaveBeenCalledWith({ id: 2, modulo: 'matriculas', filtros: {}, institucion: 'uphn' })
 
     fireEvent.click(screen.getByRole('button', { name: 'Actualizar consulta' }))
     trabajadores[0].onmessage?.({ data: { id: 2, estado: 'completada', datos: { total_registros: 1, columnas: [], registros: [] } } } as MessageEvent)
