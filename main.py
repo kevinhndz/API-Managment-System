@@ -76,12 +76,13 @@ async def proteger_cambios_con_cookie(request, call_next):
 
 @app.middleware("http")
 async def contexto_auditoria(request, call_next):
-    contexto = usuario_actual.set(
-        identificar_usuario(
-            request.headers.get("Authorization"),
-            request.cookies.get("campusflow_session"),
-        )
+    usuario = identificar_usuario(
+        request.headers.get("Authorization"),
+        request.cookies.get("campusflow_session"),
     )
+    if usuario is not None:
+        usuario = {**usuario, "ip_origen": request.client.host if request.client else None}
+    contexto = usuario_actual.set(usuario)
     try:
         return await call_next(request)
     finally:
