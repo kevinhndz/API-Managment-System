@@ -1,4 +1,7 @@
 from types import SimpleNamespace
+from io import BytesIO
+
+from PIL import Image
 
 from modulos.documentos import repository as repo_documentos
 from modulos.documentos.service import historial_academico
@@ -34,3 +37,18 @@ def test_vistas_de_archivo_no_registran_descarga(monkeypatch):
     assert b"Ana Prueba" in json.body
     assert excel.headers["cache-control"] == "no-store"
     assert csv.headers["content-disposition"] == "inline"
+
+
+def test_historial_muestra_logo_configurado(monkeypatch):
+    imagen = BytesIO()
+    Image.new("RGB", (180, 80), "#5b0309").save(imagen, format="PNG")
+    monkeypatch.setattr(repo_documentos, "buscar_institucion", lambda db, id: SimpleNamespace(id=1, slug="uphn", nombre="Universidad de prueba"))
+    monkeypatch.setattr(repo_documentos, "buscar_estudiante", lambda db, id, institucion: SimpleNamespace(id=7, nombre="Ana Prueba", cuenta="2026-0007", carrera_id=3))
+    monkeypatch.setattr(repo_documentos, "buscar_carrera", lambda db, id, institucion: SimpleNamespace(nombre="Ingenieria"))
+    monkeypatch.setattr(repo_documentos, "listar_calificaciones", lambda db, estudiante, institucion: [])
+    monkeypatch.setattr(repo_documentos, "leer_logo", lambda db, institucion: imagen.getvalue())
+
+    contenido, _ = historial_academico(SimpleNamespace(info={"institucion_id": 1}), 7, 9, emitir=False)
+
+    assert contenido.startswith(b"%PDF")
+    assert len(contenido) > 2500
