@@ -332,6 +332,27 @@ export async function descargarReporte(modulo: ReportModule, formato: ReportForm
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
+export async function descargarDocumento(tipo: 'historial-academico' | 'constancia-laboral', id: number) {
+  const tokenCsrf = await obtenerTokenCsrf()
+  const response = await fetch(`${API_URL}/documentos/${tipo}/${id}`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { ...headersInstitucion(), 'X-CSRF-Token': tokenCsrf },
+  })
+  if (!response.ok) {
+    const error = (await response.json().catch(() => null)) as { detail?: string } | null
+    throw new ApiError(error?.detail ?? 'No se pudo emitir el documento.', response.status)
+  }
+  const url = URL.createObjectURL(await response.blob())
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = `${tipo}_${id}.pdf`
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 export function listarActividad(filtros: { modulo?: string; accion?: string; usuario?: string; desde?: string; hasta?: string } = {}) {
   return request<AuditEvent[]>(`/auditoria/?${queryString(filtros)}`)
 }

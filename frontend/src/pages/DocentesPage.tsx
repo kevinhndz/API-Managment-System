@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react'
-import { IdCard } from 'lucide-react'
+import { FileText, IdCard } from 'lucide-react'
 
 import { EntityPage, StatusBadge } from '../components/crud/EntityPage'
 import { PersonCarnetDialog, type PersonCarnetData } from '../components/people/PersonCarnetDialog'
-import { docentesApi } from '../services/api'
+import { ActionMenu } from '../components/ui/ActionMenu'
+import { descargarDocumento, docentesApi } from '../services/api'
 import type { Docente, DocentePayload } from '../types/api'
 
 const emptyDocente: DocentePayload = {
@@ -21,10 +22,12 @@ const emptyDocente: DocentePayload = {
 
 export function DocentesPage() {
   const [carnet, setCarnet] = useState<PersonCarnetData | null>(null)
+  const [errorDocumento, setErrorDocumento] = useState('')
   const closeCarnet = useCallback(() => setCarnet(null), [])
 
   return (
     <>
+      {errorDocumento && <p role="alert" className="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{errorDocumento}</p>}
       <EntityPage<Docente, DocentePayload>
         title="Docentes"
         singular="Docente"
@@ -67,6 +70,17 @@ export function DocentesPage() {
             area: 'Personal docente',
           }),
         })}
+        renderActions={(docente, handlers) => (
+          <div className="flex items-center justify-end gap-2">
+            <button type="button" className="focus-ring inline-flex h-9 items-center gap-1 rounded-lg border px-2 text-xs font-semibold" onClick={() => {
+              setErrorDocumento('')
+              void descargarDocumento('constancia-laboral', docente.id).catch((error: unknown) => {
+                setErrorDocumento(error instanceof Error ? error.message : 'No se pudo emitir la constancia.')
+              })
+            }}><FileText className="h-4 w-4" /> Constancia</button>
+            <ActionMenu singular="Docente" onEdit={handlers.onEdit} onDelete={handlers.onDelete} extraAction={{ label: 'Ver carnet', icon: <IdCard className="h-4 w-4" />, onSelect: () => handlers.onExtraAction?.() }} />
+          </div>
+        )}
       />
       {carnet && <PersonCarnetDialog person={carnet} onClose={closeCarnet} />}
     </>
