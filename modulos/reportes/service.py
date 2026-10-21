@@ -45,6 +45,8 @@ class ReportesService:
                 raise AccesoProhibidoError("Este reporte requiere permiso de administrador")
             if modulo == "carga_docente":
                 return CONSULTAS[modulo](db, periodo_id)
+            if modulo == "poblacion_carrera":
+                return CONSULTAS[modulo](db, carrera_id)
             return CONSULTAS[modulo](db, periodo_id, carrera_id)
 
         if modulo == "matriculas":

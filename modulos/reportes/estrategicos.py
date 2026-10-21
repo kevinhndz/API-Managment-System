@@ -1,6 +1,6 @@
 """Consultas de gestion basadas en datos academicos existentes."""
 
-from sqlalchemy import Numeric, and_, cast, func
+from sqlalchemy import Numeric, and_, case, cast, func
 from sqlalchemy.orm import Session
 
 from modulos.asignaturas.tabla import Asignaturas
@@ -162,9 +162,88 @@ def carga_docente(db: Session, periodo_id=None):
     )
 
 
+def asignaturas_sin_oferta(db: Session, periodo_id=None, carrera_id=None):
+    relacion = Secciones.asignatura_id == Asignaturas.id
+    if periodo_id is not None:
+        relacion = and_(relacion, Secciones.periodo_id == periodo_id)
+    consulta = (
+        db.query(
+            Carreras.nombre.label("carrera"),
+            Asignaturas.codigo.label("codigo_asignatura"),
+            Asignaturas.nombre.label("asignatura"),
+            Asignaturas.unidades_valorativas.label("unidades_valorativas"),
+        )
+        .select_from(Asignaturas)
+        .join(Carreras, Carreras.id == Asignaturas.carrera_id)
+        .outerjoin(Secciones, relacion)
+        .filter(
+            Asignaturas.institucion_id == _institucion(db),
+            Asignaturas.activo.is_(True),
+        )
+    )
+    if carrera_id is not None:
+        consulta = consulta.filter(Carreras.id == carrera_id)
+    return (
+        consulta.group_by(Asignaturas.id, Carreras.id)
+        .having(func.count(Secciones.id) == 0)
+        .order_by(Carreras.nombre, Asignaturas.nombre)
+        .all()
+    )
+
+
+def poblacion_por_carrera(db: Session, carrera_id=None):
+    activos = func.sum(case((Estudiantes.estado.is_(True), 1), else_=0))
+    inactivos = func.sum(case((Estudiantes.estado.is_(False), 1), else_=0))
+    consulta = (
+        db.query(
+            Carreras.codigo.label("codigo_carrera"),
+            Carreras.nombre.label("carrera"),
+            func.count(Estudiantes.id).label("estudiantes"),
+            activos.label("activos"),
+            inactivos.label("inactivos"),
+        )
+        .select_from(Carreras)
+        .outerjoin(Estudiantes, Estudiantes.carrera_id == Carreras.id)
+        .filter(Carreras.institucion_id == _institucion(db))
+    )
+    if carrera_id is not None:
+        consulta = consulta.filter(Carreras.id == carrera_id)
+    return consulta.group_by(Carreras.id).order_by(Carreras.nombre).all()
+
+
+def matricula_por_estado(db: Session, periodo_id=None, carrera_id=None):
+    consulta = (
+        db.query(
+            Periodos.anio.label("anio"),
+            Periodos.numero.label("periodo"),
+            Carreras.codigo.label("codigo_carrera"),
+            Carreras.nombre.label("carrera"),
+            Matriculas.estado.label("estado"),
+            func.count(Matriculas.id).label("matriculas"),
+            func.count(func.distinct(Estudiantes.id)).label("estudiantes"),
+        )
+        .select_from(Matriculas)
+        .join(Estudiantes, Estudiantes.id == Matriculas.estudiante_id)
+        .join(Carreras, Carreras.id == Estudiantes.carrera_id)
+        .join(Secciones, Secciones.id == Matriculas.seccion_id)
+        .join(Periodos, Periodos.id == Secciones.periodo_id)
+        .filter(Matriculas.institucion_id == _institucion(db))
+    )
+    if periodo_id is not None:
+        consulta = consulta.filter(Periodos.id == periodo_id)
+    if carrera_id is not None:
+        consulta = consulta.filter(Carreras.id == carrera_id)
+    return (
+        consulta.group_by(Periodos.id, Carreras.id, Matriculas.estado)
+        .order_by(Periodos.anio.desc(), Periodos.numero.desc(), Carreras.nombre, Matriculas.estado)
+        .all()
+    )
 CONSULTAS = {
     "matricula_carrera": matricula_por_carrera,
     "ocupacion_secciones": ocupacion_de_secciones,
     "rendimiento_asignaturas": rendimiento_por_asignatura,
     "carga_docente": carga_docente,
+    "asignaturas_sin_oferta": asignaturas_sin_oferta,
+    "poblacion_carrera": poblacion_por_carrera,
+    "matricula_estado": matricula_por_estado,
 }
