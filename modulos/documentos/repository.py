@@ -58,6 +58,20 @@ def buscar_docente(db: Session, docente_id: int, institucion_id: int) -> Docente
     ).one_or_none()
 
 
+def listar_matriculas_activas(db: Session, estudiante_id: int, institucion_id: int):
+    return (
+        db.query(Periodos.anio, Periodos.numero, Asignaturas.codigo, Asignaturas.nombre, Secciones.codigo.label("seccion"))
+        .select_from(Matriculas)
+        .join(Secciones, Secciones.id == Matriculas.seccion_id)
+        .join(Asignaturas, Asignaturas.id == Secciones.asignatura_id)
+        .join(Periodos, Periodos.id == Secciones.periodo_id)
+        .filter(Matriculas.estudiante_id == estudiante_id, Matriculas.institucion_id == institucion_id,
+                Matriculas.estado == "ACTIVA")
+        .order_by(Periodos.anio.desc(), Periodos.numero.desc(), Asignaturas.codigo)
+        .all()
+    )
+
+
 def guardar_emision(db: Session, institucion_id: int, tipo: str, sujeto_id: int,
                     usuario_id: int, folio: str, fecha: datetime, hash_pdf: str) -> None:
     db.add(DocumentosEmitidos(

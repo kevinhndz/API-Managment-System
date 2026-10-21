@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from database.almacen import abrir_puerta_bd
 from modulos.documentos.schema import VerificacionDocumento
-from modulos.documentos.service import constancia_laboral, guardar_logo, historial_academico, leer_logo, verificar_documento as verificar_folio
+from modulos.documentos.service import constancia_estudiantil, constancia_laboral, guardar_logo, historial_academico, leer_logo, verificar_documento as verificar_folio
 from modulos.suscripciones.dependencias import exigir_suscripcion
 from utils.auth import permiso_admin
 
@@ -64,6 +64,24 @@ def emitir_constancia(
     administrador: dict = Depends(permiso_admin),
 ):
     contenido, nombre = constancia_laboral(db, docente_id, administrador["user_id"])
+    return Response(content=contenido, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{nombre}"'})
+
+
+@router.get("/constancia-laboral/{docente_id}/vista-previa", dependencies=[Depends(exigir_suscripcion)])
+def previsualizar_constancia_laboral(docente_id: int, db: Session = Depends(abrir_puerta_bd), administrador: dict = Depends(permiso_admin)):
+    contenido, _ = constancia_laboral(db, docente_id, administrador["user_id"], emitir=False)
+    return Response(content=contenido, media_type="application/pdf", headers={"Cache-Control": "no-store"})
+
+
+@router.get("/constancia-estudiantil/{estudiante_id}/vista-previa", dependencies=[Depends(exigir_suscripcion)])
+def previsualizar_constancia_estudiantil(estudiante_id: int, db: Session = Depends(abrir_puerta_bd), administrador: dict = Depends(permiso_admin)):
+    contenido, _ = constancia_estudiantil(db, estudiante_id, administrador["user_id"], emitir=False)
+    return Response(content=contenido, media_type="application/pdf", headers={"Cache-Control": "no-store"})
+
+
+@router.post("/constancia-estudiantil/{estudiante_id}", dependencies=[Depends(exigir_suscripcion)])
+def emitir_constancia_estudiantil(estudiante_id: int, db: Session = Depends(abrir_puerta_bd), administrador: dict = Depends(permiso_admin)):
+    contenido, nombre = constancia_estudiantil(db, estudiante_id, administrador["user_id"])
     return Response(content=contenido, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{nombre}"'})
 
 

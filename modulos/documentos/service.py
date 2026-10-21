@@ -130,7 +130,7 @@ def historial_academico(db: Session, estudiante_id: int, usuario_id: int, emitir
     return contenido, f"historial_academico_{estudiante.id}_vista_previa.pdf"
 
 
-def constancia_laboral(db: Session, docente_id: int, usuario_id: int) -> tuple[bytes, str]:
+def constancia_laboral(db: Session, docente_id: int, usuario_id: int, emitir: bool = True) -> tuple[bytes, str]:
     institucion = _institucion(db)
     docente = repo.buscar_docente(db, docente_id, institucion.id)
     if docente is None:
@@ -151,13 +151,45 @@ def constancia_laboral(db: Session, docente_id: int, usuario_id: int) -> tuple[b
         parrafos.append(f"Departamento: {_texto(docente.departamento)}.")
     if docente.tipo_contrato:
         parrafos.append(f"Tipo de contrato: {_texto(docente.tipo_contrato)}.")
-    folio = str(uuid4())
+    folio = str(uuid4()) if emitir else "VISTA PREVIA"
     fecha = datetime.now(timezone.utc)
     contenido = _pdf(
         "Constancia laboral", institucion, repo.leer_logo(db, institucion.id), folio, fecha,
         [Paragraph(parrafo, estilos["BodyText"]) for parrafo in parrafos],
     )
-    return _entregar(db, "constancia_laboral", docente.id, usuario_id, folio, fecha, contenido)
+    if emitir:
+        return _entregar(db, "constancia_laboral", docente.id, usuario_id, folio, fecha, contenido)
+    return contenido, f"constancia_laboral_{docente.id}_vista_previa.pdf"
+
+
+def constancia_estudiantil(db: Session, estudiante_id: int, usuario_id: int, emitir: bool = True) -> tuple[bytes, str]:
+    institucion = _institucion(db)
+    estudiante = repo.buscar_estudiante(db, estudiante_id, institucion.id)
+    if estudiante is None:
+        raise RecursoNoEncontradoError("Estudiante no encontrado")
+    carrera = repo.buscar_carrera(db, estudiante.carrera_id, institucion.id)
+    matriculas = repo.listar_matriculas_activas(db, estudiante_id, institucion.id)
+    if not matriculas:
+        raise DatosInvalidosError("El estudiante no tiene matriculas activas para emitir la constancia")
+    anio, numero = matriculas[0].anio, matriculas[0].numero
+    actuales = [item for item in matriculas if (item.anio, item.numero) == (anio, numero)]
+    estilos = getSampleStyleSheet()
+    filas = [["Codigo", "Asignatura", "Seccion"]]
+    filas.extend([_texto(item.codigo), Paragraph(_texto(item.nombre), estilos["BodyText"]), _texto(item.seccion)] for item in actuales)
+    tabla = Table(filas, colWidths=[90, 355, 65], repeatRows=1)
+    tabla.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#e9edf3")),
+                               ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                               ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f7f8fa")])]))
+    folio = str(uuid4()) if emitir else "VISTA PREVIA"
+    fecha = datetime.now(timezone.utc)
+    contenido = _pdf("Constancia estudiantil", institucion, repo.leer_logo(db, institucion.id), folio, fecha, [
+        Paragraph(f"{_texto(institucion.nombre)} hace constar que {_texto(estudiante.nombre)}, numero de cuenta {_texto(estudiante.cuenta)}, tiene matricula activa en el periodo {anio}-{numero}.", estilos["BodyText"]),
+        Paragraph(f"Carrera: {_texto(carrera.nombre if carrera else 'No registrada')}", estilos["BodyText"]),
+        Spacer(1, 14), tabla,
+    ])
+    if emitir:
+        return _entregar(db, "constancia_estudiantil", estudiante.id, usuario_id, folio, fecha, contenido)
+    return contenido, f"constancia_estudiantil_{estudiante.id}_vista_previa.pdf"
 
 
 def verificar_documento(db: Session, folio: str) -> dict:
