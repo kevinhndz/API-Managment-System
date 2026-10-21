@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { descargarReporte } from '../services/api'
+import { descargarDocumento, descargarReporte, previsualizarHistorial, previsualizarReporte } from '../services/api'
 import { ReportesPage } from './ReportesPage'
 
 vi.mock('../contexts/AuthContext', () => ({
@@ -18,6 +18,11 @@ vi.mock('../hooks/useAcademicLabels', () => ({
 
 vi.mock('../services/api', () => ({
   descargarReporte: vi.fn(),
+  descargarDocumento: vi.fn(),
+  previsualizarReporte: vi.fn(),
+  previsualizarHistorial: vi.fn(),
+  subirLogoInstitucional: vi.fn(),
+  urlLogoInstitucional: vi.fn(() => '/api/documentos/logo'),
   INSTITUTION_SLUG: 'uphn',
 }))
 
@@ -30,6 +35,7 @@ describe('ReportesPage', () => {
 
   it('ofrece Excel, PDF, CSV y JSON y solicita la descarga seleccionada', async () => {
     vi.mocked(descargarReporte).mockResolvedValue(undefined)
+    vi.mocked(previsualizarReporte).mockResolvedValue(new Blob(['Cuenta,Estudiante\n20260017,Ana López'], { type: 'text/csv' }))
     render(<ReportesPage />)
 
     expect(screen.queryByRole('combobox', { name: 'Módulo' })).not.toBeInTheDocument()
@@ -50,8 +56,35 @@ describe('ReportesPage', () => {
     fireEvent.click(csvButton)
 
     await waitFor(() => {
-      expect(descargarReporte).toHaveBeenCalledWith('matriculas', 'csv', { carrera_id: 8, estudiante_id: 17 })
+      expect(previsualizarReporte).toHaveBeenCalledWith('matriculas', 'csv', { carrera_id: 8, estudiante_id: 17 })
     })
+    expect(descargarReporte).not.toHaveBeenCalled()
+    expect(await screen.findByRole('dialog', { name: 'Vista previa de Matrículas' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar descarga' }))
+    await waitFor(() => expect(descargarReporte).toHaveBeenCalledWith('matriculas', 'csv', { carrera_id: 8, estudiante_id: 17 }))
+  })
+
+  it('previsualiza el historial desde Reportes y solo lo emite al confirmar', async () => {
+    const URLOriginal = URL
+    vi.stubGlobal('URL', class extends URLOriginal {
+      static createObjectURL = vi.fn(() => 'blob:historial')
+      static revokeObjectURL = vi.fn()
+    })
+    vi.mocked(previsualizarHistorial).mockResolvedValue(new Blob(['%PDF'], { type: 'application/pdf' }))
+    vi.mocked(descargarDocumento).mockResolvedValue(undefined)
+    render(<ReportesPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Historial academico: abrir reporte académico' }))
+    expect(screen.queryByRole('button', { name: 'Descargar Excel' })).not.toBeInTheDocument()
+    fireEvent.change(screen.getByRole('combobox', { name: 'Estudiante' }), { target: { value: '20260017' } })
+    fireEvent.click(screen.getByRole('option', { name: '20260017 · Ana López' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Descargar PDF' }))
+
+    expect(await screen.findByRole('dialog', { name: 'Vista previa de Historial academico' })).toBeInTheDocument()
+    expect(previsualizarHistorial).toHaveBeenCalledWith(17)
+    expect(descargarDocumento).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar descarga' }))
+    await waitFor(() => expect(descargarDocumento).toHaveBeenCalledWith('historial-academico', 17))
   })
 
   it('abre el reporte elegido y permite regresar a la cuadrícula', () => {
