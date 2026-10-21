@@ -418,7 +418,7 @@ export function ReportesPage() {
       {moduloActivo !== 'historial_academico' && <div className="mt-7 border-t pt-5">
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" onClick={consultarVista} className="focus-ring rounded-xl border px-4 py-2 text-sm font-semibold hover:bg-slate-50 dark:border-[#39334b] dark:hover:bg-[#302a42]">
-            {consultando ? 'Actualizar consulta' : 'Consultar vista previa'}
+            {consultando ? 'Actualizar consulta' : 'Consultar datos'}
           </button>
           {consultando && <span role="status" className="text-sm text-slate-500">Consultando en segundo plano. Puedes seguir usando los filtros.</span>}
         </div>

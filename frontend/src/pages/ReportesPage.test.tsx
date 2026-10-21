@@ -118,7 +118,7 @@ describe('ReportesPage', () => {
     render(<ReportesPage />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Consultar vista previa' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Consultar datos' }))
     expect(screen.getByRole('status')).toHaveTextContent('Consultando en segundo plano')
     expect(trabajadores[0].postMessage).toHaveBeenCalledWith({ id: 2, modulo: 'matriculas', filtros: {}, institucion: 'uphn' })
 
@@ -149,7 +149,7 @@ describe('ReportesPage', () => {
 
     render(<ReportesPage />)
     fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir reporte académico' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Consultar vista previa' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Consultar datos' }))
     trabajadores[0].onmessage?.({ data: { id: 2, estado: 'completada', datos: {
       modulo: 'estudiantes', total_registros: 1,
       columnas: [{ titulo: 'Estado', campo: 'estado' }], registros: [{ estado: false }],
@@ -171,7 +171,7 @@ describe('ReportesPage', () => {
 
     render(<ReportesPage />)
     fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Consultar vista previa' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Consultar datos' }))
     trabajadores[0].onmessage?.({ data: { id: 2, estado: 'completada', datos: {
       modulo: 'matriculas', total_registros: 1,
       columnas: [{ titulo: 'Estado', campo: 'estado' }], registros: [{ estado: 'REPROBADA' }],
