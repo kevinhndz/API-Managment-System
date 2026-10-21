@@ -2,12 +2,29 @@ from sqlalchemy.orm import Session
 from modulos.reportes.repository import ReportesRepository as repo
 from modulos.reportes.estrategicos import CONSULTAS
 from modulos.reportes.auditoria import CONSULTAS_AUDITORIA
-from modulos.reportes.exportadores import COLUMNAS, valor_json, exportar_csv, exportar_excel, exportar_json, exportar_pdf
+from modulos.reportes.exportadores import COLUMNAS, valor_json, exportar_csv, exportar_excel, exportar_json, exportar_pdf, previsualizar_excel
 from modulos.auditoria.registro import registrar_evento
 from core.excepciones import AccesoProhibidoError, DatosInvalidosError
 
 
 class ReportesService:
+    @staticmethod
+    def previsualizar_archivo(db: Session, modulo, formato, usuario, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None):
+        registros = ReportesService.consultar_registros(
+            db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta,
+        )
+        if formato == "xlsx":
+            return previsualizar_excel(modulo, registros)
+        if formato == "pdf":
+            respuesta = exportar_pdf(modulo, registros)
+        elif formato == "csv":
+            respuesta = exportar_csv(modulo, registros)
+        else:
+            respuesta = exportar_json(modulo, registros)
+        respuesta.headers["Content-Disposition"] = "inline"
+        respuesta.headers["Cache-Control"] = "no-store"
+        return respuesta
+
     @staticmethod
     def descargar_reporte(db: Session, modulo, formato, usuario, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None):
         registros = ReportesService.consultar_registros(

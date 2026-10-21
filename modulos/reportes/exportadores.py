@@ -121,6 +121,29 @@ def exportar_excel(modulo, registros):
     return StreamingResponse(archivo, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f'attachment; filename="reporte_{modulo}.xlsx"'})
 
 
+def previsualizar_excel(modulo, registros):
+    columnas = COLUMNAS[modulo]
+    encabezados = "".join(f"<th>{escape(titulo)}</th>" for titulo, _ in columnas)
+    filas = "".join(
+        "<tr>" + "".join(f"<td>{escape(str(valor(item, campo)))}</td>" for _, campo in columnas) + "</tr>"
+        for item in registros[:50]
+    )
+    html = (
+        '<!doctype html><html lang="es"><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<style>body{font:14px system-ui;background:#f5f6f8;color:#202936;margin:0;padding:24px}'
+        'h1{font-size:18px;margin:0 0 8px}p{color:#566274;margin:0 0 18px}'
+        'table{border-collapse:collapse;background:white;min-width:100%}'
+        'th,td{border:1px solid #cbd5e1;padding:9px 12px;text-align:left;white-space:nowrap}'
+        'th{background:#5b0309;color:white;font-weight:700}tr:nth-child(even){background:#f8fafc}'
+        '.hoja{overflow:auto;border:1px solid #cbd5e1;border-radius:8px}</style>'
+        f'<h1>Vista de hoja de calculo: {escape(modulo.replace("_", " ").title())}</h1>'
+        f'<p>{len(registros)} registros. Se muestran los primeros {min(len(registros), 50)}; el Excel descargado incluye todos.</p>'
+        f'<div class="hoja"><table><thead><tr>{encabezados}</tr></thead><tbody>{filas}</tbody></table></div></html>'
+    )
+    return Response(content=html, media_type="text/html; charset=utf-8", headers={"Cache-Control": "no-store"})
+
+
 def exportar_pdf(modulo, registros):
     archivo = BytesIO()
     documento = SimpleDocTemplate(archivo, pagesize=landscape(A4), leftMargin=28, rightMargin=28)

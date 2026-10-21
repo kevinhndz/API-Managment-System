@@ -67,3 +67,21 @@ def descargar_reporte(
     return s.descargar_reporte(
         db, modulo, formato, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta,
     )
+
+
+@router.get("/{modulo}/previsualizar/{formato}")
+def previsualizar_archivo(
+    modulo: Literal["matriculas", "secciones", "estudiantes", "docentes", "calificaciones", "matricula_carrera", "ocupacion_secciones", "rendimiento_asignaturas", "carga_docente", "asignaturas_sin_oferta", "poblacion_carrera", "matricula_estado", "actividad_usuario", "cambios_sensibles"],
+    formato: Literal["xlsx", "pdf", "csv", "json"],
+    periodo_id: int | None = None,
+    estudiante_id: int | None = None,
+    estado: str | None = None,
+    carrera_id: int | None = None,
+    desde: date | None = None,
+    hasta: date | None = None,
+    db: Session = Depends(abrir_puerta_bd),
+    usuario: dict = Depends(permiso_usuario),
+):
+    return s.previsualizar_archivo(
+        db, modulo, formato, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta,
+    )
