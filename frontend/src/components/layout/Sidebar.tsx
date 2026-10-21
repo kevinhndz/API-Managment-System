@@ -27,7 +27,7 @@ export function Sidebar({ open, collapsed, width, onWidthChange, onClose, onTogg
     { key: 'academico' as const, label: 'Gestión académica', items: itemsPermitidos.filter((item) => ['/aulas', '/docentes', '/carreras', '/estudiantes'].includes(item.path)) },
     { key: 'oferta' as const, label: 'Oferta y periodos', items: itemsPermitidos.filter((item) => ['/asignaturas', '/periodos', '/secciones'].includes(item.path)) },
     { key: 'operacion' as const, label: 'Operación académica', items: itemsPermitidos.filter((item) => ['/matriculas', '/calificaciones'].includes(item.path)) },
-    { key: 'administracion' as const, label: 'Administración', items: itemsPermitidos.filter((item) => ['/reportes', '/actividad'].includes(item.path)) },
+    { key: 'administracion' as const, label: 'Administración', items: itemsPermitidos.filter((item) => ['/reportes', '/actividad', '/finanzas'].includes(item.path)) },
   ]
 
   return (

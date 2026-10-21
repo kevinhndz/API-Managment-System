@@ -27,6 +27,7 @@ from modulos.dashboard.router import router as router_dashboard
 from modulos.suscripciones.router import router as router_suscripcion
 from modulos.suscripciones.dependencias import exigir_suscripcion
 from modulos.documentos.router import router as router_documentos
+from modulos.finanzas.router import router as router_finanzas
 from core.escuchadores import ExcepcionesGlobales as eg
 from modulos.carreras.tabla import Carreras
 from modulos.estudiantes.tabla import Estudiantes
@@ -124,4 +125,5 @@ app.include_router(router_solicitudes_cuenta)
 app.include_router(router_dashboard)
 app.include_router(router_suscripcion)
 app.include_router(router_documentos)
+app.include_router(router_finanzas)
 eg.directorio(app)
