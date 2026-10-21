@@ -4,10 +4,12 @@ from html import escape
 from io import BytesIO
 from uuid import uuid4
 
+from PIL import Image as ImagenPIL, UnidentifiedImageError
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.lib.utils import ImageReader
+from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from sqlalchemy.orm import Session
 
 from core.excepciones import DatosInvalidosError, RecursoNoEncontradoError
@@ -27,12 +29,19 @@ def _texto(valor) -> str:
     return escape(str(valor if valor is not None else ""))
 
 
-def _pdf(titulo: str, institucion: str, folio: str, fecha: datetime, cuerpo: list) -> bytes:
+def _pdf(titulo: str, institucion: Instituciones, logo: bytes | None, folio: str, fecha: datetime, cuerpo: list) -> bytes:
     archivo = BytesIO()
     estilos = getSampleStyleSheet()
     documento = SimpleDocTemplate(archivo, pagesize=A4, leftMargin=42, rightMargin=42)
+    if logo:
+        ancho, alto = ImageReader(BytesIO(logo)).getSize()
+        escala = min(140 / ancho, 68 / alto)
+        encabezado = [Image(BytesIO(logo), width=ancho * escala, height=alto * escala)]
+    else:
+        encabezado = [Paragraph(_texto(institucion.slug.upper()), estilos["Heading1"])]
     elementos = [
-        Paragraph(_texto(institucion), estilos["Heading2"]),
+        *encabezado,
+        Paragraph(_texto(institucion.nombre), estilos["Heading2"]),
         Paragraph(_texto(titulo), estilos["Title"]),
         Paragraph(f"Folio: {_texto(folio)} | Emitido: {fecha:%Y-%m-%d %H:%M} UTC", estilos["Normal"]),
         Spacer(1, 20),
@@ -52,7 +61,7 @@ def _entregar(db: Session, tipo: str, sujeto_id: int, usuario_id: int, folio: st
     return contenido, f"{tipo}_{sujeto_id}_{folio}.pdf"
 
 
-def historial_academico(db: Session, estudiante_id: int, usuario_id: int) -> tuple[bytes, str]:
+def historial_academico(db: Session, estudiante_id: int, usuario_id: int, emitir: bool = True) -> tuple[bytes, str]:
     institucion = _institucion(db)
     estudiante = repo.buscar_estudiante(db, estudiante_id, institucion.id)
     if estudiante is None:
@@ -81,10 +90,10 @@ def historial_academico(db: Session, estudiante_id: int, usuario_id: int) -> tup
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f7f8fa")]),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
     ]))
-    folio = str(uuid4())
+    folio = str(uuid4()) if emitir else "VISTA PREVIA"
     fecha = datetime.now(timezone.utc)
     contenido = _pdf(
-        "Historial academico", institucion.nombre, folio, fecha,
+        "Historial academico", institucion, repo.leer_logo(db, institucion.id), folio, fecha,
         [
             Paragraph(f"Estudiante: {_texto(estudiante.nombre)}", estilos["Normal"]),
             Paragraph(f"Cuenta: {_texto(estudiante.cuenta)}", estilos["Normal"]),
@@ -93,7 +102,9 @@ def historial_academico(db: Session, estudiante_id: int, usuario_id: int) -> tup
             tabla,
         ],
     )
-    return _entregar(db, "historial_academico", estudiante.id, usuario_id, folio, fecha, contenido)
+    if emitir:
+        return _entregar(db, "historial_academico", estudiante.id, usuario_id, folio, fecha, contenido)
+    return contenido, f"historial_academico_{estudiante.id}_vista_previa.pdf"
 
 
 def constancia_laboral(db: Session, docente_id: int, usuario_id: int) -> tuple[bytes, str]:
@@ -120,7 +131,7 @@ def constancia_laboral(db: Session, docente_id: int, usuario_id: int) -> tuple[b
     folio = str(uuid4())
     fecha = datetime.now(timezone.utc)
     contenido = _pdf(
-        "Constancia laboral", institucion.nombre, folio, fecha,
+        "Constancia laboral", institucion, repo.leer_logo(db, institucion.id), folio, fecha,
         [Paragraph(parrafo, estilos["BodyText"]) for parrafo in parrafos],
     )
     return _entregar(db, "constancia_laboral", docente.id, usuario_id, folio, fecha, contenido)
@@ -138,3 +149,21 @@ def verificar_documento(db: Session, folio: str) -> dict:
         "emitido_en": documento.emitido_en,
         "hash_pdf": documento.hash_pdf,
     }
+
+
+def guardar_logo(db: Session, contenido: bytes) -> None:
+    institucion = _institucion(db)
+    try:
+        with ImagenPIL.open(BytesIO(contenido)) as imagen:
+            if imagen.format not in {"PNG", "JPEG"} or imagen.width * imagen.height > 4_000_000:
+                raise DatosInvalidosError("Usa un logo PNG o JPG de hasta 4 megapixeles")
+            imagen.thumbnail((600, 600))
+            archivo = BytesIO()
+            imagen.convert("RGBA").save(archivo, format="PNG")
+    except (UnidentifiedImageError, OSError) as error:
+        raise DatosInvalidosError("El archivo no es una imagen PNG o JPG valida") from error
+    repo.guardar_logo(db, institucion.id, archivo.getvalue())
+
+
+def leer_logo(db: Session) -> bytes | None:
+    return repo.leer_logo(db, _institucion(db).id)

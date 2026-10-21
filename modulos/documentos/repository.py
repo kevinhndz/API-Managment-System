@@ -77,3 +77,16 @@ def buscar_emision(db: Session, folio: str, institucion_id: int) -> DocumentosEm
         DocumentosEmitidos.folio == folio,
         DocumentosEmitidos.institucion_id == institucion_id,
     ).one_or_none()
+
+
+def leer_logo(db: Session, institucion_id: int) -> bytes | None:
+    institucion = buscar_institucion(db, institucion_id)
+    return institucion.logo_png if institucion else None
+
+
+def guardar_logo(db: Session, institucion_id: int, contenido: bytes) -> None:
+    institucion = buscar_institucion(db, institucion_id)
+    if institucion is None:
+        raise ValueError("Institucion no encontrada")
+    institucion.logo_png = contenido
+    db.commit()
