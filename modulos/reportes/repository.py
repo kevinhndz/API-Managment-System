@@ -14,7 +14,15 @@ from modulos.calificaciones.tabla import Calificaciones
 
 class ReportesRepository:
     @staticmethod
+    def institucion_actual(db: Session) -> int:
+        institucion_id = db.info.get("institucion_id")
+        if institucion_id is None:
+            raise ValueError("Se requiere una institucion para consultar reportes")
+        return institucion_id
+
+    @staticmethod
     def matriculas_repository(db: Session, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde: date | None = None, hasta: date | None = None):
+        institucion_id = ReportesRepository.institucion_actual(db)
         query = (
             db.query(
                 Estudiantes.id.label("estudiante_id"),
@@ -34,6 +42,7 @@ class ReportesRepository:
             .join(Asignaturas, Asignaturas.id == Secciones.asignatura_id)
             .join(Periodos, Periodos.id == Secciones.periodo_id)
             .outerjoin(Calificaciones, Calificaciones.matricula_id == Matriculas.id)
+            .filter(Estudiantes.institucion_id == institucion_id)
         )
         if periodo_id is not None:
             query = query.filter(Secciones.periodo_id == periodo_id)
@@ -51,6 +60,7 @@ class ReportesRepository:
 
     @staticmethod
     def secciones_repository(db: Session, periodo_id=None, estado=None, carrera_id=None):
+        institucion_id = ReportesRepository.institucion_actual(db)
         query = (
             db.query(
                 Secciones.codigo.label("seccion"),
@@ -78,6 +88,7 @@ class ReportesRepository:
                 Secciones.estado,
                 Secciones.cupo_maximo,
             )
+            .filter(Secciones.institucion_id == institucion_id)
         )
         if periodo_id is not None:
             query = query.filter(Secciones.periodo_id == periodo_id)
@@ -89,13 +100,16 @@ class ReportesRepository:
 
     @staticmethod
     def estudiantes_repository(db: Session, estado=None, carrera_id=None):
+        institucion_id = ReportesRepository.institucion_actual(db)
         query = db.query(
             Estudiantes.cuenta,
             Estudiantes.nombre,
             Estudiantes.correo,
             Carreras.nombre.label("carrera"),
             Estudiantes.estado,
-        ).join(Carreras, Carreras.id == Estudiantes.carrera_id)
+        ).join(Carreras, Carreras.id == Estudiantes.carrera_id).filter(
+            Estudiantes.institucion_id == institucion_id
+        )
         if estado is not None:
             query = query.filter(Estudiantes.estado == (estado == "ACTIVO"))
         if carrera_id is not None:
@@ -104,13 +118,15 @@ class ReportesRepository:
 
     @staticmethod
     def docentes_repository(db: Session, estado=None):
-        query = db.query(Docentes.numero_empleado, Docentes.nombres, Docentes.apellidos, Docentes.correo, Docentes.estado)
+        institucion_id = ReportesRepository.institucion_actual(db)
+        query = db.query(Docentes.numero_empleado, Docentes.nombres, Docentes.apellidos, Docentes.correo, Docentes.estado).filter(Docentes.institucion_id == institucion_id)
         if estado is not None:
             query = query.filter(Docentes.estado == (estado == "ACTIVO"))
         return query.all()
 
     @staticmethod
     def calificaciones_repository(db: Session, periodo_id=None, carrera_id=None, docente_id=None):
+        institucion_id = ReportesRepository.institucion_actual(db)
         query = db.query(
             Estudiantes.cuenta,
             Estudiantes.nombre.label("estudiante"),
@@ -121,7 +137,7 @@ class ReportesRepository:
             Calificaciones.segundo_parcial,
             Calificaciones.tercer_parcial,
             Calificaciones.nota_final,
-        ).join(Matriculas, Matriculas.id == Calificaciones.matricula_id).join(Estudiantes, Estudiantes.id == Matriculas.estudiante_id).join(Secciones, Secciones.id == Matriculas.seccion_id).join(Asignaturas, Asignaturas.id == Secciones.asignatura_id).join(Periodos, Periodos.id == Secciones.periodo_id)
+        ).join(Matriculas, Matriculas.id == Calificaciones.matricula_id).join(Estudiantes, Estudiantes.id == Matriculas.estudiante_id).join(Secciones, Secciones.id == Matriculas.seccion_id).join(Asignaturas, Asignaturas.id == Secciones.asignatura_id).join(Periodos, Periodos.id == Secciones.periodo_id).filter(Calificaciones.institucion_id == institucion_id)
         if periodo_id is not None:
             query = query.filter(Secciones.periodo_id == periodo_id)
         if carrera_id is not None:
