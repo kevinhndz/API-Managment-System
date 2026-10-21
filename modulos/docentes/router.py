@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from database.almacen import abrir_puerta_bd
 from core.schema import RespuestaPaginada
 from modulos.docentes.schema import (
+    CargaDocenteResponse,
     DocenteResponse,
     Editar_Parcialmente_Docente,
     Revisar_Json_Crear_Docente,
@@ -12,6 +13,11 @@ from modulos.docentes.schema import (
 from modulos.docentes.service import DocentesService as s
 
 router = APIRouter(prefix="/docentes", tags=["Docentes"])
+
+
+@router.get("/carga", response_model=list[CargaDocenteResponse])
+def consultar_carga_docente(db: Session = Depends(abrir_puerta_bd)):
+    return s.carga_service(db)
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=DocenteResponse)

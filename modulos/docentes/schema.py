@@ -58,3 +58,23 @@ class DocenteResponse(BaseModel):
     tipo_contrato: str | None = None
     fecha_ingreso: date | None = None
     estado: bool
+
+
+class CargaDocenteResponse(BaseModel):
+    docente_id: int
+    numero_empleado: str
+    nombres: str
+    apellidos: str
+    tipo_contrato: str | None
+    departamento: str | None
+    seccion: str
+    estado_seccion: str
+    dias: str
+    hora_inicio: str
+    hora_fin: str
+    asignatura_id: int
+    codigo_asignatura: str
+    asignatura: str
+    periodo_id: int
+    anio: int
+    numero: int
