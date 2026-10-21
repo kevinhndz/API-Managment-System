@@ -107,7 +107,9 @@ class LoginService:
     @staticmethod
     def login_service(db: Session, json: LoginRequest, direccion_ip: str | None = None):
         ahora = datetime.now(timezone.utc)
-        claves_y_limites = LoginService._claves_intentos(json.usuario, direccion_ip)
+        claves_y_limites = LoginService._claves_intentos(
+            json.usuario, direccion_ip, db.info.get("institucion_id")
+        )
         claves = [clave for clave, _ in claves_y_limites]
         segundos_restantes = intentos_repo.buscar_bloqueo(db, claves, ahora)
         if segundos_restantes:
@@ -141,10 +143,10 @@ class LoginService:
         )
 
     @staticmethod
-    def _claves_intentos(usuario: str, direccion_ip: str | None):
+    def _claves_intentos(usuario: str, direccion_ip: str | None, institucion_id: int | None = None):
         secreto = settings.SECRET_KEY.get_secret_value().encode("utf-8")
         usuario_normalizado = usuario.strip().casefold()
-        material_cuenta = f"cuenta-ip:{usuario_normalizado}:{direccion_ip or 'sin-ip'}"
+        material_cuenta = f"cuenta-ip:{institucion_id or 0}:{usuario_normalizado}:{direccion_ip or 'sin-ip'}"
         clave_cuenta = hmac.new(secreto, material_cuenta.encode("utf-8"), hashlib.sha256).hexdigest()
         claves_y_limites = [
             (clave_cuenta, settings.LOGIN_RATE_LIMIT_IDENTITY_ATTEMPTS),
@@ -152,7 +154,7 @@ class LoginService:
         if direccion_ip:
             clave_ip = hmac.new(
                 secreto,
-                f"ip:{direccion_ip}".encode("utf-8"),
+                f"ip:{institucion_id or 0}:{direccion_ip}".encode("utf-8"),
                 hashlib.sha256,
             ).hexdigest()
             claves_y_limites.append((clave_ip, settings.LOGIN_RATE_LIMIT_IP_ATTEMPTS))
