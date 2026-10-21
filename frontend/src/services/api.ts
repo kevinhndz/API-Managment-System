@@ -11,9 +11,19 @@ import type {
 } from '../types/api'
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')
+const HOSTNAME = typeof window === 'undefined' ? 'localhost' : window.location.hostname
+const INSTITUTION_SLUG = import.meta.env.VITE_INSTITUTION_SLUG
+  ?? (HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1' ? 'uphn' : HOSTNAME.split('.')[0])
+
+function headersInstitucion(): Record<string, string> {
+  return { 'X-Institution-Slug': INSTITUTION_SLUG }
+}
 
 async function obtenerTokenCsrf() {
-  const respuesta = await fetch(`${API_URL}/login/csrf`, { credentials: 'include' })
+  const respuesta = await fetch(`${API_URL}/login/csrf`, {
+    credentials: 'include',
+    headers: headersInstitucion(),
+  })
   if (!respuesta.ok) throw new ApiError('No se pudo preparar la solicitud segura.', respuesta.status)
   const datos = (await respuesta.json()) as { csrf_token: string }
   return datos.csrf_token
@@ -149,6 +159,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ...options,
     credentials: 'include',
     headers: {
+      ...headersInstitucion(),
       'Content-Type': 'application/json',
       ...(tokenCsrf ? { 'X-CSRF-Token': tokenCsrf } : {}),
       ...options.headers,
@@ -162,7 +173,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       await fetch(`${API_URL}/login/cerrar`, {
         method: 'POST',
         credentials: 'include',
-        headers: tokenCsrf ? { 'X-CSRF-Token': tokenCsrf } : {},
+        headers: {
+          ...headersInstitucion(),
+          ...(tokenCsrf ? { 'X-CSRF-Token': tokenCsrf } : {}),
+        },
       }).catch(() => undefined)
       window.location.assign('/login')
     }
@@ -284,6 +298,7 @@ function queryString<T extends object>(filters: T) {
 export async function descargarReporte(modulo: ReportModule, formato: ReportFormat, filtros: ReportFilters) {
   const response = await fetch(`${API_URL}/reportes/${modulo}/descargar/${formato}?${queryString(filtros)}`, {
     credentials: 'include',
+    headers: headersInstitucion(),
   })
 
   if (!response.ok) {
@@ -293,7 +308,10 @@ export async function descargarReporte(modulo: ReportModule, formato: ReportForm
       await fetch(`${API_URL}/login/cerrar`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'X-CSRF-Token': await obtenerTokenCsrf().catch(() => '') },
+        headers: {
+          ...headersInstitucion(),
+          'X-CSRF-Token': await obtenerTokenCsrf().catch(() => ''),
+        },
       }).catch(() => undefined)
       window.location.assign('/login')
     }

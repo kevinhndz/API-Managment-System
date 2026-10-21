@@ -5,7 +5,13 @@ from core.excepciones import CredencialesInvalidasError
 
 LLAVE = traer.SECRET_KEY.get_secret_value()
 
-def crear_token(user: str, user_id: int, rol: str, version_token: int = 0) -> str:
+def crear_token(
+    user: str,
+    user_id: int,
+    rol: str,
+    version_token: int = 0,
+    institucion_id: int = 1,
+) -> str:
     
     expira_en = datetime.now(timezone.utc) + timedelta(minutes = 30)
     
@@ -14,6 +20,7 @@ def crear_token(user: str, user_id: int, rol: str, version_token: int = 0) -> st
         "user_id": user_id,
         "rol" : rol,
         "version_token": version_token,
+        "institucion_id": institucion_id,
         "iat": datetime.now(timezone.utc),
         "tipo": "acceso",
         "exp": expira_en
@@ -28,7 +35,7 @@ def verificar_token(token: str) -> dict:
     
     try:
         data = jwt.decode(token, LLAVE, algorithms=["HS256"])
-        if not all(data.get(clave) for clave in ("user", "user_id", "rol")):
+        if not all(data.get(clave) for clave in ("user", "user_id", "rol", "institucion_id")):
             raise CredencialesInvalidasError("Sesion invalida")
         return data
     except JWTError:

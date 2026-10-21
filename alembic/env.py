@@ -15,7 +15,7 @@ from core.config import preparar_url_base_datos
 # 2. Cargar variables de entorno
 load_dotenv()
 
-from database.almacen import miClaseBase
+from database.almacen import Instituciones, miClaseBase
 from modulos.aulas.tabla import Aulas
 from modulos.docentes.tabla import Docentes
 from modulos.carreras.tabla import Carreras

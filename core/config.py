@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     DATABASE_URL: SecretStr
     SECRET_KEY: SecretStr
     FRONTEND_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+    DEFAULT_INSTITUTION_SLUG: str = "uphn"
     COOKIE_SECURE: bool | None = None
     COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
     SMTP_HOST: str = ""

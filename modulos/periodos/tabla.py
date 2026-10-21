@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy import Boolean, Column, Date, Integer
+from sqlalchemy import Boolean, Column, Date, Integer, UniqueConstraint
 
 from database.almacen import miClaseBase
 from database.base import PoderAuditor
@@ -15,3 +15,7 @@ class Periodos(miClaseBase, PoderAuditor):
     fecha_inicio = Column(Date, nullable=False)
     fecha_fin = Column(Date, nullable=False)
     activo = Column(Boolean, default=True, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("institucion_id", "id", name="uq_periodos_institucion_id"),
+    )

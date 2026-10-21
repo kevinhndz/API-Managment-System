@@ -132,7 +132,13 @@ class LoginService:
             raise CredencialesInvalidasError("Usuario o contraseña incorrectos")
 
         intentos_repo.limpiar(db, [claves_y_limites[0][0]])
-        return crear_token(usuario.usuario, usuario.id, usuario.rol, usuario.version_token)
+        return crear_token(
+            usuario.usuario,
+            usuario.id,
+            usuario.rol,
+            usuario.version_token,
+            usuario.institucion_id,
+        )
 
     @staticmethod
     def _claves_intentos(usuario: str, direccion_ip: str | None):

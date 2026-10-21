@@ -53,6 +53,9 @@ def registrar_cambios(db: Session, flush_context):
             modulo = objeto.__tablename__
             registro_id = inspect(objeto).identity[0] if inspect(objeto).identity else getattr(objeto, "id", None)
             eventos.append({
+                "institucion_id": usuario.get(
+                    "institucion_id", db.info.get("institucion_id")
+                ) or 1,
                 "usuario_id": usuario.get("user_id"),
                 "usuario": usuario.get("user", "Desconocido"),
                 "accion": accion,
