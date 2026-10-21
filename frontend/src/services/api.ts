@@ -12,7 +12,7 @@ import type {
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')
 const HOSTNAME = typeof window === 'undefined' ? 'localhost' : window.location.hostname
-const INSTITUTION_SLUG = import.meta.env.VITE_INSTITUTION_SLUG
+export const INSTITUTION_SLUG = import.meta.env.VITE_INSTITUTION_SLUG
   ?? (HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1' ? 'uphn' : HOSTNAME.split('.')[0])
 
 function headersInstitucion(): Record<string, string> {

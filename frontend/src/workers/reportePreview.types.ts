@@ -11,6 +11,7 @@ export interface SolicitudVistaPrevia {
   id: number
   modulo: ReportModule
   filtros: ReportFilters
+  institucion: string
 }
 
 export type ResultadoVistaPrevia =
