@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, Index, Integer, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.almacen import miClaseBase
@@ -17,6 +18,9 @@ class EventoAuditoria(miClaseBase, EntidadInstitucional):
     modulo: Mapped[str] = mapped_column(String(60), nullable=False)
     registro_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     descripcion: Mapped[str] = mapped_column(String(250), nullable=False)
+    ip_origen: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    datos_anteriores: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    datos_nuevos: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     fecha: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     __table_args__ = (

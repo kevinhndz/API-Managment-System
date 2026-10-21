@@ -20,11 +20,22 @@ COLUMNAS = {
     "estudiantes": [("Cuenta", "cuenta"), ("Nombre", "nombre"), ("Correo", "correo"), ("Carrera", "carrera"), ("Activo", "estado")],
     "docentes": [("Empleado", "numero_empleado"), ("Nombres", "nombres"), ("Apellidos", "apellidos"), ("Correo", "correo"), ("Activo", "estado")],
     "calificaciones": [("Cuenta", "cuenta"), ("Estudiante", "estudiante"), ("Asignatura", "asignatura"), ("Seccion", "seccion"), ("Periodo", "periodo"), ("Primer parcial", "primer_parcial"), ("Segundo parcial", "segundo_parcial"), ("Tercer parcial", "tercer_parcial"), ("Nota final", "nota_final")],
+    "matricula_carrera": [("Anio", "anio"), ("Periodo", "periodo"), ("Codigo carrera", "codigo_carrera"), ("Carrera", "carrera"), ("Matriculas", "matriculas"), ("Estudiantes", "estudiantes")],
+    "ocupacion_secciones": [("Anio", "anio"), ("Periodo", "periodo"), ("Carrera", "carrera"), ("Codigo asignatura", "codigo_asignatura"), ("Asignatura", "asignatura"), ("Seccion", "seccion"), ("Cupo", "cupo"), ("Inscritos", "inscritos"), ("Cupos libres", "cupos_libres"), ("Ocupacion %", "ocupacion_pct")],
+    "rendimiento_asignaturas": [("Anio", "anio"), ("Periodo", "periodo"), ("Carrera", "carrera"), ("Codigo asignatura", "codigo_asignatura"), ("Asignatura", "asignatura"), ("Calificados", "calificados"), ("Promedio", "promedio"), ("Nota minima", "nota_minima"), ("Nota maxima", "nota_maxima")],
+    "carga_docente": [("Anio", "anio"), ("Periodo", "periodo"), ("Empleado", "numero_empleado"), ("Nombres", "nombres"), ("Apellidos", "apellidos"), ("Secciones", "secciones"), ("Estudiantes inscritos", "estudiantes_inscritos")],
+    "detalle_carga_docente": [("Anio", "anio"), ("Periodo", "periodo"), ("Empleado", "numero_empleado"), ("Nombres", "nombres"), ("Apellidos", "apellidos"), ("Contrato", "tipo_contrato"), ("Codigo", "codigo_asignatura"), ("Asignatura", "asignatura"), ("Seccion", "seccion"), ("Estado", "estado"), ("Dias", "dias"), ("Inicio", "hora_inicio"), ("Fin", "hora_fin"), ("Cupo", "cupo"), ("Inscritos", "inscritos")],
+    "estudiantes_asignatura": [("Codigo asignatura", "codigo_asignatura"), ("Asignatura", "asignatura"), ("Cuenta", "cuenta"), ("Estudiante", "estudiante"), ("Seccion", "seccion"), ("Anio", "anio"), ("Periodo", "periodo"), ("Estado", "estado"), ("Fecha matricula", "fecha_matricula")],
+    "cobros_estudiantiles": [("Cuenta", "codigo"), ("Estudiante", "persona"), ("Mes", "mes"), ("Concepto", "concepto"), ("Monto", "monto"), ("Pagado", "pagado"), ("Saldo", "saldo"), ("Moneda", "moneda"), ("Vence", "vence_en"), ("Estado", "estado")],
+    "nomina_docente": [("Empleado", "codigo"), ("Docente", "persona"), ("Mes", "mes"), ("Concepto", "concepto"), ("Monto", "monto"), ("Pagado", "pagado"), ("Saldo", "saldo"), ("Moneda", "moneda"), ("Vence", "vence_en"), ("Estado", "estado")],
+    "asignaturas_sin_oferta": [("Carrera", "carrera"), ("Codigo", "codigo_asignatura"), ("Asignatura", "asignatura"), ("UV", "unidades_valorativas")],
+    "poblacion_carrera": [("Codigo", "codigo_carrera"), ("Carrera", "carrera"), ("Estudiantes", "estudiantes"), ("Activos", "activos"), ("Inactivos", "inactivos")],
+    "matricula_estado": [("Anio", "anio"), ("Periodo", "periodo"), ("Codigo carrera", "codigo_carrera"), ("Carrera", "carrera"), ("Estado", "estado"), ("Matriculas", "matriculas"), ("Estudiantes", "estudiantes")],
 }
 
 
 def valor(item, campo):
-    dato = getattr(item, campo, None)
+    dato = item.get(campo) if isinstance(item, dict) else getattr(item, campo, None)
     if dato is None:
         return ""
     if isinstance(dato, bool):
@@ -33,7 +44,7 @@ def valor(item, campo):
 
 
 def valor_json(item, campo):
-    dato = getattr(item, campo, None)
+    dato = item.get(campo) if isinstance(item, dict) else getattr(item, campo, None)
     if isinstance(dato, (date, datetime)):
         return dato.isoformat()
     if isinstance(dato, Decimal):
@@ -110,6 +121,29 @@ def exportar_excel(modulo, registros):
     libro.save(archivo)
     archivo.seek(0)
     return StreamingResponse(archivo, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f'attachment; filename="reporte_{modulo}.xlsx"'})
+
+
+def previsualizar_excel(modulo, registros):
+    columnas = COLUMNAS[modulo]
+    encabezados = "".join(f"<th>{escape(titulo)}</th>" for titulo, _ in columnas)
+    filas = "".join(
+        "<tr>" + "".join(f"<td>{escape(str(valor(item, campo)))}</td>" for _, campo in columnas) + "</tr>"
+        for item in registros[:50]
+    )
+    html = (
+        '<!doctype html><html lang="es"><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<style>body{font:14px system-ui;background:#f5f6f8;color:#202936;margin:0;padding:24px}'
+        'h1{font-size:18px;margin:0 0 8px}p{color:#566274;margin:0 0 18px}'
+        'table{border-collapse:collapse;background:white;min-width:100%}'
+        'th,td{border:1px solid #cbd5e1;padding:9px 12px;text-align:left;white-space:nowrap}'
+        'th{background:#5b0309;color:white;font-weight:700}tr:nth-child(even){background:#f8fafc}'
+        '.hoja{overflow:auto;border:1px solid #cbd5e1;border-radius:8px}</style>'
+        f'<h1>Vista de hoja de calculo: {escape(modulo.replace("_", " ").title())}</h1>'
+        f'<p>{len(registros)} registros. Se muestran los primeros {min(len(registros), 50)}; el Excel descargado incluye todos.</p>'
+        f'<div class="hoja"><table><thead><tr>{encabezados}</tr></thead><tbody>{filas}</tbody></table></div></html>'
+    )
+    return Response(content=html, media_type="text/html; charset=utf-8", headers={"Cache-Control": "no-store"})
 
 
 def exportar_pdf(modulo, registros):

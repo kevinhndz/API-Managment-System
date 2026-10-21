@@ -1,15 +1,34 @@
 from sqlalchemy.orm import Session
 from modulos.reportes.repository import ReportesRepository as repo
-from modulos.reportes.exportadores import COLUMNAS, valor_json, exportar_csv, exportar_excel, exportar_json, exportar_pdf
+from modulos.reportes.estrategicos import CONSULTAS
+from modulos.finanzas.service import listar_saldos
+from modulos.reportes.exportadores import COLUMNAS, valor_json, exportar_csv, exportar_excel, exportar_json, exportar_pdf, previsualizar_excel
 from modulos.auditoria.registro import registrar_evento
 from core.excepciones import AccesoProhibidoError, DatosInvalidosError
 
 
 class ReportesService:
     @staticmethod
-    def descargar_reporte(db: Session, modulo, formato, usuario, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None):
+    def previsualizar_archivo(db: Session, modulo, formato, usuario, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None, mes=None, docente_id=None, asignatura_id=None):
         registros = ReportesService.consultar_registros(
-            db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta,
+            db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes, docente_id, asignatura_id,
+        )
+        if formato == "xlsx":
+            return previsualizar_excel(modulo, registros)
+        if formato == "pdf":
+            respuesta = exportar_pdf(modulo, registros)
+        elif formato == "csv":
+            respuesta = exportar_csv(modulo, registros)
+        else:
+            respuesta = exportar_json(modulo, registros)
+        respuesta.headers["Content-Disposition"] = "inline"
+        respuesta.headers["Cache-Control"] = "no-store"
+        return respuesta
+
+    @staticmethod
+    def descargar_reporte(db: Session, modulo, formato, usuario, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None, mes=None, docente_id=None, asignatura_id=None):
+        registros = ReportesService.consultar_registros(
+            db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes, docente_id, asignatura_id,
         )
         if formato == "xlsx":
             respuesta = exportar_excel(modulo, registros)
@@ -26,12 +45,26 @@ class ReportesService:
         return respuesta
 
     @staticmethod
-    def consultar_registros(db: Session, modulo: str, usuario: dict, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None):
+    def consultar_registros(db: Session, modulo: str, usuario: dict, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None, mes=None, docente_id=None, asignatura_id=None):
         es_docente = usuario["rol"].casefold() == "docente"
         if es_docente and modulo != "calificaciones":
             raise AccesoProhibidoError("Los docentes solo pueden consultar reportes de sus calificaciones")
         if desde and hasta and desde > hasta:
             raise DatosInvalidosError("La fecha inicial no puede superar la fecha final")
+
+        if modulo in {"cobros_estudiantiles", "nomina_docente"}:
+            return listar_saldos(db, "ESTUDIANTE" if modulo == "cobros_estudiantiles" else "DOCENTE", mes=mes, estado=estado)
+
+        if modulo in CONSULTAS:
+            if es_docente:
+                raise AccesoProhibidoError("Este reporte requiere permiso de administrador")
+            if modulo in {"carga_docente", "detalle_carga_docente"}:
+                return CONSULTAS[modulo](db, periodo_id, docente_id)
+            if modulo == "estudiantes_asignatura":
+                return CONSULTAS[modulo](db, periodo_id, asignatura_id)
+            if modulo == "poblacion_carrera":
+                return CONSULTAS[modulo](db, carrera_id)
+            return CONSULTAS[modulo](db, periodo_id, carrera_id)
 
         if modulo == "matriculas":
             return repo.matriculas_repository(db, periodo_id, estudiante_id, estado, carrera_id, desde, hasta)
@@ -41,12 +74,12 @@ class ReportesService:
             return repo.estudiantes_repository(db, estado, carrera_id)
         if modulo == "docentes":
             return repo.docentes_repository(db, estado)
-        docente_id = usuario["docente_id"] if es_docente else None
+        docente_id = usuario["docente_id"] if es_docente else docente_id
         return repo.calificaciones_repository(db, periodo_id, carrera_id, docente_id)
 
     @staticmethod
-    def vista_previa(db: Session, modulo: str, usuario: dict, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None):
-        registros = ReportesService.consultar_registros(db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta)
+    def vista_previa(db: Session, modulo: str, usuario: dict, periodo_id=None, estudiante_id=None, estado=None, carrera_id=None, desde=None, hasta=None, mes=None, docente_id=None, asignatura_id=None):
+        registros = ReportesService.consultar_registros(db, modulo, usuario, periodo_id, estudiante_id, estado, carrera_id, desde, hasta, mes, docente_id, asignatura_id)
         columnas = COLUMNAS[modulo]
         return {
             "modulo": modulo,

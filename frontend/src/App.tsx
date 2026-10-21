@@ -23,6 +23,7 @@ const SeccionesPage = lazy(() => import('./pages/SeccionesPage').then((module) =
 const MatriculasPage = lazy(() => import('./pages/MatriculasPage').then((module) => ({ default: module.MatriculasPage })))
 const CalificacionesPage = lazy(() => import('./pages/CalificacionesPage').then((module) => ({ default: module.CalificacionesPage })))
 const ReportesPage = lazy(() => import('./pages/ReportesPage').then((module) => ({ default: module.ReportesPage })))
+const FinanzasPage = lazy(() => import('./pages/FinanzasPage').then((module) => ({ default: module.FinanzasPage })))
 const ActividadPage = lazy(() => import('./pages/ActividadPage').then((module) => ({ default: module.ActividadPage })))
 const SolicitudesCuentaPage = lazy(() => import('./pages/SolicitudesCuentaPage').then((module) => ({ default: module.SolicitudesCuentaPage })))
 
@@ -58,6 +59,7 @@ export function App() {
           <Route element={<AdministratorRoute />}>
             <Route path="aulas" element={<Suspense fallback={<PageLoader />}><AulasPage /></Suspense>} />
             <Route path="docentes" element={<Suspense fallback={<PageLoader />}><DocentesPage /></Suspense>} />
+            <Route path="finanzas" element={<Suspense fallback={<PageLoader />}><FinanzasPage /></Suspense>} />
             <Route path="carreras" element={<Suspense fallback={<PageLoader />}><CarrerasPage /></Suspense>} />
             <Route path="asignaturas" element={<Suspense fallback={<PageLoader />}><AsignaturasPage /></Suspense>} />
             <Route path="periodos" element={<Suspense fallback={<PageLoader />}><PeriodosPage /></Suspense>} />

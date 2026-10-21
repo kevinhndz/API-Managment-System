@@ -12,9 +12,14 @@ from modulos.asignaturas.schema import (
     Revisar_Json_Editar_Asignatura,
 )
 from modulos.asignaturas.tabla import Asignaturas
+from modulos.reportes.estrategicos import estudiantes_por_asignatura
 
 
 class AsignaturasService:
+    @staticmethod
+    def estudiantes_service(db: Session, id: int, periodo_id: int | None = None):
+        AsignaturasService.buscar_service(db, id)
+        return estudiantes_por_asignatura(db, periodo_id, id)
     @staticmethod
     def crear_service(db: Session, json: Revisar_Json_Crear_Asignatura):
         check = repo.check_repository(db, json)

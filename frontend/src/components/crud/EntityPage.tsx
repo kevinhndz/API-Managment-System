@@ -42,7 +42,7 @@ export interface EntityFilter<T> {
   key: string
   label: string
   options: StatusOption[]
-  getValue: (item: T) => string | number | boolean | null | undefined
+  getValue: (item: T) => string | number | boolean | null | undefined | Array<string | number>
 }
 
 interface EntityPageProps<T extends EntityWithId, TPayload extends object> {
@@ -135,7 +135,8 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
     const sourceItems = hasActiveFilters ? filterItems ?? [] : resource.items
     return sourceItems.filter((item) => matchesQuery(item) && matchesStatus(item) && filters.every((filter) => {
       const selected = filterValues[filter.key]
-      return !selected || String(filter.getValue(item) ?? '') === selected
+      const value = filter.getValue(item)
+      return !selected || (Array.isArray(value) ? value.some((entry) => String(entry) === selected) : String(value ?? '') === selected)
     }))
   }, [query, resource.items, searchableText, statusFilter, filterItems, filterValues, filters, hasActiveFilters])
 
@@ -178,7 +179,9 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   }
 
   const updateField = (field: Field<TPayload>, value: string | boolean) => {
-    const nextValue = field.type === 'number' || field.valueType === 'number' ? value === '' && field.required === false ? null : Number(value) : value
+    const nextValue = field.type === 'number' || field.valueType === 'number'
+      ? value === '' && field.required === false ? null : Number(value)
+      : field.type === 'date' && value === '' && field.required === false ? null : value
     setForm((current) => ({ ...current, [field.key]: nextValue }))
   }
 

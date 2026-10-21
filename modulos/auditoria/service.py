@@ -24,5 +24,6 @@ class AuditoriaService:
             modulo=modulo,
             registro_id=registro_id,
             descripcion=descripcion,
+            ip_origen=usuario.get("ip_origen"),
         )
         repo.guardar_evento(db, evento)

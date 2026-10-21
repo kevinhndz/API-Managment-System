@@ -1,10 +1,12 @@
 from pathlib import Path
 import hmac
+import re
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
+from sqlalchemy.orm import Session
+from database.almacen import abrir_puerta_bd
 from modulos.notificaciones.router import router as router_notificaciones
 from modulos.aulas.router import router as router_aulas
 from modulos.carreras.router import router as router_carreras
@@ -22,17 +24,37 @@ from modulos.auditoria.router import router as router_auditoria
 from modulos.auditoria.registro import identificar_usuario, usuario_actual
 from modulos.solicitudes_cuenta.router import router as router_solicitudes_cuenta
 from modulos.dashboard.router import router as router_dashboard
+from modulos.suscripciones.router import router as router_suscripcion
+from modulos.suscripciones.dependencias import exigir_suscripcion
+from modulos.documentos.router import router as router_documentos
+from modulos.finanzas.router import router as router_finanzas
 from core.escuchadores import ExcepcionesGlobales as eg
 from modulos.carreras.tabla import Carreras
 from modulos.estudiantes.tabla import Estudiantes
 from modulos.aulas.tabla import Aulas
 from modulos.docentes.tabla import Docentes
-from utils.auth import permiso_admin
+from utils.auth import permiso_admin, permiso_usuario
 from core.config import settings
 
 app = FastAPI()
 Path(settings.UPLOADS_DIR).mkdir(parents=True, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=settings.UPLOADS_DIR), name="uploads")
+
+
+@app.get("/uploads/profiles/{nombre}")
+def servir_foto_perfil(
+    nombre: str,
+    usuario: dict = Depends(permiso_usuario),
+    db: Session = Depends(abrir_puerta_bd),
+):
+    if not re.fullmatch(r"[0-9a-f]{32}\.(?:jpg|png|webp)", nombre):
+        return JSONResponse(status_code=404, content={"detail": "Foto no encontrada"})
+    cuenta = db.query(Usuarios).filter(Usuarios.id == usuario["user_id"]).first()
+    if cuenta is None or cuenta.foto != f"/uploads/profiles/{nombre}":
+        return JSONResponse(status_code=404, content={"detail": "Foto no encontrada"})
+    archivo = Path(settings.UPLOADS_DIR).resolve() / "profiles" / nombre
+    if not archivo.is_file():
+        return JSONResponse(status_code=404, content={"detail": "Foto no encontrada"})
+    return FileResponse(archivo)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -74,12 +96,13 @@ async def proteger_cambios_con_cookie(request, call_next):
 
 @app.middleware("http")
 async def contexto_auditoria(request, call_next):
-    contexto = usuario_actual.set(
-        identificar_usuario(
-            request.headers.get("Authorization"),
-            request.cookies.get("campusflow_session"),
-        )
+    usuario = identificar_usuario(
+        request.headers.get("Authorization"),
+        request.cookies.get("campusflow_session"),
     )
+    if usuario is not None:
+        usuario = {**usuario, "ip_origen": request.client.host if request.client else None}
+    contexto = usuario_actual.set(usuario)
     try:
         return await call_next(request)
     finally:
@@ -94,10 +117,13 @@ app.include_router(router_periodos, dependencies=[Depends(permiso_admin)])
 app.include_router(router_secciones, dependencies=[Depends(permiso_admin)])
 app.include_router(router_matriculas)
 app.include_router(router_calificaciones)
-app.include_router(router_reportes)
-app.include_router(router_auditoria, dependencies=[Depends(permiso_admin)])
+app.include_router(router_reportes, dependencies=[Depends(exigir_suscripcion)])
+app.include_router(router_auditoria, dependencies=[Depends(permiso_admin), Depends(exigir_suscripcion)])
 app.include_router(router_login)
 app.include_router(router_notificaciones)
 app.include_router(router_solicitudes_cuenta)
 app.include_router(router_dashboard)
+app.include_router(router_suscripcion)
+app.include_router(router_documentos)
+app.include_router(router_finanzas)
 eg.directorio(app)

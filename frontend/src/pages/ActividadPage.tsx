@@ -23,6 +23,12 @@ function fechaLegible(value: string) {
   return new Intl.DateTimeFormat('es-HN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 
+function mostrarDato(valor: unknown) {
+  if (valor === null || valor === undefined) return '—'
+  if (typeof valor === 'boolean') return valor ? 'Si' : 'No'
+  return String(valor)
+}
+
 export function ActividadPage() {
   const [eventos, setEventos] = useState<AuditEvent[]>([])
   const [modulo, setModulo] = useState('')
@@ -148,6 +154,17 @@ export function ActividadPage() {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-navy-950 dark:text-white">{evento.usuario}<span className="font-normal text-slate-500 dark:text-slate-400"> · {evento.accion.toLocaleLowerCase('es')} en </span>{nombreModulo(evento.modulo)}</p>
                         <p className="mt-1 text-sm leading-5 text-slate-600 dark:text-slate-300">{evento.descripcion}{evento.registro_id ? ` (#${evento.registro_id})` : ''}</p>
+                        {Object.keys({ ...evento.datos_anteriores, ...evento.datos_nuevos }).length > 0 && (
+                          <dl className="mt-2 grid gap-1 text-xs text-slate-600 dark:text-slate-300">
+                            {Object.keys({ ...evento.datos_anteriores, ...evento.datos_nuevos }).map((campo) => (
+                              <div key={campo} className="flex flex-wrap gap-1">
+                                <dt className="font-semibold">{campo.replaceAll('_', ' ')}:</dt>
+                                <dd>{mostrarDato(evento.datos_anteriores?.[campo])} → {mostrarDato(evento.datos_nuevos?.[campo])}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        )}
+                        {evento.ip_origen && <p className="mt-1 text-xs text-slate-500">IP: {evento.ip_origen}</p>}
                       </div>
                       <time className="shrink-0 text-xs text-slate-500 dark:text-slate-400 sm:pt-1" dateTime={evento.fecha}>{fechaLegible(evento.fecha)}</time>
                     </li>

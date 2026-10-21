@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { descargarReporte } from '../services/api'
+import { descargarDocumento, descargarReporte, previsualizarDocumento, previsualizarHistorial, previsualizarReporte } from '../services/api'
 import { ReportesPage } from './ReportesPage'
 
 vi.mock('../contexts/AuthContext', () => ({
@@ -13,11 +13,21 @@ vi.mock('../hooks/useAcademicLabels', () => ({
     carreraOptions: [{ value: '8', label: 'ING · Ingeniería' }, { value: '9', label: 'ADM · Administración' }],
     periodoOptions: [{ value: '2', label: '2026 · período 2' }],
     estudianteOptions: [{ value: '17', label: '20260017 · Ana López' }, { value: '18', label: '20260018 · Luis Díaz' }],
+    docenteOptions: [{ value: '7', label: 'DOC-007 · Carlos Perez' }],
+    asignaturaOptions: [{ value: '4', label: 'MAT-1 · Matematicas' }],
   }),
 }))
 
 vi.mock('../services/api', () => ({
   descargarReporte: vi.fn(),
+  obtenerCargaDocente: vi.fn(),
+  descargarDocumento: vi.fn(),
+  previsualizarReporte: vi.fn(),
+  previsualizarHistorial: vi.fn(),
+  previsualizarDocumento: vi.fn(),
+  subirLogoInstitucional: vi.fn(),
+  urlLogoInstitucional: vi.fn(() => '/api/documentos/logo'),
+  INSTITUTION_SLUG: 'uphn',
 }))
 
 describe('ReportesPage', () => {
@@ -29,9 +39,11 @@ describe('ReportesPage', () => {
 
   it('ofrece Excel, PDF, CSV y JSON y solicita la descarga seleccionada', async () => {
     vi.mocked(descargarReporte).mockResolvedValue(undefined)
+    vi.mocked(previsualizarReporte).mockResolvedValue(new Blob(['Cuenta,Estudiante\n20260017,Ana López'], { type: 'text/csv' }))
     render(<ReportesPage />)
 
     expect(screen.queryByRole('combobox', { name: 'Módulo' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Matriculas y secciones: abrir grupo de reportes' }))
     fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
     expect(screen.getByRole('button', { name: 'Descargar Excel' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Descargar PDF' })).toBeInTheDocument()
@@ -49,17 +61,66 @@ describe('ReportesPage', () => {
     fireEvent.click(csvButton)
 
     await waitFor(() => {
-      expect(descargarReporte).toHaveBeenCalledWith('matriculas', 'csv', { carrera_id: 8, estudiante_id: 17 })
+      expect(previsualizarReporte).toHaveBeenCalledWith('matriculas', 'csv', { carrera_id: 8, estudiante_id: 17 })
     })
+    expect(descargarReporte).not.toHaveBeenCalled()
+    expect(await screen.findByRole('dialog', { name: 'Vista previa de Matrículas' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar descarga' }))
+    await waitFor(() => expect(descargarReporte).toHaveBeenCalledWith('matriculas', 'csv', { carrera_id: 8, estudiante_id: 17 }))
+  })
+
+  it('previsualiza el historial desde Reportes y solo lo emite al confirmar', async () => {
+    const URLOriginal = URL
+    vi.stubGlobal('URL', class extends URLOriginal {
+      static createObjectURL = vi.fn(() => 'blob:historial')
+      static revokeObjectURL = vi.fn()
+    })
+    vi.mocked(previsualizarHistorial).mockResolvedValue(new Blob(['%PDF'], { type: 'application/pdf' }))
+    vi.mocked(descargarDocumento).mockResolvedValue(undefined)
+    render(<ReportesPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir grupo de reportes' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Historial academico: abrir reporte académico' }))
+    expect(screen.queryByRole('button', { name: 'Descargar Excel' })).not.toBeInTheDocument()
+    fireEvent.change(screen.getByRole('combobox', { name: 'Estudiante' }), { target: { value: '20260017' } })
+    fireEvent.click(screen.getByRole('option', { name: '20260017 · Ana López' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Descargar PDF' }))
+
+    expect(await screen.findByRole('dialog', { name: 'Vista previa de Historial academico' })).toBeInTheDocument()
+    expect(previsualizarHistorial).toHaveBeenCalledWith(17)
+    expect(descargarDocumento).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar descarga' }))
+    await waitFor(() => expect(descargarDocumento).toHaveBeenCalledWith('historial-academico', 17))
+  })
+
+  it('previsualiza la constancia laboral antes de emitirla', async () => {
+    const URLOriginal = URL
+    vi.stubGlobal('URL', class extends URLOriginal {
+      static createObjectURL = vi.fn(() => 'blob:constancia')
+      static revokeObjectURL = vi.fn()
+    })
+    vi.mocked(previsualizarDocumento).mockResolvedValue(new Blob(['%PDF'], { type: 'application/pdf' }))
+    vi.mocked(descargarDocumento).mockResolvedValue(undefined)
+    render(<ReportesPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Docentes: abrir grupo de reportes' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Constancia laboral: abrir reporte académico' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Docente' }), { target: { value: 'DOC-007' } })
+    fireEvent.click(screen.getByRole('option', { name: 'DOC-007 · Carlos Perez' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Descargar PDF' }))
+    await waitFor(() => expect(previsualizarDocumento).toHaveBeenCalledWith('constancia-laboral', 7))
+    expect(descargarDocumento).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar descarga' }))
+    await waitFor(() => expect(descargarDocumento).toHaveBeenCalledWith('constancia-laboral', 7))
   })
 
   it('abre el reporte elegido y permite regresar a la cuadrícula', () => {
     render(<ReportesPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir grupo de reportes' }))
     fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir reporte académico' }))
     expect(screen.getByRole('heading', { name: 'Estudiantes' })).toBeInTheDocument()
     expect(screen.queryByRole('combobox', { name: 'Módulo' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Elegir otro reporte' }))
-    expect(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Historial academico: abrir reporte académico' })).toBeInTheDocument()
   })
 
   it('mantiene los filtros activos y descarta respuestas antiguas del hilo', async () => {
@@ -83,10 +144,11 @@ describe('ReportesPage', () => {
     vi.stubGlobal('Worker', TrabajadorDePrueba)
     render(<ReportesPage />)
 
+    fireEvent.click(screen.getByRole('button', { name: 'Matriculas y secciones: abrir grupo de reportes' }))
     fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Consultar vista previa' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Consultar datos' }))
     expect(screen.getByRole('status')).toHaveTextContent('Consultando en segundo plano')
-    expect(trabajadores[0].postMessage).toHaveBeenCalledWith({ id: 2, modulo: 'matriculas', filtros: {} })
+    expect(trabajadores[0].postMessage).toHaveBeenCalledWith({ id: 2, modulo: 'matriculas', filtros: {}, institucion: 'uphn' })
 
     fireEvent.click(screen.getByRole('button', { name: 'Actualizar consulta' }))
     trabajadores[0].onmessage?.({ data: { id: 2, estado: 'completada', datos: { total_registros: 1, columnas: [], registros: [] } } } as MessageEvent)
@@ -114,8 +176,9 @@ describe('ReportesPage', () => {
     vi.stubGlobal('Worker', TrabajadorDePrueba)
 
     render(<ReportesPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir grupo de reportes' }))
     fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir reporte académico' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Consultar vista previa' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Consultar datos' }))
     trabajadores[0].onmessage?.({ data: { id: 2, estado: 'completada', datos: {
       modulo: 'estudiantes', total_registros: 1,
       columnas: [{ titulo: 'Estado', campo: 'estado' }], registros: [{ estado: false }],
@@ -136,8 +199,9 @@ describe('ReportesPage', () => {
     vi.stubGlobal('Worker', TrabajadorDePrueba)
 
     render(<ReportesPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Matriculas y secciones: abrir grupo de reportes' }))
     fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Consultar vista previa' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Consultar datos' }))
     trabajadores[0].onmessage?.({ data: { id: 2, estado: 'completada', datos: {
       modulo: 'matriculas', total_registros: 1,
       columnas: [{ titulo: 'Estado', campo: 'estado' }], registros: [{ estado: 'REPROBADA' }],

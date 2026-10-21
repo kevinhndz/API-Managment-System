@@ -31,6 +31,11 @@ export interface Docente {
   apellidos: string
   foto: string | null
   correo: string
+  especialidad: string
+  cargo: string | null
+  departamento: string | null
+  tipo_contrato: string | null
+  fecha_ingreso: string | null
   estado: boolean
 }
 

@@ -35,7 +35,10 @@ describe('aulasApi', () => {
 
     await aulasApi.remove(4)
 
-    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/login/csrf', { credentials: 'include' })
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/login/csrf', {
+      credentials: 'include',
+      headers: { 'X-Institution-Slug': 'uphn' },
+    })
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
       '/api/aulas/4',
@@ -83,7 +86,7 @@ describe('descargarReporte', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/reportes/estudiantes/descargar/' + formato + '?estado=ACTIVO',
-      { credentials: 'include' },
+      { credentials: 'include', headers: { 'X-Institution-Slug': 'uphn' } },
     )
     expect(crearUrl).toHaveBeenCalledTimes(1)
     expect(crearUrl.mock.calls[0]?.[0]).toMatchObject({

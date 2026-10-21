@@ -16,6 +16,11 @@ from modulos.docentes.tabla import Docentes
 
 class DocentesService:
     @staticmethod
+    def carga_service(db: Session, docente_id: int | None = None, periodo_id: int | None = None):
+        if docente_id is not None:
+            DocentesService.buscar_service(db, docente_id)
+        return repo.carga_repository(db, docente_id, periodo_id)
+    @staticmethod
     def crear_service(db: Session, json: Revisar_Json_Crear_Docente):
         check = repo.check_repository(db, json)
         if check is not None:
@@ -27,6 +32,10 @@ class DocentesService:
             apellidos=json.apellidos,
             correo=json.correo,
             especialidad=json.especialidad,
+            cargo=json.cargo,
+            departamento=json.departamento,
+            tipo_contrato=json.tipo_contrato,
+            fecha_ingreso=json.fecha_ingreso,
             estado=json.estado,
         )
         return repo.guardar_docente_repository(db, nueva_docente)
@@ -66,6 +75,9 @@ class DocentesService:
         check.apellidos = json.apellidos
         check.correo = json.correo
         check.especialidad = json.especialidad
+        for campo in ("cargo", "departamento", "tipo_contrato", "fecha_ingreso"):
+            if campo in json.model_fields_set:
+                setattr(check, campo, getattr(json, campo))
         check.estado = json.estado
         return repo.guardar_docente_repository(db, check)
 

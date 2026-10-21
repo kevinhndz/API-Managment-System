@@ -31,7 +31,7 @@ async function obtenerTokenCsrf() {
 
 export function resolverFotoUrl(foto: string | null | undefined) {
   if (!foto) return null
-  return foto.startsWith('/uploads/') ? `${API_URL}${foto}` : foto
+  return foto.startsWith('/uploads/profiles/') ? `${API_URL}${foto}?institucion=${encodeURIComponent(INSTITUTION_SLUG)}` : foto
 }
 
 
@@ -239,9 +239,51 @@ function createCrudService<T, TPayload>(path: string): CrudService<T, TPayload> 
 
 export const aulasApi = createCrudService<Aula, AulaPayload>('/aulas')
 export const docentesApi = createCrudService<Docente, DocentePayload>('/docentes')
+export interface CargaDocente {
+  docente_id: number
+  numero_empleado: string
+  nombres: string
+  apellidos: string
+  tipo_contrato: string | null
+  departamento: string | null
+  seccion: string
+  estado_seccion: string
+  dias: string
+  hora_inicio: string
+  hora_fin: string
+  asignatura_id: number
+  codigo_asignatura: string
+  asignatura: string
+  periodo_id: number
+  anio: number
+  numero: number
+  vigente: boolean
+}
+export function listarCargaDocente() { return request<CargaDocente[]>('/docentes/carga') }
+export function obtenerCargaDocente(id: number, periodoId?: number) {
+  const params = new URLSearchParams()
+  if (periodoId) params.set('periodo_id', String(periodoId))
+  return request<CargaDocente[]>(`/docentes/${id}/carga?${params}`)
+}
 export const carrerasApi = createCrudService<Carrera, CarreraPayload>('/carreras')
 export const estudiantesApi = createCrudService<Estudiante, EstudiantePayload>('/estudiantes')
 export const asignaturasApi = createCrudService<Asignatura, AsignaturaPayload>('/asignaturas')
+export interface EstudianteAsignatura {
+  codigo_asignatura: string
+  asignatura: string
+  cuenta: string
+  estudiante: string
+  seccion: string
+  anio: number
+  periodo: number
+  estado: string
+  fecha_matricula: string
+}
+export function listarEstudiantesAsignatura(id: number, periodoId?: number) {
+  const params = new URLSearchParams()
+  if (periodoId) params.set('periodo_id', String(periodoId))
+  return request<EstudianteAsignatura[]>(`/asignaturas/${id}/estudiantes?${params}`)
+}
 export const periodosApi = createCrudService<Periodo, PeriodoPayload>('/periodos')
 export const seccionesApi = createCrudService<Seccion, SeccionPayload>('/secciones')
 export const matriculasApi = createCrudService<Matricula, MatriculaPayload>('/matriculas')
@@ -253,12 +295,15 @@ export const dashboardApi = {
   },
 }
 
-export type ReportModule = 'matriculas' | 'secciones' | 'estudiantes' | 'docentes' | 'calificaciones'
+export type ReportModule = 'matriculas' | 'secciones' | 'estudiantes' | 'docentes' | 'calificaciones' | 'matricula_carrera' | 'ocupacion_secciones' | 'rendimiento_asignaturas' | 'carga_docente' | 'detalle_carga_docente' | 'estudiantes_asignatura' | 'cobros_estudiantiles' | 'nomina_docente' | 'asignaturas_sin_oferta' | 'poblacion_carrera' | 'matricula_estado'
 export type ReportFormat = 'xlsx' | 'pdf' | 'csv' | 'json'
 
 export interface ReportFilters {
   periodo_id?: number
   estudiante_id?: number
+  docente_id?: number
+  asignatura_id?: number
+  mes?: string
   estado?: string
   carrera_id?: number
   desde?: string
@@ -272,6 +317,9 @@ export interface AuditEvent {
   modulo: string
   registro_id: number | null
   descripcion: string
+  ip_origen?: string | null
+  datos_anteriores?: Record<string, unknown> | null
+  datos_nuevos?: Record<string, unknown> | null
   fecha: string
 }
 
@@ -293,6 +341,49 @@ function queryString<T extends object>(filters: T) {
     if (value !== undefined && value !== '') query.set(key, String(value))
   })
   return query.toString()
+}
+
+async function obtenerVistaArchivo(path: string): Promise<Blob> {
+  const response = await fetch(`${API_URL}${path}`, {
+    credentials: 'include',
+    headers: headersInstitucion(),
+  })
+  if (!response.ok) {
+    if (response.status === 401) window.location.assign('/login')
+    const error = (await response.json().catch(() => null)) as { detail?: string } | null
+    throw new ApiError(error?.detail ?? 'No se pudo preparar la vista previa.', response.status)
+  }
+  return response.blob()
+}
+
+export function previsualizarReporte(modulo: ReportModule, formato: ReportFormat, filtros: ReportFilters) {
+  return obtenerVistaArchivo(`/reportes/${modulo}/previsualizar/${formato}?${queryString(filtros)}`)
+}
+
+export function previsualizarDocumento(tipo: 'historial-academico' | 'constancia-estudiantil' | 'constancia-laboral', id: number) {
+  return obtenerVistaArchivo(`/documentos/${tipo}/${id}/vista-previa`)
+}
+
+export function previsualizarHistorial(estudianteId: number) {
+  return previsualizarDocumento('historial-academico', estudianteId)
+}
+
+export function urlLogoInstitucional(revision = 0) {
+  return `${API_URL}/documentos/logo?institucion=${encodeURIComponent(INSTITUTION_SLUG)}&v=${revision}`
+}
+
+export async function subirLogoInstitucional(archivo: File): Promise<void> {
+  const tokenCsrf = await obtenerTokenCsrf()
+  const response = await fetch(`${API_URL}/documentos/logo`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { ...headersInstitucion(), 'X-CSRF-Token': tokenCsrf, 'Content-Type': archivo.type },
+    body: archivo,
+  })
+  if (!response.ok) {
+    const error = (await response.json().catch(() => null)) as { detail?: string } | null
+    throw new ApiError(error?.detail ?? 'No se pudo guardar el logo.', response.status)
+  }
 }
 
 export async function descargarReporte(modulo: ReportModule, formato: ReportFormat, filtros: ReportFilters) {
@@ -329,6 +420,66 @@ export async function descargarReporte(modulo: ReportModule, formato: ReportForm
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
+export async function descargarDocumento(tipo: 'historial-academico' | 'constancia-laboral' | 'constancia-estudiantil', id: number) {
+  const tokenCsrf = await obtenerTokenCsrf()
+  const response = await fetch(`${API_URL}/documentos/${tipo}/${id}`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { ...headersInstitucion(), 'X-CSRF-Token': tokenCsrf },
+  })
+  if (!response.ok) {
+    const error = (await response.json().catch(() => null)) as { detail?: string } | null
+    throw new ApiError(error?.detail ?? 'No se pudo emitir el documento.', response.status)
+  }
+  const url = URL.createObjectURL(await response.blob())
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = `${tipo}_${id}.pdf`
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 export function listarActividad(filtros: { modulo?: string; accion?: string; usuario?: string; desde?: string; hasta?: string } = {}) {
   return request<AuditEvent[]>(`/auditoria/?${queryString(filtros)}`)
+}
+
+export interface ObligacionFinanciera {
+  id: number
+  tipo: 'ESTUDIANTE' | 'DOCENTE'
+  sujeto_id: number
+  codigo: string
+  persona: string
+  mes: string
+  concepto: string
+  monto: string
+  pagado: string
+  saldo: string
+  moneda: string
+  vence_en: string
+  estado: 'PENDIENTE' | 'VENCIDO' | 'PARCIAL' | 'PAGADO'
+}
+
+export interface CrearObligacionFinanciera {
+  tipo: 'ESTUDIANTE' | 'DOCENTE'
+  estudiante_id?: number
+  docente_id?: number
+  mes: string
+  concepto: string
+  monto: number
+  moneda: string
+  vence_en: string
+}
+
+export const finanzasApi = {
+  listar(filtros: { tipo?: string; mes?: string; estado?: string } = {}) {
+    return request<ObligacionFinanciera[]>(`/finanzas/obligaciones?${queryString(filtros)}`)
+  },
+  crear(datos: CrearObligacionFinanciera) {
+    return request<ObligacionFinanciera>('/finanzas/obligaciones', { method: 'POST', body: JSON.stringify(datos) })
+  },
+  registrarPago(id: number, datos: { referencia: string; monto: number; fecha: string; metodo: string }) {
+    return request<{ id: number }>(`/finanzas/obligaciones/${id}/pagos`, { method: 'POST', body: JSON.stringify(datos) })
+  },
 }

@@ -67,7 +67,7 @@ export function EstudiantesPage() {
             area: labels.carreras[item.carrera_id] ?? `Carrera #${item.carrera_id}`,
           }),
         })}
-        renderActions={(_, handlers) => (
+        renderActions={(_estudiante, handlers) => (
           <FolderFloat
             items={[
               { label: 'Ver carnet', value: 'carnet' },
@@ -79,7 +79,7 @@ export function EstudiantesPage() {
               ]),
             ]}
             label="Acciones"
-            sublabel="3 opciones"
+            sublabel="Opciones"
             trigger="hover"
             closeOnSelect
             physics

@@ -19,6 +19,7 @@ from modulos.solicitudes_cuenta.tabla import (
     SolicitudesRecuperacion,
     VerificacionesCorreoSolicitud,
 )
+from modulos.suscripciones.tabla import Suscripciones
 from main import app
 from utils.hash import encriptar_contrasena
 from utils.token import crear_token
@@ -451,9 +452,11 @@ def _cliente_con_bd_en_memoria():
     SolicitudesCuenta.__table__.create(motor)
     SolicitudesRecuperacion.__table__.create(motor)
     VerificacionesCorreoSolicitud.__table__.create(motor)
+    Suscripciones.__table__.create(motor)
 
     def abrir_bd_prueba():
         with Session(motor) as db:
+            db.info["institucion_id"] = 1
             yield db
 
     app.dependency_overrides[abrir_puerta_bd] = abrir_bd_prueba
@@ -616,7 +619,11 @@ def test_solicitud_de_navegador_necesita_token_csrf_aunque_no_haya_sesion():
         motor.dispose()
 
 
-def test_origen_autorizado_y_token_csrf_pueden_enviar_solicitud_de_navegador():
+def test_origen_autorizado_y_token_csrf_pueden_enviar_solicitud_de_navegador(monkeypatch):
+    monkeypatch.setattr(settings, "SMTP_HOST", "smtp.prueba")
+    monkeypatch.setattr(settings, "SMTP_USER", "usuario")
+    monkeypatch.setattr(settings, "SMTP_PASSWORD", "clave")
+    monkeypatch.setattr(settings, "SMTP_FROM", "prueba@example.test")
     cliente, motor = _cliente_con_bd_en_memoria()
 
     try:
@@ -657,7 +664,11 @@ def test_registro_publico_limita_solicitudes_por_ip():
         motor.dispose()
 
 
-def test_recuperacion_limita_envios_por_ip():
+def test_recuperacion_limita_envios_por_ip(monkeypatch):
+    monkeypatch.setattr(settings, "SMTP_HOST", "smtp.prueba")
+    monkeypatch.setattr(settings, "SMTP_USER", "usuario")
+    monkeypatch.setattr(settings, "SMTP_PASSWORD", "clave")
+    monkeypatch.setattr(settings, "SMTP_FROM", "prueba@example.test")
     cliente, motor = _cliente_con_bd_en_memoria()
 
     try:
@@ -827,6 +838,8 @@ def test_cors_solo_refleja_origenes_configurados():
 def test_busqueda_de_actividad_trata_el_texto_del_usuario_como_dato():
     cliente, motor = _cliente_con_bd_en_memoria()
     with Session(motor) as db:
+        ahora = datetime.now(timezone.utc)
+        db.add(Suscripciones(institucion_id=1, plan="PILOTO", estado="PRUEBA", inicia_en=ahora, vence_en=ahora + timedelta(days=30)))
         db.add(Usuarios(id=81, usuario="admin-sql", contrasena="hash", rol="Administrador", activo=True))
         db.add_all([
             EventoAuditoria(usuario_id=81, usuario="admin-sql", accion="CREAR", modulo="aulas", descripcion="Aula creada"),

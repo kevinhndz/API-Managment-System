@@ -6,6 +6,7 @@ const { listarDocentes } = vi.hoisted(() => ({
 }))
 
 vi.mock('../services/api', () => ({
+  listarCargaDocente: vi.fn().mockResolvedValue([]),
   docentesApi: {
     list: listarDocentes,
     get: vi.fn(),
