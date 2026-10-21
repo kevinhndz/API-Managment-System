@@ -257,6 +257,7 @@ export interface CargaDocente {
   periodo_id: number
   anio: number
   numero: number
+  vigente: boolean
 }
 export function listarCargaDocente() { return request<CargaDocente[]>('/docentes/carga') }
 export const carrerasApi = createCrudService<Carrera, CarreraPayload>('/carreras')
