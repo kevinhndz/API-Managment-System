@@ -1,12 +1,14 @@
 """Provision one SaaS institution and its first administrator."""
 
 import argparse
+from datetime import datetime, timedelta, timezone
 from getpass import getpass
 
 from sqlalchemy import select
 
 from database.almacen import Instituciones, llaves
 from modulos.login.tabla import Usuarios
+from modulos.suscripciones.tabla import Suscripciones
 from utils.hash import encriptar_contrasena
 
 
@@ -39,6 +41,16 @@ def main() -> None:
         db.add(institucion)
         db.flush()
         db.info["institucion_id"] = institucion.id
+        inicio = datetime.now(timezone.utc)
+        db.add(
+            Suscripciones(
+                institucion_id=institucion.id,
+                plan="PILOTO",
+                estado="PRUEBA",
+                inicia_en=inicio,
+                vence_en=inicio + timedelta(days=30),
+            )
+        )
 
         administrador_existente = db.scalar(
             select(Usuarios.id).where(Usuarios.usuario == args.usuario.strip())
