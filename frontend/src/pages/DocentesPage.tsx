@@ -5,7 +5,6 @@ import { EntityPage, StatusBadge } from '../components/crud/EntityPage'
 import { PersonCarnetDialog, type PersonCarnetData } from '../components/people/PersonCarnetDialog'
 import { ActionMenu } from '../components/ui/ActionMenu'
 import { Modal } from '../components/ui/Modal'
-import { useAcademicLabels } from '../hooks/useAcademicLabels'
 import { listarCargaDocente, docentesApi, type CargaDocente } from '../services/api'
 import type { Docente, DocentePayload } from '../types/api'
 
@@ -24,7 +23,6 @@ const emptyDocente: DocentePayload = {
 
 export function DocentesPage() {
   const [carnet, setCarnet] = useState<PersonCarnetData | null>(null)
-  const labels = useAcademicLabels()
   const [carga, setCarga] = useState<CargaDocente[]>([])
   const [catalogoDocentes, setCatalogoDocentes] = useState<Docente[]>([])
   const [docenteCarga, setDocenteCarga] = useState<Docente | null>(null)
@@ -39,11 +37,11 @@ export function DocentesPage() {
   const filtros = useMemo(() => [
     { key: 'contrato', label: 'Tipo de contrato', options: [...new Set(catalogoDocentes.map((item) => item.tipo_contrato).filter((item): item is string => Boolean(item)))].map((value) => ({ value, label: value })), getValue: (item: Docente) => item.tipo_contrato },
     { key: 'departamento', label: 'Departamento', options: [...new Set(catalogoDocentes.map((item) => item.departamento).filter((item): item is string => Boolean(item)))].map((value) => ({ value, label: value })), getValue: (item: Docente) => item.departamento },
-    { key: 'asignatura', label: 'Asignatura', options: labels.asignaturaOptions, getValue: (item: Docente) => carga.filter((registro) => registro.docente_id === item.id).map((registro) => registro.asignatura_id) },
+    { key: 'asignatura', label: 'Asignatura', options: [...new Map(carga.map((item) => [item.asignatura_id, { value: String(item.asignatura_id), label: `${item.codigo_asignatura} · ${item.asignatura}` }])).values()], getValue: (item: Docente) => carga.filter((registro) => registro.docente_id === item.id).map((registro) => registro.asignatura_id) },
     { key: 'seccion', label: 'Seccion', options: [...new Set(carga.map((item) => item.seccion))].map((value) => ({ value, label: value })), getValue: (item: Docente) => carga.filter((registro) => registro.docente_id === item.id).map((registro) => registro.seccion) },
-    { key: 'periodo', label: 'Periodo', options: labels.periodoOptions, getValue: (item: Docente) => carga.filter((registro) => registro.docente_id === item.id).map((registro) => registro.periodo_id) },
+    { key: 'periodo', label: 'Periodo', options: [...new Map(carga.map((item) => [item.periodo_id, { value: String(item.periodo_id), label: `${item.anio} · periodo ${item.numero}` }])).values()], getValue: (item: Docente) => carga.filter((registro) => registro.docente_id === item.id).map((registro) => registro.periodo_id) },
     { key: 'secciones', label: 'Numero de secciones', options: [{ value: '0', label: 'Sin secciones' }, { value: '1', label: '1 seccion' }, { value: '2', label: '2 secciones' }, { value: '3', label: '3 o mas' }], getValue: (item: Docente) => { const total = carga.filter((registro) => registro.docente_id === item.id).length; return total >= 3 ? 3 : total } },
-  ], [carga, catalogoDocentes, labels.asignaturaOptions, labels.periodoOptions])
+  ], [carga, catalogoDocentes])
   const closeCarnet = useCallback(() => setCarnet(null), [])
 
   return (

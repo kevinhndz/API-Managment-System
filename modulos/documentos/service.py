@@ -137,16 +137,16 @@ def constancia_laboral(db: Session, docente_id: int, usuario_id: int, emitir: bo
         raise RecursoNoEncontradoError("Docente no encontrado")
     if not docente.estado:
         raise DatosInvalidosError("Solo se puede emitir constancia laboral de un docente activo")
-    if not docente.cargo or not docente.fecha_ingreso:
-        raise DatosInvalidosError("Completa cargo y fecha de ingreso del docente antes de emitir la constancia")
-
     estilos = getSampleStyleSheet()
     nombre = f"{docente.nombres} {docente.apellidos}"
     parrafos = [
         f"{_texto(institucion.nombre)} hace constar que {_texto(nombre)}, con numero de empleado "
         f"{_texto(docente.numero_empleado)}, figura como docente activo en sus registros.",
-        f"Cargo: {_texto(docente.cargo)}. Fecha de ingreso registrada: {docente.fecha_ingreso:%Y-%m-%d}.",
     ]
+    if docente.cargo:
+        parrafos.append(f"Cargo: {_texto(docente.cargo)}.")
+    if docente.fecha_ingreso:
+        parrafos.append(f"Fecha de ingreso registrada: {docente.fecha_ingreso:%Y-%m-%d}.")
     if docente.departamento:
         parrafos.append(f"Departamento: {_texto(docente.departamento)}.")
     if docente.tipo_contrato:

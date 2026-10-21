@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from sqlalchemy.orm import Session
 
@@ -66,7 +66,8 @@ def listar_matriculas_activas(db: Session, estudiante_id: int, institucion_id: i
         .join(Asignaturas, Asignaturas.id == Secciones.asignatura_id)
         .join(Periodos, Periodos.id == Secciones.periodo_id)
         .filter(Matriculas.estudiante_id == estudiante_id, Matriculas.institucion_id == institucion_id,
-                Matriculas.estado == "ACTIVA")
+                Matriculas.estado == "ACTIVA", Periodos.activo.is_(True),
+                Periodos.fecha_inicio <= date.today(), Periodos.fecha_fin >= date.today())
         .order_by(Periodos.anio.desc(), Periodos.numero.desc(), Asignaturas.codigo)
         .all()
     )

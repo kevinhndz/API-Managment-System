@@ -1,6 +1,8 @@
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from core.excepciones import RecursoDuplicadoError
 from modulos.docentes.tabla import Docentes
 from modulos.estudiantes.tabla import Estudiantes
 from modulos.finanzas.tabla import ObligacionFinanciera, PagoFinanciero
@@ -17,6 +19,15 @@ def buscar_obligacion(db: Session, id: int, bloquear: bool = False):
         ObligacionFinanciera.institucion_id == db.info["institucion_id"],
     )
     return (consulta.with_for_update() if bloquear else consulta).one_or_none()
+
+
+def obligacion_duplicada(db: Session, tipo: str, sujeto_id: int, mes: str, concepto: str) -> bool:
+    campo = ObligacionFinanciera.estudiante_id if tipo == "ESTUDIANTE" else ObligacionFinanciera.docente_id
+    return db.query(ObligacionFinanciera.id).filter(
+        ObligacionFinanciera.institucion_id == db.info["institucion_id"],
+        ObligacionFinanciera.tipo == tipo, campo == sujeto_id,
+        ObligacionFinanciera.mes == mes, ObligacionFinanciera.concepto == concepto,
+    ).first() is not None
 
 
 def referencia_existe(db: Session, referencia: str) -> bool:
@@ -44,6 +55,15 @@ def listar_obligaciones(db: Session, tipo: str | None = None, mes: str | None = 
 
 def guardar(db: Session, registro):
     db.add(registro)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as error:
+        db.rollback()
+        if any(nombre in str(error.orig) for nombre in (
+            "uq_pago_financiero_referencia", "uq_obligacion_estudiante_mes_concepto",
+            "uq_obligacion_docente_mes_concepto",
+        )):
+            raise RecursoDuplicadoError("La referencia o la obligacion ya existe") from error
+        raise
     db.refresh(registro)
     return registro

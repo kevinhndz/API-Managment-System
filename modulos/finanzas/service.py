@@ -15,6 +15,8 @@ def crear_obligacion(db: Session, datos: CrearObligacion):
         raise DatosInvalidosError("Selecciona solo el estudiante o docente correspondiente")
     if repo.buscar_sujeto(db, datos.tipo, sujeto_id) is None:
         raise RecursoNoEncontradoError("Persona no encontrada en esta institucion")
+    if repo.obligacion_duplicada(db, datos.tipo, sujeto_id, datos.mes, datos.concepto):
+        raise RecursoDuplicadoError("Ya existe una obligacion con ese concepto para esta persona y mes")
     obligacion = ObligacionFinanciera(**datos.model_dump(), institucion_id=db.info["institucion_id"])
     return repo.guardar(db, obligacion)
 

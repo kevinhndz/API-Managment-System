@@ -25,6 +25,8 @@ CAMPOS_AUDITABLES = {
     "secciones": {"codigo", "asignatura_id", "docente_id", "periodo_id", "aula_id", "dias", "hora_inicio", "hora_fin", "cupo_maximo", "estado"},
     "solicitudes_cuenta": {"estado", "revisado_por"},
     "usuarios": {"rol", "activo", "docente_id"},
+    "obligaciones_financieras": {"tipo", "estudiante_id", "docente_id", "mes", "concepto", "monto", "moneda", "vence_en"},
+    "pagos_financieros": {"obligacion_id", "referencia", "monto", "fecha", "metodo"},
 }
 
 

@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKeyConstraint, Integer, Numeric, String, UniqueConstraint, func
+from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKeyConstraint, Index, Integer, Numeric, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.almacen import miClaseBase
@@ -29,6 +29,8 @@ class ObligacionFinanciera(miClaseBase, EntidadInstitucional):
         CheckConstraint("(tipo = 'ESTUDIANTE' AND estudiante_id IS NOT NULL AND docente_id IS NULL) OR (tipo = 'DOCENTE' AND docente_id IS NOT NULL AND estudiante_id IS NULL)", name="ck_obligacion_sujeto"),
         CheckConstraint("monto > 0", name="ck_obligacion_monto"),
         CheckConstraint("length(mes) = 7 AND substr(mes, 5, 1) = '-' AND substr(mes, 6, 2) BETWEEN '01' AND '12'", name="ck_obligacion_mes"),
+        Index("uq_obligacion_estudiante_mes_concepto", "institucion_id", "estudiante_id", "mes", "concepto", unique=True),
+        Index("uq_obligacion_docente_mes_concepto", "institucion_id", "docente_id", "mes", "concepto", unique=True),
     )
 
 
@@ -47,4 +49,5 @@ class PagoFinanciero(miClaseBase, EntidadInstitucional):
         ForeignKeyConstraint(["institucion_id", "obligacion_id"], ["obligaciones_financieras.institucion_id", "obligaciones_financieras.id"], name="fk_pago_obligacion_institucion"),
         UniqueConstraint("institucion_id", "referencia", name="uq_pago_financiero_referencia"),
         CheckConstraint("monto > 0", name="ck_pago_financiero_monto"),
+        Index("ix_pagos_financieros_obligacion", "institucion_id", "obligacion_id"),
     )

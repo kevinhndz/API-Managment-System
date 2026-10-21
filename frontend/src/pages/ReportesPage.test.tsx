@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { descargarDocumento, descargarReporte, previsualizarHistorial, previsualizarReporte } from '../services/api'
+import { descargarDocumento, descargarReporte, previsualizarDocumento, previsualizarHistorial, previsualizarReporte } from '../services/api'
 import { ReportesPage } from './ReportesPage'
 
 vi.mock('../contexts/AuthContext', () => ({
@@ -13,6 +13,7 @@ vi.mock('../hooks/useAcademicLabels', () => ({
     carreraOptions: [{ value: '8', label: 'ING · Ingeniería' }, { value: '9', label: 'ADM · Administración' }],
     periodoOptions: [{ value: '2', label: '2026 · período 2' }],
     estudianteOptions: [{ value: '17', label: '20260017 · Ana López' }, { value: '18', label: '20260018 · Luis Díaz' }],
+    docenteOptions: [{ value: '7', label: 'DOC-007 · Carlos Perez' }],
   }),
 }))
 
@@ -21,6 +22,7 @@ vi.mock('../services/api', () => ({
   descargarDocumento: vi.fn(),
   previsualizarReporte: vi.fn(),
   previsualizarHistorial: vi.fn(),
+  previsualizarDocumento: vi.fn(),
   subirLogoInstitucional: vi.fn(),
   urlLogoInstitucional: vi.fn(() => '/api/documentos/logo'),
   INSTITUTION_SLUG: 'uphn',
@@ -85,6 +87,25 @@ describe('ReportesPage', () => {
     expect(descargarDocumento).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'Confirmar descarga' }))
     await waitFor(() => expect(descargarDocumento).toHaveBeenCalledWith('historial-academico', 17))
+  })
+
+  it('previsualiza la constancia laboral antes de emitirla', async () => {
+    const URLOriginal = URL
+    vi.stubGlobal('URL', class extends URLOriginal {
+      static createObjectURL = vi.fn(() => 'blob:constancia')
+      static revokeObjectURL = vi.fn()
+    })
+    vi.mocked(previsualizarDocumento).mockResolvedValue(new Blob(['%PDF'], { type: 'application/pdf' }))
+    vi.mocked(descargarDocumento).mockResolvedValue(undefined)
+    render(<ReportesPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Constancia laboral: abrir reporte académico' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Docente' }), { target: { value: 'DOC-007' } })
+    fireEvent.click(screen.getByRole('option', { name: 'DOC-007 · Carlos Perez' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Descargar PDF' }))
+    await waitFor(() => expect(previsualizarDocumento).toHaveBeenCalledWith('constancia-laboral', 7))
+    expect(descargarDocumento).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar descarga' }))
+    await waitFor(() => expect(descargarDocumento).toHaveBeenCalledWith('constancia-laboral', 7))
   })
 
   it('abre el reporte elegido y permite regresar a la cuadrícula', () => {
