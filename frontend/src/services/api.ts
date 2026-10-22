@@ -50,7 +50,7 @@ async function solicitudPublica<T>(ruta: string, datos?: object): Promise<T> {
   if (!respuesta.ok) throw new ApiError(typeof cuerpo?.detail === 'string' ? cuerpo.detail : 'No se pudo completar la solicitud.', respuesta.status)
   return cuerpo as T
 }
-export const listarPlanesPublicos = () => solicitudPublica<{ nombre: string; importe: string | null; moneda: string | null; intervalo: string | null }[]>('/onboarding/planes')
+export const listarPlanesPublicos = () => solicitudPublica<{ nombre: string; importe: string | null; moneda: string | null; intervalo: string | null; disponible: boolean }[]>('/onboarding/planes')
 export const registrarUniversidad = (datos: object) => solicitudPublica<AltaUniversidad>('/onboarding/universidades', datos)
 export const consultarAltaUniversidad = (token: string) => solicitudPublica<{ slug: string; status: string; active: boolean }>('/onboarding/estado', { token })
 export const reanudarAltaUniversidad = (token: string) => solicitudPublica<AltaUniversidad>('/onboarding/reanudar', { token })

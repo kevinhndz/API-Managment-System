@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { useReducedMotion } from 'framer-motion'
 
 import { LampContainer } from '../ui/LampContainer'
+import { PricingSection } from '../marketing/PricingSection'
 
 export function LoginLanding() {
   const [showNavigation, setShowNavigation] = useState(false)
@@ -37,12 +38,12 @@ export function LoginLanding() {
         </div>
       </nav>
 
-      <section id="inicio" className="relative z-10 min-h-svh overflow-hidden px-4 sm:px-8">
+      <section id="inicio" className="relative z-10 min-h-[82svh] overflow-hidden px-4 sm:px-8">
         <LampContainer
-          className="absolute inset-x-0 top-0 z-0 isolate h-[min(100svh,820px)]"
+          className="absolute inset-x-0 top-0 z-0 isolate h-[min(82svh,820px)]"
           onOpen={() => setShowNavigation(true)}
         />
-        <div className="relative z-10 mx-auto flex min-h-svh max-w-6xl flex-col items-center justify-start pt-[clamp(9rem,21svh,11rem)] text-center">
+        <div className="relative z-10 mx-auto flex min-h-[82svh] max-w-6xl flex-col items-center justify-start pt-[clamp(8rem,17svh,10rem)] text-center">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-violet-100/90 sm:text-sm">Gestión académica, más clara</p>
           <h1 className="text-6xl font-semibold tracking-[-0.075em] text-white drop-shadow-[0_4px_28px_rgb(16_13_24_/_0.95)] sm:text-8xl lg:text-[7.5rem]">
             Campus Flow
@@ -53,8 +54,10 @@ export function LoginLanding() {
           <Link className="mt-7 inline-flex items-center gap-2 rounded-full border border-white/20 bg-[#171124]/65 px-5 py-3 text-sm font-medium text-white shadow-lg backdrop-blur-sm transition hover:border-violet-200/50 hover:bg-[#241637]/85" to="/iniciar-sesion">
             Entrar al campus <ArrowRight aria-hidden="true" className="h-4 w-4" />
           </Link>
+          <a href="#planes" className="mt-5 text-sm font-medium text-violet-200 underline-offset-4 hover:underline">Conocer los planes ↓</a>
         </div>
       </section>
+      <PricingSection />
     </main>
   )
 }
