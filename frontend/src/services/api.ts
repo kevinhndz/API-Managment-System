@@ -14,6 +14,13 @@ const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')
 const HOSTNAME = typeof window === 'undefined' ? 'localhost' : window.location.hostname
 export const INSTITUTION_SLUG = import.meta.env.VITE_INSTITUTION_SLUG
   ?? (HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1' ? 'uphn' : HOSTNAME.split('.')[0])
+export function obtenerSlugInstitucion() {
+  return localStorage.getItem('campusflow.institutionSlug') || INSTITUTION_SLUG
+}
+export function seleccionarInstitucion(slug: string) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error('Identificador de universidad invalido')
+  localStorage.setItem('campusflow.institutionSlug', slug)
+}
 
 export interface SuscripcionInstitucional {
   institucion_id: number
@@ -32,16 +39,32 @@ export function obtenerSuscripcionInstitucional() {
   return request<SuscripcionInstitucional>('/payments/subscription')
 }
 
-export function iniciarCheckoutInstitucional() {
-  return request<{ transaction_id: string; client_token: string; environment: 'sandbox' | 'production' }>('/payments/checkout', { method: 'POST' })
+export function abrirPortalInstitucional() {
+  return request<{ overview: string; payment_method: string | null; cancel: string | null; subscription: string | null }>('/payments/portal', { method: 'POST' })
 }
 
-export function abrirPortalInstitucional() {
-  return request<{ url: string }>('/payments/portal', { method: 'POST' })
+export interface AltaUniversidad { slug: string; token: string; transaction_id: string; client_token: string; environment: 'sandbox' | 'production'; status: string }
+async function solicitudPublica<T>(ruta: string, datos?: object): Promise<T> {
+  const respuesta = await fetch(`${API_URL}${ruta}`, { method: datos ? 'POST' : 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: datos ? JSON.stringify(datos) : undefined })
+  const cuerpo = await respuesta.json().catch(() => null)
+  if (!respuesta.ok) throw new ApiError(typeof cuerpo?.detail === 'string' ? cuerpo.detail : 'No se pudo completar la solicitud.', respuesta.status)
+  return cuerpo as T
 }
+export const listarPlanesPublicos = () => solicitudPublica<{ nombre: string; importe: string | null; moneda: string | null; intervalo: string | null }[]>('/onboarding/planes')
+export const registrarUniversidad = (datos: object) => solicitudPublica<AltaUniversidad>('/onboarding/universidades', datos)
+export const consultarAltaUniversidad = (token: string) => solicitudPublica<{ slug: string; status: string; active: boolean }>('/onboarding/estado', { token })
+export const reanudarAltaUniversidad = (token: string) => solicitudPublica<AltaUniversidad>('/onboarding/reanudar', { token })
+export const historialSuscripcion = () => request<{ id: string; status: string; created_at: string; invoice_number: string | null; amount: string | null; currency: string | null; invoice_available: boolean }[]>('/payments/history')
+export const metodoPagoSuscripcion = () => request<{ method: { type: string; brand: string | null; last4: string | null } | null }>('/payments/payment-method')
+export const facturaSuscripcion = (id: string) => request<{ url: string }>(`/payments/transactions/${encodeURIComponent(id)}/invoice`)
+export const cancelarSuscripcion = () => request<{ detail: string }>('/payments/cancel', { method: 'POST' })
+export const reactivarSuscripcion = () => request<{ detail: string }>('/payments/reactivate', { method: 'POST' })
+export const cambiarPlanSuscripcion = (plan: string) => request<{ detail: string }>('/payments/change-plan', { method: 'POST', body: JSON.stringify({ plan }) })
+export const previsualizarImportacion = (tipo: string, archivo: File) => request<{ token: string; total: number; validos: number; invalidos: number; errores: { fila: number; error: string }[] }>(`/importaciones/vista-previa?tipo=${encodeURIComponent(tipo)}`, { method: 'POST', headers: { 'Content-Type': archivo.type || 'application/octet-stream', 'X-File-Name': archivo.name }, body: archivo })
+export const confirmarImportacion = (token: string) => request<{ importados: number; omitidos: number }>('/importaciones/confirmar', { method: 'POST', body: JSON.stringify({ token }) })
 
 function headersInstitucion(): Record<string, string> {
-  return { 'X-Institution-Slug': INSTITUTION_SLUG }
+  return { 'X-Institution-Slug': obtenerSlugInstitucion() }
 }
 
 async function obtenerTokenCsrf() {
@@ -56,7 +79,7 @@ async function obtenerTokenCsrf() {
 
 export function resolverFotoUrl(foto: string | null | undefined) {
   if (!foto) return null
-  return foto.startsWith('/uploads/profiles/') ? `${API_URL}${foto}?institucion=${encodeURIComponent(INSTITUTION_SLUG)}` : foto
+  return foto.startsWith('/uploads/profiles/') ? `${API_URL}${foto}?institucion=${encodeURIComponent(obtenerSlugInstitucion())}` : foto
 }
 
 
@@ -394,7 +417,7 @@ export function previsualizarHistorial(estudianteId: number) {
 }
 
 export function urlLogoInstitucional(revision = 0) {
-  return `${API_URL}/documentos/logo?institucion=${encodeURIComponent(INSTITUTION_SLUG)}&v=${revision}`
+  return `${API_URL}/documentos/logo?institucion=${encodeURIComponent(obtenerSlugInstitucion())}&v=${revision}`
 }
 
 export async function subirLogoInstitucional(archivo: File): Promise<void> {

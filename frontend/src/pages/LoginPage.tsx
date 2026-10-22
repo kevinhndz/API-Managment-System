@@ -7,9 +7,11 @@ import { z } from 'zod'
 
 import { useAuth } from '../contexts/AuthContext'
 import { CampusFlowLogo } from '../components/brand/CampusFlowLogo'
+import { obtenerSlugInstitucion, seleccionarInstitucion } from '../services/api'
 import './LoginPage.css'
 
 const loginSchema = z.object({
+  institucion: z.string().min(3, 'Ingresa el identificador de tu universidad.'),
   usuario: z.string().min(3, 'Ingresa tu usuario.'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres.'),
 })
@@ -27,13 +29,14 @@ export function LoginPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginValues>({ resolver: zodResolver(loginSchema) })
+  } = useForm<LoginValues>({ resolver: zodResolver(loginSchema), defaultValues: { institucion: obtenerSlugInstitucion() } })
 
   if (isAuthenticated) return <Navigate to="/" replace />
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError('')
     try {
+      seleccionarInstitucion(values.institucion.trim().toLowerCase())
       await login(values.usuario, values.password)
       const destination = (location.state as { from?: string } | null)?.from ?? '/'
       navigate(destination, { replace: true })
@@ -82,6 +85,7 @@ export function LoginPage() {
           </div>
 
           <form className="signin-form" onSubmit={onSubmit} noValidate>
+            <label className="signin-field"><span className="signin-field__label">Universidad</span><span className="signin-field__control"><input type="text" placeholder="identificador-universidad" autoComplete="organization" {...register('institucion')} /></span>{errors.institucion && <span className="signin-field__error">{errors.institucion.message}</span>}</label>
             <label className="signin-field">
               <span className="signin-field__label">Usuario</span>
               <span className="signin-field__control">
@@ -139,7 +143,7 @@ export function LoginPage() {
         </div>
       </section>
 
-      <p className="signin-page__footer">© {new Date().getFullYear()} CampusFlow · Universidad Politécnica de Honduras</p>
+      <p className="signin-page__footer">© {new Date().getFullYear()} CampusFlow</p>
     </main>
   )
 }

@@ -30,8 +30,8 @@ export function LoginLanding() {
             <Link className="rounded-full px-3 py-2 text-sm text-violet-100 drop-shadow-[0_1px_8px_rgb(16_13_24_/_0.95)] transition hover:bg-white/10" to="/iniciar-sesion" tabIndex={showNavigation ? 0 : -1}>
               Iniciar sesión
             </Link>
-            <Link className="rounded-full bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400" to="/solicitar-cuenta" tabIndex={showNavigation ? 0 : -1}>
-              Crear cuenta
+            <Link className="rounded-full bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400" to="/registrar-universidad" tabIndex={showNavigation ? 0 : -1}>
+              Registrar universidad
             </Link>
           </div>
         </div>

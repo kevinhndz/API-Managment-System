@@ -28,6 +28,8 @@ const FinanzasPage = lazy(() => import('./pages/FinanzasPage').then((module) => 
 const ActividadPage = lazy(() => import('./pages/ActividadPage').then((module) => ({ default: module.ActividadPage })))
 const SolicitudesCuentaPage = lazy(() => import('./pages/SolicitudesCuentaPage').then((module) => ({ default: module.SolicitudesCuentaPage })))
 const PlanesPage = lazy(() => import('./pages/PlanesPage').then((module) => ({ default: module.PlanesPage })))
+const RegistroUniversidadPage = lazy(() => import('./pages/RegistroUniversidadPage').then((module) => ({ default: module.RegistroUniversidadPage })))
+const ImportacionesPage = lazy(() => import('./pages/ImportacionesPage').then((module) => ({ default: module.ImportacionesPage })))
 
 function PageLoader() {
   return <div className="h-72 animate-pulse rounded-2xl border bg-[#fffdf8] dark:border-[#39334b] dark:bg-[#242033]" aria-label="Cargando página" />
@@ -45,6 +47,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginLanding />} />
+      <Route path="/registrar-universidad" element={<Suspense fallback={<PageLoader />}><RegistroUniversidadPage /></Suspense>} />
       <Route path="/iniciar-sesion" element={<LoginPage />} />
       <Route path="/solicitar-cuenta" element={<SolicitudCuentaPage />} />
       <Route path="/recuperar-contrasena" element={<RecuperacionPage />} />
@@ -68,6 +71,7 @@ export function App() {
               <Route path="actividad" element={<Suspense fallback={<PageLoader />}><ActividadPage /></Suspense>} />
             </Route>
             <Route path="planes" element={<Suspense fallback={<PageLoader />}><PlanesPage /></Suspense>} />
+            <Route path="importaciones" element={<Suspense fallback={<PageLoader />}><ImportacionesPage /></Suspense>} />
             <Route path="carreras" element={<Suspense fallback={<PageLoader />}><CarrerasPage /></Suspense>} />
             <Route path="asignaturas" element={<Suspense fallback={<PageLoader />}><AsignaturasPage /></Suspense>} />
             <Route path="periodos" element={<Suspense fallback={<PageLoader />}><PeriodosPage /></Suspense>} />
