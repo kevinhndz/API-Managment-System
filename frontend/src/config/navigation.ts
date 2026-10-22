@@ -1,4 +1,4 @@
-import { Building2, GraduationCap, LayoutDashboard, UsersRound, UserRound, BookMarked, CalendarDays, CalendarClock, ClipboardList, Award, FileDown, History, Wallet, type LucideIcon } from 'lucide-react'
+import { Building2, GraduationCap, LayoutDashboard, UsersRound, UserRound, BookMarked, CalendarDays, CalendarClock, ClipboardList, Award, FileDown, History, Wallet, CreditCard, Database, type LucideIcon } from 'lucide-react'
 
 export interface NavigationItem {
   label: string
@@ -18,6 +18,8 @@ export const navigationItems: NavigationItem[] = [
   { label: 'Matrículas', path: '/matriculas', icon: ClipboardList },
   { label: 'Calificaciones', path: '/calificaciones', icon: Award },
   { label: 'Reportes', path: '/reportes', icon: FileDown },
-  { label: 'Cobros y pagos', path: '/finanzas', icon: Wallet },
+  { label: 'Finanzas academicas', path: '/finanzas', icon: Wallet },
+  { label: 'Suscripcion', path: '/planes', icon: CreditCard },
+  { label: 'Importar datos', path: '/importaciones', icon: Database },
   { label: 'Actividad reciente', path: '/actividad', icon: History },
 ]
