@@ -17,6 +17,8 @@ class Usuarios(miClaseBase, PoderAuditor):
     rol = Column(String(20), nullable=False)
     docente_id = Column(Integer, nullable=True)
     activo = Column(Boolean, default=True, nullable=False)
+    propietario = Column(Boolean, default=False, nullable=False)
+    estudiante_id = Column(Integer, nullable=True)
     version_token = Column(Integer, default=0, nullable=False)
 
     __table_args__ = (
@@ -27,6 +29,11 @@ class Usuarios(miClaseBase, PoderAuditor):
             ["institucion_id", "docente_id"],
             ["docentes.institucion_id", "docentes.id"],
             name="fk_usuarios_docente_institucion",
+        ),
+        ForeignKeyConstraint(
+            ["institucion_id", "estudiante_id"],
+            ["estudiantes.institucion_id", "estudiantes.id"],
+            name="fk_usuarios_estudiante_institucion",
         ),
     )
 

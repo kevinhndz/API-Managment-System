@@ -1,10 +1,12 @@
 """Checkout y webhooks de la suscripcion institucional."""
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from database.almacen import abrir_puerta_bd, llaves
-from modulos.suscripciones.paddle import crear_portal, iniciar_checkout, procesar_evento, verificar_firma
+from modulos.suscripciones.catalogo import planes_disponibles
+from modulos.suscripciones.paddle import cancelar_al_fin, cambiar_plan, enlace_factura, enlaces_portal, historial_transacciones, metodo_pago, procesar_evento, reactivar_programada, verificar_firma
 from modulos.suscripciones.service import esta_vigente, obtener_suscripcion
 from utils.auth import permiso_admin, permiso_usuario
 
@@ -28,17 +30,66 @@ def suscripcion_institucional(usuario: dict = Depends(permiso_usuario), db: Sess
             "can_manage": usuario["rol"].casefold() in {"admin", "administrador"}}
 
 
-@router.post("/checkout")
-def checkout(administrador: dict = Depends(permiso_admin), db: Session = Depends(abrir_puerta_bd)):
-    return iniciar_checkout(db, administrador["institucion_id"])
-
-
 @router.post("/portal")
 def portal(administrador: dict = Depends(permiso_admin), db: Session = Depends(abrir_puerta_bd)):
     suscripcion = obtener_suscripcion(db)
     if suscripcion is None:
         raise HTTPException(404, "No existe suscripcion institucional")
-    return {"url": crear_portal(db, suscripcion)}
+    return enlaces_portal(suscripcion)
+
+
+@router.get("/history")
+def historial(administrador: dict = Depends(permiso_admin), db: Session = Depends(abrir_puerta_bd)):
+    suscripcion = obtener_suscripcion(db)
+    return historial_transacciones(suscripcion) if suscripcion else []
+
+
+@router.get("/payment-method")
+def metodo(administrador: dict = Depends(permiso_admin), db: Session = Depends(abrir_puerta_bd)):
+    suscripcion = obtener_suscripcion(db)
+    return {"method": metodo_pago(suscripcion) if suscripcion else None}
+
+
+@router.get("/transactions/{transaccion_id}/invoice")
+def factura(transaccion_id: str, administrador: dict = Depends(permiso_admin), db: Session = Depends(abrir_puerta_bd)):
+    suscripcion = obtener_suscripcion(db)
+    if not suscripcion:
+        raise HTTPException(404, "Suscripcion no encontrada")
+    return {"url": enlace_factura(suscripcion, transaccion_id)}
+
+
+@router.post("/cancel")
+def cancelar(administrador: dict = Depends(permiso_admin), db: Session = Depends(abrir_puerta_bd)):
+    suscripcion = obtener_suscripcion(db)
+    if not suscripcion:
+        raise HTTPException(404, "Suscripcion no encontrada")
+    cancelar_al_fin(suscripcion)
+    return {"detail": "Cancelacion solicitada a Paddle; espera la confirmacion del webhook"}
+
+
+@router.post("/reactivate")
+def reactivar(administrador: dict = Depends(permiso_admin), db: Session = Depends(abrir_puerta_bd)):
+    suscripcion = obtener_suscripcion(db)
+    if not suscripcion:
+        raise HTTPException(404, "Suscripcion no encontrada")
+    reactivar_programada(suscripcion)
+    return {"detail": "Reactivacion solicitada a Paddle; espera la confirmacion del webhook"}
+
+
+class CambioPlan(BaseModel):
+    plan: str
+
+
+@router.post("/change-plan")
+def cambiar(datos: CambioPlan, administrador: dict = Depends(permiso_admin), db: Session = Depends(abrir_puerta_bd)):
+    suscripcion = obtener_suscripcion(db)
+    if not suscripcion:
+        raise HTTPException(404, "Suscripcion no encontrada")
+    precio = next((plan["price_id"] for plan in planes_disponibles() if plan["nombre"] == datos.plan), None)
+    if not precio:
+        raise HTTPException(422, "Plan no disponible")
+    cambiar_plan(suscripcion, precio)
+    return {"detail": "Cambio solicitado a Paddle; espera la confirmacion del webhook"}
 
 
 @router.post("/paddle/webhook")

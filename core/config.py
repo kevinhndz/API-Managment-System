@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     PADDLE_CLIENT_TOKEN: str = ""
     PADDLE_API_KEY: SecretStr = SecretStr("")
     PADDLE_PRICE_ID: str = ""
+    PADDLE_PLANS: str = ""
     PADDLE_WEBHOOK_SECRET: SecretStr = SecretStr("")
 
     # Configuracion de Pydantic para indicarle que lea el archivo .env automaticamente

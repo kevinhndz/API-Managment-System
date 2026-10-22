@@ -26,6 +26,8 @@ from modulos.solicitudes_cuenta.router import router as router_solicitudes_cuent
 from modulos.dashboard.router import router as router_dashboard
 from modulos.suscripciones.router import router as router_suscripcion
 from modulos.suscripciones.payments_router import router as router_payments
+from modulos.suscripciones.onboarding_router import router as router_onboarding
+from modulos.importaciones.router import router as router_importaciones
 from modulos.suscripciones.dependencias import exigir_suscripcion
 from modulos.documentos.router import router as router_documentos
 from modulos.finanzas.router import router as router_finanzas
@@ -66,7 +68,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=[
-        "Authorization", "Content-Type", "X-CSRF-Token", "X-Institution-Slug"
+        "Authorization", "Content-Type", "X-CSRF-Token", "X-Institution-Slug", "X-File-Name"
     ],
 )
 
@@ -88,7 +90,11 @@ async def proteger_cambios_con_cookie(request, call_next):
         if origen and origen.rstrip("/") not in origenes_permitidos:
             return JSONResponse(status_code=403, content={"detail": "Origen no permitido."})
 
-        requiere_token = (usa_cookie and not usa_token_bearer) or bool(origen)
+        alta_publica = request.url.path in {
+            "/onboarding/universidades", "/onboarding/estado", "/onboarding/reanudar",
+            "/api/onboarding/universidades", "/api/onboarding/estado", "/api/onboarding/reanudar",
+        }
+        requiere_token = not alta_publica and ((usa_cookie and not usa_token_bearer) or bool(origen))
         if requiere_token:
             token_cookie = request.cookies.get("campusflow_csrf", "")
             token_encabezado = request.headers.get("X-CSRF-Token", "")
@@ -129,6 +135,9 @@ app.include_router(router_dashboard)
 app.include_router(router_suscripcion)
 app.include_router(router_payments, include_in_schema=False)
 app.include_router(router_payments, prefix="/api")
+app.include_router(router_onboarding, include_in_schema=False)
+app.include_router(router_onboarding, prefix="/api")
+app.include_router(router_importaciones)
 app.include_router(router_documentos)
 app.include_router(router_finanzas)
 eg.directorio(app)

@@ -33,9 +33,10 @@ from modulos.solicitudes_cuenta.tabla import (
     VerificacionesCorreoSolicitud,
 )
 from modulos.notificaciones.tabla import NotificacionesLeidas
-from modulos.suscripciones.tabla import EventosPaddle, PagosSuscripcion, Suscripciones
+from modulos.suscripciones.tabla import AltasInstitucion, EventosPaddle, PagosSuscripcion, Suscripciones
 from modulos.documentos.tabla import DocumentosEmitidos
 from modulos.finanzas.tabla import ObligacionFinanciera, PagoFinanciero
+from modulos.importaciones.tabla import ImportacionesPendientes
 
 # Configuracion de Alembic
 config = context.config

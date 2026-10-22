@@ -36,7 +36,7 @@ def main() -> None:
             parser.error("Ya existe una institución con ese identificador.")
 
         institucion = Instituciones(
-            slug=args.slug.casefold(), nombre=args.nombre.strip(), activa=True
+            slug=args.slug.casefold(), nombre=args.nombre.strip(), activa=False
         )
         db.add(institucion)
         db.flush()
@@ -45,8 +45,8 @@ def main() -> None:
         db.add(
             Suscripciones(
                 institucion_id=institucion.id,
-                plan="PILOTO",
-                estado="PRUEBA",
+                plan="INSTITUCIONAL",
+                estado="PENDIENTE",
                 inicia_en=inicio,
                 vence_en=inicio + timedelta(days=30),
             )
@@ -66,6 +66,7 @@ def main() -> None:
                 correo=args.correo.strip().casefold(),
                 contrasena=encriptar_contrasena(password),
                 rol="Administrador",
+                propietario=True,
                 activo=True,
             )
         )

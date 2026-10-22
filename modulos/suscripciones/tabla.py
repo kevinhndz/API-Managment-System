@@ -31,7 +31,7 @@ class Suscripciones(miClaseBase, EntidadInstitucional):
     __table_args__ = (
         UniqueConstraint("institucion_id", name="uq_suscripciones_institucion_id"),
         CheckConstraint("vence_en > inicia_en", name="ck_suscripciones_fechas"),
-        CheckConstraint("estado IN ('PRUEBA', 'ACTIVA', 'SUSPENDIDA', 'ATRASADA', 'CANCELADA', 'PAUSADA')", name="ck_suscripciones_estado"),
+        CheckConstraint("estado IN ('PENDIENTE', 'PRUEBA', 'ACTIVA', 'SUSPENDIDA', 'ATRASADA', 'CANCELADA', 'PAUSADA')", name="ck_suscripciones_estado"),
     )
 
 
@@ -60,3 +60,14 @@ class EventosPaddle(miClaseBase, EntidadInstitucional):
     event_type: Mapped[str] = mapped_column(String(80), nullable=False)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     procesado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+class AltasInstitucion(miClaseBase, EntidadInstitucional):
+    __tablename__ = "altas_institucion"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    vence_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    creada_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+    __table_args__ = (UniqueConstraint("institucion_id", name="uq_altas_institucion"),)

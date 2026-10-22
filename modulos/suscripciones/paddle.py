@@ -13,20 +13,20 @@ from sqlalchemy.orm import Session
 
 from core.config import settings
 from database.almacen import Instituciones
+from modulos.suscripciones.catalogo import planes_disponibles
 from modulos.suscripciones.tabla import EventosPaddle, Suscripciones
-from modulos.suscripciones.service import esta_vigente
 
 
 def _url_api() -> str:
     return "https://sandbox-api.paddle.com" if settings.PADDLE_ENVIRONMENT == "sandbox" else "https://api.paddle.com"
 
 
-def _api(method: str, path: str, payload: dict) -> dict:
+def _api(method: str, path: str, payload: dict | None = None, params: dict | None = None):
     clave = settings.PADDLE_API_KEY.get_secret_value()
     if not clave:
         raise HTTPException(503, "Falta configurar Paddle API")
     try:
-        respuesta = requests.request(method, _url_api() + path, json=payload,
+        respuesta = requests.request(method, _url_api() + path, json=payload, params=params,
             headers={"Authorization": f"Bearer {clave}", "Content-Type": "application/json"}, timeout=15)
         respuesta.raise_for_status()
         return respuesta.json()["data"]
@@ -34,33 +34,24 @@ def _api(method: str, path: str, payload: dict) -> dict:
         raise HTTPException(502, "Paddle no pudo completar la operacion") from exc
 
 
-def iniciar_checkout(db: Session, institucion_id: int) -> dict:
-    institucion = db.get(Instituciones, institucion_id)
-    if institucion is None or not institucion.activa:
-        raise HTTPException(404, "Institucion no encontrada")
-    if not settings.PADDLE_PRICE_ID or not settings.PADDLE_CLIENT_TOKEN:
-        raise HTTPException(503, "Falta configurar el plan de Paddle")
-
-    # La fila unica por institucion serializa dos inicios de checkout simultaneos.
-    suscripcion = db.query(Suscripciones).filter_by(institucion_id=institucion_id).with_for_update().one_or_none()
-    if suscripcion is None:
-        raise HTTPException(409, "La institucion no tiene una suscripcion inicial")
-    if suscripcion.estado == "ACTIVA" and esta_vigente(suscripcion):
-        raise HTTPException(409, "La institucion ya tiene una suscripcion activa")
-    if suscripcion.paddle_subscription_id and suscripcion.estado in {"ACTIVA", "ATRASADA", "PAUSADA"}:
-        raise HTTPException(409, "La institucion ya tiene una suscripcion de Paddle; administrala desde el portal")
-    if suscripcion.paddle_transaction_id and not suscripcion.paddle_subscription_id:
-        return {"transaction_id": suscripcion.paddle_transaction_id, "client_token": settings.PADDLE_CLIENT_TOKEN, "environment": settings.PADDLE_ENVIRONMENT}
-
+def crear_transaccion_inicial(institucion_id: int, precio_id: str) -> str:
     transaccion = _api("POST", "/transactions", {
-        "items": [{"price_id": settings.PADDLE_PRICE_ID, "quantity": 1}],
+        "items": [{"price_id": precio_id, "quantity": 1}],
         "collection_mode": "automatic",
         "custom_data": {"institucion_id": str(institucion_id)},
     })
-    suscripcion.paddle_transaction_id = transaccion["id"]
-    suscripcion.paddle_price_id = settings.PADDLE_PRICE_ID
-    db.commit()
-    return {"transaction_id": transaccion["id"], "client_token": settings.PADDLE_CLIENT_TOKEN, "environment": settings.PADDLE_ENVIRONMENT}
+    return transaccion["id"]
+
+
+def detalles_planes() -> list[dict]:
+    resultado = []
+    for plan in planes_disponibles():
+        precio = _api("GET", f"/prices/{plan['price_id']}")
+        importe = precio.get("unit_price") or {}
+        resultado.append({"nombre": plan["nombre"], "importe": importe.get("amount"),
+                          "moneda": importe.get("currency_code"),
+                          "intervalo": (precio.get("billing_cycle") or {}).get("interval")})
+    return resultado
 
 
 def crear_portal(db: Session, suscripcion: Suscripciones) -> str:
@@ -69,6 +60,68 @@ def crear_portal(db: Session, suscripcion: Suscripciones) -> str:
     cuerpo = {"subscription_ids": [suscripcion.paddle_subscription_id]} if suscripcion.paddle_subscription_id else {}
     datos = _api("POST", f"/customers/{suscripcion.paddle_customer_id}/portal-sessions", cuerpo)
     return datos["urls"]["general"]["overview"]
+
+
+def enlaces_portal(suscripcion: Suscripciones) -> dict:
+    if not suscripcion.paddle_customer_id or not suscripcion.paddle_subscription_id:
+        raise HTTPException(409, "Esta institucion no tiene una suscripcion de Paddle")
+    datos = _api("POST", f"/customers/{suscripcion.paddle_customer_id}/portal-sessions",
+                 {"subscription_ids": [suscripcion.paddle_subscription_id]})
+    item = next((item for item in datos["urls"].get("subscriptions", []) if item["id"] == suscripcion.paddle_subscription_id), {})
+    return {"overview": datos["urls"]["general"]["overview"],
+            "payment_method": item.get("update_subscription_payment_method"),
+            "cancel": item.get("cancel_subscription"), "subscription": item.get("view_subscription")}
+
+
+def historial_transacciones(suscripcion: Suscripciones) -> list[dict]:
+    if not suscripcion.paddle_subscription_id:
+        return []
+    datos = _api("GET", "/transactions", params={"subscription_id": suscripcion.paddle_subscription_id, "per_page": 30})
+    return [{"id": item["id"], "status": item["status"], "created_at": item.get("created_at"),
+             "invoice_number": item.get("invoice_number"), "amount": (item.get("details") or {}).get("totals", {}).get("grand_total"),
+             "currency": item.get("currency_code"), "invoice_available": item["status"] == "completed"}
+            for item in datos if item.get("subscription_id") == suscripcion.paddle_subscription_id]
+
+
+def enlace_factura(suscripcion: Suscripciones, transaccion_id: str) -> str:
+    if transaccion_id not in {item["id"] for item in historial_transacciones(suscripcion)}:
+        raise HTTPException(404, "Transaccion no encontrada en esta institucion")
+    datos = _api("GET", f"/transactions/{transaccion_id}/invoice")
+    return datos["url"]
+
+
+def metodo_pago(suscripcion: Suscripciones) -> dict | None:
+    if not suscripcion.paddle_customer_id:
+        return None
+    datos = _api("GET", f"/customers/{suscripcion.paddle_customer_id}/payment-methods", params={"per_page": 10})
+    if not datos:
+        return None
+    item = datos[0]
+    tarjeta = item.get("card") or {}
+    return {"type": item.get("type"), "brand": tarjeta.get("type"), "last4": tarjeta.get("last4")}
+
+
+def cancelar_al_fin(suscripcion: Suscripciones) -> None:
+    if not suscripcion.paddle_subscription_id or suscripcion.estado != "ACTIVA" or suscripcion.cancelar_al_fin_periodo:
+        raise HTTPException(409, "La suscripcion no permite programar una cancelacion")
+    _api("POST", f"/subscriptions/{suscripcion.paddle_subscription_id}/cancel", {"effective_from": "next_billing_period"})
+
+
+def reactivar_programada(suscripcion: Suscripciones) -> None:
+    if not suscripcion.paddle_subscription_id or not suscripcion.cancelar_al_fin_periodo or suscripcion.estado != "ACTIVA":
+        raise HTTPException(409, "Solo se puede retirar una cancelacion programada")
+    _api("PATCH", f"/subscriptions/{suscripcion.paddle_subscription_id}", {"scheduled_change": None})
+
+
+def cambiar_plan(suscripcion: Suscripciones, precio_id: str) -> None:
+    if not suscripcion.paddle_subscription_id or suscripcion.estado != "ACTIVA" or suscripcion.cancelar_al_fin_periodo:
+        raise HTTPException(409, "La suscripcion no permite cambiar de plan")
+    if precio_id == suscripcion.paddle_price_id:
+        raise HTTPException(409, "Ese plan ya esta activo")
+    _api("PATCH", f"/subscriptions/{suscripcion.paddle_subscription_id}", {
+        "items": [{"price_id": precio_id, "quantity": 1}],
+        "proration_billing_mode": "prorated_next_billing_period",
+    })
 
 
 def verificar_firma(cuerpo: bytes, encabezado: str | None) -> dict:
@@ -146,12 +199,17 @@ def procesar_evento(db: Session, evento: dict) -> bool:
             if tipo == "subscription.created" and precio != suscripcion.paddle_price_id:
                 raise HTTPException(409, "El precio no corresponde al plan institucional")
             suscripcion.paddle_price_id = precio or suscripcion.paddle_price_id
+            nombre_plan = next((plan["nombre"] for plan in planes_disponibles() if plan["price_id"] == precio), None)
+            if nombre_plan:
+                suscripcion.plan = nombre_plan
         estados = {"active": "ACTIVA", "trialing": "PRUEBA", "past_due": "ATRASADA", "canceled": "CANCELADA", "paused": "PAUSADA"}
         estado = datos.get("status")
         if estado in estados:
             suscripcion.estado = estados[estado]
             if tipo == "subscription.created":
-                suscripcion.plan = "INSTITUCIONAL"
+                institucion = db.get(Instituciones, institucion_id)
+                if estado == "active" and institucion is not None:
+                    institucion.activa = True
         periodo = datos.get("current_billing_period") or {}
         inicio = _fecha(periodo.get("starts_at"))
         fin = _fecha(periodo.get("ends_at"))
