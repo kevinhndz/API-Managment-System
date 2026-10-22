@@ -3,6 +3,8 @@
 import hashlib
 import hmac
 import json
+import logging
+import re
 import time
 from datetime import datetime, timezone
 
@@ -15,6 +17,17 @@ from core.config import settings
 from database.almacen import Instituciones
 from modulos.suscripciones.catalogo import planes_disponibles
 from modulos.suscripciones.tabla import EventosPaddle, Suscripciones
+
+
+logger = logging.getLogger(__name__)
+ERRORES_PADDLE = {
+    "forbidden": "La clave de Paddle no tiene permisos o pertenece a otro entorno",
+    "invalid_token": "La clave API de Paddle no es valida",
+    "transaction_price_not_found": "El precio del plan no existe en este entorno de Paddle",
+    "transaction_default_checkout_url_not_set": "Falta configurar la URL de pago predeterminada en Paddle",
+    "transaction_checkout_url_domain_is_not_approved": "El dominio del checkout no esta aprobado en Paddle",
+    "paddle_billing_not_enabled": "Paddle Billing aun no esta habilitado para esta cuenta",
+}
 
 
 def _url_api() -> str:
@@ -30,8 +43,23 @@ def _api(method: str, path: str, payload: dict | None = None, params: dict | Non
             headers={"Authorization": f"Bearer {clave}", "Content-Type": "application/json"}, timeout=15)
         respuesta.raise_for_status()
         return respuesta.json()["data"]
+    except requests.HTTPError as exc:
+        respuesta = exc.response
+        try:
+            cuerpo = respuesta.json() if respuesta is not None else {}
+        except ValueError:
+            cuerpo = {}
+        codigo = (cuerpo.get("error") or {}).get("code", "error_desconocido")
+        solicitud = (cuerpo.get("meta") or {}).get("request_id")
+        logger.warning("Paddle rechazo %s %s: estado=%s codigo=%s request_id=%s", method, path,
+                       respuesta.status_code if respuesta is not None else None, codigo, solicitud)
+        mensaje = ERRORES_PADDLE.get(codigo)
+        if not mensaje:
+            seguro = codigo if isinstance(codigo, str) and re.fullmatch(r"[a-z0-9_]{1,80}", codigo) else "error_desconocido"
+            mensaje = f"Paddle rechazo la operacion ({seguro})"
+        raise HTTPException(502, mensaje) from exc
     except (requests.RequestException, ValueError, KeyError) as exc:
-        raise HTTPException(502, "Paddle no pudo completar la operacion") from exc
+        raise HTTPException(502, "No se pudo conectar con Paddle. Intenta de nuevo") from exc
 
 
 def crear_transaccion_inicial(institucion_id: int, precio_id: str) -> str:
@@ -46,11 +74,17 @@ def crear_transaccion_inicial(institucion_id: int, precio_id: str) -> str:
 def detalles_planes() -> list[dict]:
     resultado = []
     for plan in planes_disponibles():
-        precio = _api("GET", f"/prices/{plan['price_id']}")
+        try:
+            precio = _api("GET", f"/prices/{plan['price_id']}")
+        except HTTPException:
+            resultado.append({"nombre": plan["nombre"], "importe": None, "moneda": None,
+                              "intervalo": None, "disponible": False})
+            continue
         importe = precio.get("unit_price") or {}
         resultado.append({"nombre": plan["nombre"], "importe": importe.get("amount"),
                           "moneda": importe.get("currency_code"),
-                          "intervalo": (precio.get("billing_cycle") or {}).get("interval")})
+                          "intervalo": (precio.get("billing_cycle") or {}).get("interval"),
+                          "disponible": precio.get("status") == "active" and bool(settings.PADDLE_WEBHOOK_SECRET.get_secret_value())})
     return resultado
 
 

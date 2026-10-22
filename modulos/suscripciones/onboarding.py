@@ -13,7 +13,7 @@ from core.config import settings
 from database.almacen import Instituciones
 from modulos.login.tabla import Usuarios
 from modulos.suscripciones.catalogo import planes_disponibles
-from modulos.suscripciones.paddle import crear_transaccion_inicial
+from modulos.suscripciones.paddle import crear_transaccion_inicial, detalles_planes
 from modulos.suscripciones.tabla import AltasInstitucion, Suscripciones
 from utils.hash import encriptar_contrasena
 
@@ -47,12 +47,16 @@ def _respuesta_alta(suscripcion: Suscripciones, token: str, slug: str) -> dict:
 
 
 def registrar_universidad(db: Session, datos: RegistroUniversidad) -> dict:
-    if not settings.PADDLE_CLIENT_TOKEN or not settings.PADDLE_WEBHOOK_SECRET.get_secret_value():
-        raise HTTPException(503, "El alta aun no esta habilitada en Paddle")
+    if not settings.PADDLE_CLIENT_TOKEN:
+        raise HTTPException(503, "El registro esta temporalmente deshabilitado: falta configurar Paddle Checkout")
+    if not settings.PADDLE_WEBHOOK_SECRET.get_secret_value():
+        raise HTTPException(503, "El registro esta temporalmente deshabilitado: falta configurar el webhook de Paddle")
     planes = {plan["nombre"]: plan["price_id"] for plan in planes_disponibles()}
     precio = planes.get(datos.plan)
     if not precio:
-        raise HTTPException(422, "Plan no disponible")
+        raise HTTPException(503, "El plan seleccionado no tiene un precio valido de Paddle Sandbox")
+    if not any(plan["nombre"] == datos.plan and plan["disponible"] for plan in detalles_planes()):
+        raise HTTPException(503, "El plan seleccionado no esta disponible en Paddle Sandbox")
     if db.query(Instituciones.id).filter(Instituciones.slug == datos.slug).first():
         raise HTTPException(409, "Ya existe una universidad con ese identificador")
 

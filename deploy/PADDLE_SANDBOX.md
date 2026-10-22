@@ -10,6 +10,8 @@ La universidad es `instituciones.id`. No existe una tabla de tenants adicional. 
 4. Configura Nginx segun `deploy/nginx-api.conf.example` y instala un certificado HTTPS. El contenedor escucha solo en `127.0.0.1` del VPS.
 5. Registra en Paddle Sandbox la URL `https://api.mi-dominio.com/api/payments/paddle/webhook` con `transaction.completed`, `subscription.created`, `subscription.updated`, `subscription.canceled` y `subscription.past_due`. Copia el secreto de esa notificacion a `PADDLE_WEBHOOK_SECRET` y reinicia el contenedor.
 
+El precio debe existir como precio recurrente activo dentro de la misma cuenta Sandbox de la API key. Subir el backend al VPS no corrige un `PADDLE_PRICE_ID` invalido. Mientras falte `PADDLE_WEBHOOK_SECRET`, los planes se pueden consultar, pero el registro con pago permanece deshabilitado para evitar universidades que no puedan activarse.
+
 Nginx quita `/api` antes de enviar la solicitud al contenedor. El backend tambien acepta la ruta con `/api` si el proxy conserva el prefijo. El webhook es publico, no usa JWT ni CSRF y verifica `Paddle-Signature` sobre el cuerpo original. Si falta el secreto, responde 503.
 
 ## Recorrido manual en Sandbox
