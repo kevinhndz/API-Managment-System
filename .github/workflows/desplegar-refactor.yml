@@ -1,21 +1,24 @@
 name: CI CD CampusFlow
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
-      - refactor
+      - main
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: campusflow-refactor
+  group: campusflow-main
   cancel-in-progress: false
 
 jobs:
   compilar-y-desplegar:
-    if: github.ref == 'refs/heads/refactor'
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Obtener codigo
@@ -34,14 +37,19 @@ jobs:
           npm run build --prefix frontend
 
       - name: Construir imagen de API
-        run: docker build --pull --tag campusflow-api:refactor .
+        run: docker build --pull --tag campusflow-api:main .
+
+      - name: Verificar configuracion Docker Compose
+        if: github.event_name == 'pull_request'
+        run: docker compose --env-file /dev/null -f deploy/compose.vps.yaml config --quiet
 
       - name: Empaquetar entrega
         run: |
-          docker save campusflow-api:refactor | gzip -1 > /tmp/campusflow-api.tar.gz
+          docker save campusflow-api:main | gzip -1 > /tmp/campusflow-api.tar.gz
           tar -C frontend/dist -czf /tmp/campusflow-frontend.tar.gz .
 
       - name: Preparar acceso seguro al VPS
+        if: github.event_name != 'pull_request'
         env:
           DEPLOY_KEY: ${{ secrets.CAMPUSFLOW_DEPLOY_KEY }}
           VPS_HOST: ${{ vars.CAMPUSFLOW_VPS_HOST }}
@@ -63,6 +71,7 @@ jobs:
           fi
 
       - name: Copiar imagen y frontend al VPS
+        if: github.event_name != 'pull_request'
         env:
           VPS_HOST: ${{ vars.CAMPUSFLOW_VPS_HOST }}
           VPS_USER: ${{ vars.CAMPUSFLOW_VPS_USER }}
@@ -75,6 +84,7 @@ jobs:
             /tmp/campusflow-api.tar.gz /tmp/campusflow-frontend.tar.gz "$destino:$carpeta/"
 
       - name: Desplegar y verificar servicios
+        if: github.event_name != 'pull_request'
         env:
           VPS_HOST: ${{ vars.CAMPUSFLOW_VPS_HOST }}
           VPS_USER: ${{ vars.CAMPUSFLOW_VPS_USER }}
@@ -95,7 +105,7 @@ jobs:
             codigo="${1:-$?}"
             trap - ERR
             if docker image inspect "$anterior" >/dev/null 2>&1; then
-              docker image tag "$anterior" campusflow-api:refactor || true
+              docker image tag "$anterior" campusflow-api:main || true
             fi
             if [ "$cambios" = 1 ]; then
               cp "$paquete/compose.previous.yaml" "$proxy/compose.vps.yaml" || true
@@ -112,11 +122,15 @@ jobs:
           trap restaurar ERR
 
           cd "$repo"
-          git fetch origin refactor
+          git fetch origin main
           git reset --hard "$version"
           test "$(git rev-parse HEAD)" = "$version"
 
-          docker image tag campusflow-api:refactor "$anterior"
+          if docker image inspect campusflow-api:main >/dev/null 2>&1; then
+            docker image tag campusflow-api:main "$anterior"
+          elif docker image inspect campusflow-api:refactor >/dev/null 2>&1; then
+            docker image tag campusflow-api:refactor "$anterior"
+          fi
           docker load --input "$paquete/campusflow-api.tar.gz"
 
           mkdir -p "$repo/frontend/dist.next"

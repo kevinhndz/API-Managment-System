@@ -3,7 +3,7 @@ services:
     build:
       context: /srv/proyectos/CampusFlow
       dockerfile: Dockerfile
-    image: campusflow-api:refactor
+    image: campusflow-api:main
     container_name: campusflow-api
     restart: unless-stopped
     env_file:
