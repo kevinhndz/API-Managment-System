@@ -15,7 +15,10 @@ export function RegistroUniversidadPage() {
   const [error, setError] = useState('')
   const [ocupado, setOcupado] = useState(false)
   useEffect(() => {
-    void listarPlanesPublicos().then((items) => { setPlanes(items); setPlan(items.find((item) => item.nombre === parametros.get('plan'))?.nombre ?? items[0]?.nombre ?? '') }).catch((reason) => setError(String(reason)))
+    void listarPlanesPublicos().then((items) => {
+      if (!Array.isArray(items)) throw new Error('Catalogo de planes invalido')
+      setPlanes(items); setPlan(items.find((item) => item.nombre === parametros.get('plan'))?.nombre ?? items[0]?.nombre ?? '')
+    }).catch((reason) => setError(String(reason)))
     const token = localStorage.getItem(claveAlta)
     if (token) void reanudarAltaUniversidad(token).then((dato) => { setAlta(dato); setEstado(dato.status) }).catch(() => localStorage.removeItem(claveAlta))
   }, [parametros])
