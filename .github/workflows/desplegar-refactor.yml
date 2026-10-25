@@ -1,0 +1,148 @@
+name: CI CD CampusFlow
+
+on:
+  push:
+    branches:
+      - refactor
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: campusflow-refactor
+  cancel-in-progress: false
+
+jobs:
+  compilar-y-desplegar:
+    if: github.ref == 'refs/heads/refactor'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener codigo
+        uses: actions/checkout@v4
+
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Compilar frontend
+        run: |
+          npm ci --prefix frontend
+          npm run build --prefix frontend
+
+      - name: Construir imagen de API
+        run: docker build --pull --tag campusflow-api:refactor .
+
+      - name: Empaquetar entrega
+        run: |
+          docker save campusflow-api:refactor | gzip -1 > /tmp/campusflow-api.tar.gz
+          tar -C frontend/dist -czf /tmp/campusflow-frontend.tar.gz .
+
+      - name: Preparar acceso seguro al VPS
+        env:
+          DEPLOY_KEY: ${{ secrets.CAMPUSFLOW_DEPLOY_KEY }}
+          VPS_HOST: ${{ vars.CAMPUSFLOW_VPS_HOST }}
+          VPS_USER: ${{ vars.CAMPUSFLOW_VPS_USER }}
+          VPS_KNOWN_HOSTS: ${{ vars.CAMPUSFLOW_VPS_KNOWN_HOSTS }}
+        run: |
+          test -n "$DEPLOY_KEY" || { echo "Falta CAMPUSFLOW_DEPLOY_KEY"; exit 1; }
+          test -n "$VPS_HOST" || { echo "Falta CAMPUSFLOW_VPS_HOST"; exit 1; }
+          test -n "$VPS_USER" || { echo "Falta CAMPUSFLOW_VPS_USER"; exit 1; }
+          test -n "$VPS_KNOWN_HOSTS" || { echo "Falta CAMPUSFLOW_VPS_KNOWN_HOSTS"; exit 1; }
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_KEY" > "$HOME/.ssh/campusflow_deploy"
+          chmod 600 "$HOME/.ssh/campusflow_deploy"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+          if ! [[ "$VPS_HOST" =~ ^[A-Za-z0-9.-]+$ && "$VPS_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]; then
+            echo "Host o usuario del VPS tiene un formato invalido"
+            exit 1
+          fi
+
+      - name: Copiar imagen y frontend al VPS
+        env:
+          VPS_HOST: ${{ vars.CAMPUSFLOW_VPS_HOST }}
+          VPS_USER: ${{ vars.CAMPUSFLOW_VPS_USER }}
+        run: |
+          destino="$VPS_USER@$VPS_HOST"
+          version="${GITHUB_SHA}"
+          carpeta="/home/$VPS_USER/releases/$version"
+          ssh -i "$HOME/.ssh/campusflow_deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$destino" "mkdir -p '$carpeta'"
+          scp -i "$HOME/.ssh/campusflow_deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            /tmp/campusflow-api.tar.gz /tmp/campusflow-frontend.tar.gz "$destino:$carpeta/"
+
+      - name: Desplegar y verificar servicios
+        env:
+          VPS_HOST: ${{ vars.CAMPUSFLOW_VPS_HOST }}
+          VPS_USER: ${{ vars.CAMPUSFLOW_VPS_USER }}
+        run: |
+          destino="$VPS_USER@$VPS_HOST"
+          ssh -i "$HOME/.ssh/campusflow_deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$destino" \
+            "bash -s -- '$GITHUB_SHA' '$VPS_USER'" <<'REMOTE'
+          set -euo pipefail
+          version="$1"
+          usuario="$2"
+          repo=/srv/proyectos/CampusFlow
+          proxy=/srv/proyectos/ProxyNginx
+          paquete="/home/$usuario/releases/$version"
+          anterior="campusflow-api:rollback-$version"
+          cambios=0
+
+          restaurar() {
+            codigo="${1:-$?}"
+            trap - ERR
+            if docker image inspect "$anterior" >/dev/null 2>&1; then
+              docker image tag "$anterior" campusflow-api:refactor || true
+            fi
+            if [ "$cambios" = 1 ]; then
+              cp "$paquete/compose.previous.yaml" "$proxy/compose.vps.yaml" || true
+              cp "$paquete/nginx.previous.conf" "$proxy/nginx-campusflow.conf" || true
+              if [ -d "$repo/frontend/dist.previous" ]; then
+                rm -rf "$repo/frontend/dist"
+                mv "$repo/frontend/dist.previous" "$repo/frontend/dist"
+              fi
+              (cd "$proxy" && docker compose -f compose.vps.yaml up -d --no-deps --force-recreate api) || true
+              docker exec campusflow-nginx nginx -t && docker exec campusflow-nginx nginx -s reload || true
+            fi
+            exit "$codigo"
+          }
+          trap restaurar ERR
+
+          cd "$repo"
+          git fetch origin refactor
+          git reset --hard "$version"
+          test "$(git rev-parse HEAD)" = "$version"
+
+          docker image tag campusflow-api:refactor "$anterior"
+          docker load --input "$paquete/campusflow-api.tar.gz"
+
+          mkdir -p "$repo/frontend/dist.next"
+          find "$repo/frontend/dist.next" -mindepth 1 -delete
+          tar -xzf "$paquete/campusflow-frontend.tar.gz" -C "$repo/frontend/dist.next"
+          rm -rf "$repo/frontend/dist.previous"
+          cp "$proxy/compose.vps.yaml" "$paquete/compose.previous.yaml"
+          cp "$proxy/nginx-campusflow.conf" "$paquete/nginx.previous.conf"
+          mv "$repo/frontend/dist" "$repo/frontend/dist.previous"
+          cambios=1
+          mv "$repo/frontend/dist.next" "$repo/frontend/dist"
+
+          cp deploy/compose.vps.yaml "$proxy/compose.vps.yaml"
+          cp deploy/nginx-campusflow.conf "$proxy/nginx-campusflow.conf"
+          cd "$proxy"
+          docker compose -f compose.vps.yaml up -d --no-deps --force-recreate api
+          docker exec campusflow-nginx nginx -t
+          docker exec campusflow-nginx nginx -s reload
+
+          if ! curl --retry 8 --retry-delay 2 --retry-all-errors -fsS -o /dev/null \
+            https://campusuphflow.duckdns.org/api/docs; then
+            restaurar 1
+          fi
+
+          cambios=0
+          rm -rf "$repo/frontend/dist.previous"
+          docker image rm "$anterior" >/dev/null 2>&1 || true
+          rm -rf "$paquete"
+          REMOTE
