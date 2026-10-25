@@ -4,18 +4,14 @@ import csv
 import hashlib
 import io
 import secrets
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 
 from email_validator import EmailNotValidError, validate_email
-from fastapi import HTTPException
 from openpyxl import load_workbook
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from modulos.carreras.tabla import Carreras
-from modulos.docentes.tabla import Docentes
-from modulos.estudiantes.tabla import Estudiantes
-from modulos.importaciones.tabla import ImportacionesPendientes
+from modulos.importaciones import repository
+from modulos.importaciones.schema import ErrorImportacion
 
 COLUMNAS = {
     "carreras": ("codigo", "nombre", "duracion_anios"),
@@ -32,21 +28,21 @@ def _texto(valor) -> str:
 
 def _filas(archivo: bytes, nombre: str) -> tuple[list[dict], list[str]]:
     if not archivo or len(archivo) > MAX_BYTES:
-        raise HTTPException(413, "El archivo debe tener entre 1 byte y 2 MB")
+        raise ErrorImportacion(413, "El archivo debe tener entre 1 byte y 2 MB")
     if nombre.lower().endswith(".csv"):
         try:
             lector = csv.DictReader(io.StringIO(archivo.decode("utf-8-sig")))
             cabeceras = [_texto(col).casefold() for col in (lector.fieldnames or [])]
             if len(cabeceras) != len(set(cabeceras)) or not all(cabeceras):
-                raise HTTPException(422, "El CSV tiene columnas vacias o repetidas")
+                raise ErrorImportacion(422, "El CSV tiene columnas vacias o repetidas")
             filas = []
             for fila in lector:
                 if len(filas) >= MAX_FILAS:
-                    raise HTTPException(413, "Para mas de 5000 filas solicita una migracion asistida")
+                    raise ErrorImportacion(413, "Para mas de 5000 filas solicita una migracion asistida")
                 filas.append({_texto(clave).casefold(): valor for clave, valor in fila.items() if clave is not None})
             return filas, cabeceras
         except UnicodeDecodeError as exc:
-            raise HTTPException(422, "El CSV debe usar UTF-8") from exc
+            raise ErrorImportacion(422, "El CSV debe usar UTF-8") from exc
     if nombre.lower().endswith(".xlsx"):
         try:
             libro = load_workbook(io.BytesIO(archivo), read_only=True, data_only=True)
@@ -54,21 +50,21 @@ def _filas(archivo: bytes, nombre: str) -> tuple[list[dict], list[str]]:
             iterador = hoja.iter_rows(values_only=True)
             cabeceras = [_texto(valor).casefold() for valor in next(iterador, ())]
             if len(cabeceras) != len(set(cabeceras)) or not all(cabeceras):
-                raise HTTPException(422, "El Excel tiene columnas vacias o repetidas")
+                raise ErrorImportacion(422, "El Excel tiene columnas vacias o repetidas")
             filas = []
             for fila in iterador:
                 if not any(valor is not None for valor in fila):
                     continue
                 if len(filas) >= MAX_FILAS:
-                    raise HTTPException(413, "Para mas de 5000 filas solicita una migracion asistida")
+                    raise ErrorImportacion(413, "Para mas de 5000 filas solicita una migracion asistida")
                 filas.append(dict(zip(cabeceras, fila)))
             libro.close()
             return filas, cabeceras
         except HTTPException:
             raise
         except Exception as exc:
-            raise HTTPException(422, "No se pudo leer el Excel") from exc
-    raise HTTPException(422, "Usa un archivo CSV o XLSX")
+            raise ErrorImportacion(422, "No se pudo leer el Excel") from exc
+    raise ErrorImportacion(422, "Usa un archivo CSV o XLSX")
 
 
 def _validar(tipo: str, fila: dict, carreras: dict[str, int]) -> dict:
@@ -125,20 +121,20 @@ def _validar(tipo: str, fila: dict, carreras: dict[str, int]) -> dict:
 
 def previsualizar(db: Session, tipo: str, archivo: bytes, nombre: str) -> dict:
     if tipo not in COLUMNAS:
-        raise HTTPException(422, "Tipo de importacion no admitido")
+        raise ErrorImportacion(422, "Tipo de importacion no admitido")
     filas, cabeceras = _filas(archivo, nombre)
     faltantes = set(COLUMNAS[tipo]) - set(cabeceras)
     if faltantes:
-        raise HTTPException(422, "Faltan columnas: " + ", ".join(sorted(faltantes)))
+        raise ErrorImportacion(422, "Faltan columnas: " + ", ".join(sorted(faltantes)))
     if len(filas) > MAX_FILAS:
-        raise HTTPException(413, "Para mas de 5000 filas solicita una migracion asistida")
-    carreras = {item.codigo.casefold(): item.id for item in db.query(Carreras).all()}
-    modelo = {"carreras": Carreras, "docentes": Docentes, "estudiantes": Estudiantes}[tipo]
-    principal = {"carreras": "codigo", "docentes": "numero_empleado", "estudiantes": "cuenta"}[tipo]
-    existentes = {_texto(getattr(item, principal)).casefold() for item in db.query(modelo).all()}
-    nombres_carrera = {_texto(item.nombre).casefold() for item in db.query(Carreras).all()} if tipo == "carreras" else set()
-    correos = {_texto(item.correo).casefold() for item in db.query(modelo).all()} if tipo != "carreras" else set()
-    telefonos = {_texto(item.telefono) for item in db.query(Estudiantes).all() if item.telefono} if tipo == "estudiantes" else set()
+        raise ErrorImportacion(413, "Para mas de 5000 filas solicita una migracion asistida")
+    existentes_db = repository.datos_existentes(db, tipo)
+    carreras = existentes_db["carreras"]
+    principal = repository.PRINCIPALES[tipo]
+    existentes = existentes_db["principales"]
+    nombres_carrera = existentes_db["nombres_carrera"]
+    correos = existentes_db["correos"]
+    telefonos = existentes_db["telefonos"]
     vistos, correos_vistos, nombres_vistos, telefonos_vistos = set(), set(), set(), set()
     validos, errores = [], []
     for numero, fila in enumerate(filas, 2):
@@ -164,34 +160,20 @@ def previsualizar(db: Session, tipo: str, archivo: bytes, nombre: str) -> dict:
         except ValueError as exc:
             errores.append({"fila": numero, "error": str(exc)})
     token = secrets.token_urlsafe(32)
-    db.add(ImportacionesPendientes(institucion_id=db.info["institucion_id"],
-        token_hash=hashlib.sha256(token.encode()).hexdigest(), tipo=tipo,
-        registros=validos, errores=errores, vence_en=datetime.now(timezone.utc) + timedelta(hours=1)))
-    db.commit()
+    repository.guardar_vista(db, hashlib.sha256(token.encode()).hexdigest(), tipo, validos, errores)
     return {"token": token, "tipo": tipo, "total": len(filas), "validos": len(validos),
             "invalidos": len(errores), "errores": errores[:100]}
 
 
 def aplicar(db: Session, token: str) -> dict:
-    registro = db.query(ImportacionesPendientes).filter_by(token_hash=hashlib.sha256(token.encode()).hexdigest()).with_for_update().one_or_none()
+    registro = repository.buscar_vista(db, hashlib.sha256(token.encode()).hexdigest())
     if not registro:
-        raise HTTPException(404, "Vista previa no encontrada en esta universidad")
+        raise ErrorImportacion(404, "Vista previa no encontrada en esta universidad")
     vencimiento = registro.vence_en if registro.vence_en.tzinfo else registro.vence_en.replace(tzinfo=timezone.utc)
     if registro.aplicado_en or datetime.now(timezone.utc) >= vencimiento:
-        raise HTTPException(409, "Esta vista previa ya se uso o vencio")
+        raise ErrorImportacion(409, "Esta vista previa ya se uso o vencio")
     if not registro.registros:
-        raise HTTPException(409, "No hay filas validas para importar")
-    modelo = {"carreras": Carreras, "docentes": Docentes, "estudiantes": Estudiantes}[registro.tipo]
-    for fila in registro.registros:
-        preparada = dict(fila)
-        for clave in ("fecha_ingreso", "fechaNacimiento"):
-            if preparada.get(clave):
-                preparada[clave] = date.fromisoformat(preparada[clave])
-        db.add(modelo(institucion_id=db.info["institucion_id"], **preparada))
-    registro.aplicado_en = datetime.now(timezone.utc)
-    try:
-        db.commit()
-    except IntegrityError as exc:
-        db.rollback()
-        raise HTTPException(409, "Los datos cambiaron desde la vista previa. Genera otra vista previa") from exc
+        raise ErrorImportacion(409, "No hay filas validas para importar")
+    if not repository.aplicar_vista(db, registro):
+        raise ErrorImportacion(409, "Los datos cambiaron desde la vista previa. Genera otra vista previa")
     return {"importados": len(registro.registros), "omitidos": len(registro.errores)}
