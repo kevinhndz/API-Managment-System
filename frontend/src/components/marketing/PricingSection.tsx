@@ -26,7 +26,10 @@ export function PricingSection({ mostrarRegistro = true }: { mostrarRegistro?: b
   const [error, setError] = useState('')
   const reducir = useReducedMotion()
   useEffect(() => {
-    void listarPlanesPublicos().then((datos) => { setPlanes(datos); setSeleccion(datos[0]?.nombre ?? '') }).catch(() => setError('No se pudieron cargar los planes en este momento.'))
+    void listarPlanesPublicos().then((datos) => {
+      if (!Array.isArray(datos)) throw new Error('Catalogo invalido')
+      setPlanes(datos); setSeleccion(datos[0]?.nombre ?? '')
+    }).catch(() => setError('No se pudieron cargar los planes en este momento.'))
   }, [])
   const actual = planes.find((plan) => plan.nombre === seleccion) ?? planes[0]
   return <section id="planes" aria-labelledby="planes-titulo" className="relative scroll-mt-20 bg-[#100d18] px-4 pb-24 pt-10 text-white sm:px-8 sm:pt-16">
