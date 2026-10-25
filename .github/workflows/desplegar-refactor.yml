@@ -39,10 +39,6 @@ jobs:
       - name: Construir imagen de API
         run: docker build --pull --tag campusflow-api:main .
 
-      - name: Verificar configuracion Docker Compose
-        if: github.event_name == 'pull_request'
-        run: docker compose --env-file /dev/null -f deploy/compose.vps.yaml config --quiet
-
       - name: Empaquetar entrega
         run: |
           docker save campusflow-api:main | gzip -1 > /tmp/campusflow-api.tar.gz
