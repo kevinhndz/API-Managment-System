@@ -1,0 +1,9 @@
+{
+  "name": "campusflow-desarrollo",
+  "private": true,
+  "scripts": {
+    "dev": "bash scripts/desarrollo.sh",
+    "dev:backend": "venv/bin/uvicorn main:app --reload --host 127.0.0.1 --port 8000",
+    "dev:frontend": "npm --prefix frontend run dev -- --host 127.0.0.1 --strictPort"
+  }
+}
