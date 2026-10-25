@@ -101,11 +101,11 @@ jobs:
               cp "$paquete/compose.previous.yaml" "$proxy/compose.vps.yaml" || true
               cp "$paquete/nginx.previous.conf" "$proxy/nginx-campusflow.conf" || true
               if [ -d "$repo/frontend/dist.previous" ]; then
-                rm -rf "$repo/frontend/dist"
-                mv "$repo/frontend/dist.previous" "$repo/frontend/dist"
+                find "$repo/frontend/dist" -mindepth 1 -delete || true
+                cp -a "$repo/frontend/dist.previous/." "$repo/frontend/dist/" || true
               fi
-              (cd "$proxy" && docker compose -f compose.vps.yaml up -d --no-deps --force-recreate api) || true
-              docker exec campusflow-nginx nginx -t && docker exec campusflow-nginx nginx -s reload || true
+              (cd "$proxy" && docker compose -f compose.vps.yaml up -d --no-deps --force-recreate api nginx) || true
+              docker exec campusflow-nginx nginx -t || true
             fi
             exit "$codigo"
           }
@@ -125,24 +125,26 @@ jobs:
           rm -rf "$repo/frontend/dist.previous"
           cp "$proxy/compose.vps.yaml" "$paquete/compose.previous.yaml"
           cp "$proxy/nginx-campusflow.conf" "$paquete/nginx.previous.conf"
-          mv "$repo/frontend/dist" "$repo/frontend/dist.previous"
+          cp -a "$repo/frontend/dist" "$repo/frontend/dist.previous"
           cambios=1
-          mv "$repo/frontend/dist.next" "$repo/frontend/dist"
+          find "$repo/frontend/dist" -mindepth 1 -delete
+          cp -a "$repo/frontend/dist.next/." "$repo/frontend/dist/"
 
           cp deploy/compose.vps.yaml "$proxy/compose.vps.yaml"
           cp deploy/nginx-campusflow.conf "$proxy/nginx-campusflow.conf"
           cd "$proxy"
-          docker compose -f compose.vps.yaml up -d --no-deps --force-recreate api
+          docker compose -f compose.vps.yaml up -d --no-deps --force-recreate api nginx
           docker exec campusflow-nginx nginx -t
-          docker exec campusflow-nginx nginx -s reload
 
           if ! curl --retry 8 --retry-delay 2 --retry-all-errors -fsS -o /dev/null \
-            https://campusuphflow.duckdns.org/api/docs; then
+            https://campusuphflow.duckdns.org/api/docs || ! curl --retry 8 --retry-delay 2 --retry-all-errors -fsS -o /dev/null \
+            https://campusuphflow.duckdns.org/; then
             restaurar 1
           fi
 
           cambios=0
           rm -rf "$repo/frontend/dist.previous"
+          rm -rf "$repo/frontend/dist.next"
           docker image rm "$anterior" >/dev/null 2>&1 || true
           rm -rf "$paquete"
           REMOTE
