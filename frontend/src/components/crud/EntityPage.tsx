@@ -108,7 +108,7 @@ export function EntityPage<T extends EntityWithId, TPayload extends object>({
   const hasActiveFilters = statusFilter !== 'todos' || Object.values(filterValues).some(Boolean)
 
   useEffect(() => {
-    if (!hasActiveFilters) { setFilterItems(null); setFilterError(''); return undefined }
+    if (!hasActiveFilters) { setFilterItems(null); setFilterLoading(false); setFilterError(''); return undefined }
     let active = true
     void (async () => {
       setFilterLoading(true)
