@@ -328,7 +328,7 @@ export function ReportesPage() {
         setArchivo({ titulo, formato, url })
       }
     } catch (reason) {
-      if (id === solicitudArchivo.current) setError(reason instanceof Error ? reason.message : 'No se pudo preparar la vista previa.')
+      if (id === solicitudArchivo.current) setErrorArchivo(reason instanceof Error ? reason.message : 'No se pudo preparar la vista previa.')
     } finally {
       if (id === solicitudArchivo.current) setDescargando(null)
     }
@@ -380,6 +380,8 @@ export function ReportesPage() {
   }).join(' · ') || 'Todos los registros'
 
   function prepararExportacion() {
+    if (esPdf && !(moduloActivo === 'constancia_laboral' ? filtros.docente_id : filtros.estudiante_id)) { setError('Selecciona una persona antes de preparar el documento.'); return }
+    setError('')
     setErrorArchivo('')
     setExportFormat(esPdf ? 'pdf' : 'xlsx')
     setExportOpen(true)

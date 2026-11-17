@@ -31,7 +31,7 @@ export function DashboardPage() {
             const percent = data.secciones.total ? item.value / data.secciones.total * 100 : 0
             return <div className="academic-section-bar" key={item.label}>
               <div><span><i style={{ backgroundColor: item.color }} />{item.label}</span><strong>{item.value.toLocaleString('es-HN')} <small>({percent.toFixed(1)}%)</small></strong></div>
-              <meter min={0} max={Math.max(data.secciones.total, 1)} value={item.value} aria-label={item.label} style={{ accentColor: item.color }} />
+              <meter min={0} max={Math.max(data.secciones.total, 1)} value={item.value} aria-label={item.label} style={{ accentColor: item.color, color: item.color }} />
             </div>
           })}</div>
           {!data.secciones.total && <p className="academic-empty">No hay secciones registradas.</p>}
