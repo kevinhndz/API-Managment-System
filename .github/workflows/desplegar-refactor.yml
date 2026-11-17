@@ -24,6 +24,24 @@ jobs:
       - name: Obtener codigo
         uses: actions/checkout@v5
 
+      - name: Preparar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+          cache: pip
+
+      - name: Comprobar API y seguridad con base de datos de pruebas
+        env:
+          APP_ENV: test
+          DATABASE_URL: sqlite://
+          SECRET_KEY: clave-exclusiva-de-pruebas-del-workflow
+          COOKIE_SECURE: "false"
+          FRONTEND_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m compileall -q main.py core database modulos utils
+          python -m pytest -q
+
       - name: Preparar Node
         uses: actions/setup-node@v5
         with:
@@ -34,6 +52,7 @@ jobs:
       - name: Comprobar compilacion del frontend
         run: |
           npm ci --prefix frontend
+          npm test --prefix frontend
           npm run build --prefix frontend
 
       - name: Construir imagenes de API y frontend
