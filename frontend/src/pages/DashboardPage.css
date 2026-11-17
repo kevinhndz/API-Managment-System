@@ -28,3 +28,9 @@
 .academic-error { padding: 12px 16px; margin-bottom: 20px; border: 1px solid #fecaca; background: #fff1f2; border-radius: 6px; color: #9f1239; font-size: 14px; }
 @media (max-width: 1100px) { .academic-chart-row { grid-template-columns: minmax(0, 1fr); } .academic-section-status { border-left: 0; padding-left: 0; } }
 @media (max-width: 767px) { .academic-infrastructure { grid-template-columns: minmax(0, 1fr); } .academic-page-header h1 { font-size: 26px; } }
+.academic-enrollment-chart { min-width: 0; }
+.academic-enrollment-chart header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.academic-enrollment-chart header p { font-size: 13px; color: #475569; margin-top: 4px; }
+.academic-enrollment-chart header > span { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: .04em; }
+.academic-enrollment-plot { height: 280px; margin-top: 28px; }
+.academic-enrollment-chart footer { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin-top: 20px; padding-top: 12px; border-top: 1px solid #f1f5f9; font-size: 11px; color: #64748b; }
