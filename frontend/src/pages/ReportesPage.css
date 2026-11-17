@@ -1,0 +1,33 @@
+.academic-report-controls { padding: 0 0 28px; border-bottom: 1px solid #e2e8f0; }
+.academic-report-type { display: block; max-width: 384px; color: #475569; font-size: 14px; }
+.academic-reports input, .academic-reports select { background: #fff; border-radius: 4px; border-color: #cbd5e1; color: #334155; }
+.academic-report-filters { display: flex; flex-wrap: wrap; gap: 20px 16px; align-items: end; margin-top: 20px; }
+.academic-report-filters > label { flex: 1 1 190px; max-width: 360px; font-size: 13px; color: #475569; }
+.academic-report-filter-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.academic-report-results { padding: 28px 0; }
+.academic-report-results > header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; }
+.academic-report-results h2 { font-size: 20px; font-weight: 600; }
+.academic-report-results h2 span { color: #64748b; font-size: 13px; font-weight: 400; margin-left: 8px; }
+.academic-report-empty { text-align: center; padding: 70px 16px; color: #64748b; }
+.academic-report-empty svg { margin: 0 auto 16px; color: #94a3b8; }
+.academic-report-empty h3 { font-weight: 600; font-size: 16px; }
+.academic-report-empty p { font-size: 13px; margin-top: 8px; }
+.academic-report-results table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 13px; text-align: left; }
+.academic-report-results th { font-weight: 600; color: #64748b; background: #f8fafc; font-size: 11px; letter-spacing: .03em; text-transform: uppercase; }
+.academic-report-results th, .academic-report-results td { white-space: nowrap; padding: 16px; border-bottom: 1px solid #e2e8f0; }
+.academic-report-results footer { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; padding-top: 16px; color: #64748b; font-size: 12px; }
+.academic-report-results nav { display: flex; align-items: center; gap: 12px; }
+.academic-report-note { margin-top: 16px; font-size: 13px; color: #64748b; }
+.academic-document-controls { padding-top: 24px; }
+.academic-reports [role="dialog"] > div { background: #fff; border-radius: 4px; }
+.academic-export-summary { padding: 24px; }
+.academic-export-summary dl { padding: 0 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; }
+.academic-export-summary dl > div { display: grid; grid-template-columns: 1fr 1.4fr; gap: 16px; padding: 16px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+.academic-export-summary dl > div:last-child { border: 0; }
+.academic-export-summary dt { color: #64748b; }
+.academic-export-summary dd { text-align: right; font-weight: 600; }
+.academic-export-summary small { display: block; color: #64748b; font-size: 11px; font-weight: 400; }
+.academic-export-summary select { width: 100%; border: 1px solid #cbd5e1; padding: 6px; font-size: 13px; }
+.academic-export-summary > p { margin-top: 20px; color: #64748b; font-size: 12px; line-height: 1.7; }
+.academic-export-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 16px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; }
+@media (max-width: 639px) { .academic-export-summary { padding: 16px; } .academic-export-summary dl > div { grid-template-columns: 1fr; gap: 4px; } .academic-export-summary dd { text-align: left; } }
