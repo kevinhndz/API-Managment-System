@@ -1,0 +1,22 @@
+.workspace {
+  --workspace-primary: #5b32d6;
+  --workspace-ink: #0f172a;
+  --workspace-muted: #64748b;
+  --workspace-line: #e2e8f0;
+  display: flex;
+  min-height: 100dvh;
+  background: #fff;
+  color: var(--workspace-ink);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.workspace-body { flex: 1; min-width: 0; }
+.workspace-content { max-width: 1680px; margin: 0 auto; padding: 32px; outline: none; }
+.workspace-skip { position: fixed; top: -60px; left: 16px; z-index: 100; padding: 12px; background: #fff; border: 2px solid var(--workspace-primary); }
+.workspace-skip:focus { top: 12px; }
+.workspace h1, .workspace h2, .workspace h3 { color: var(--workspace-ink); letter-spacing: -.025em; }
+.workspace .focus-ring:focus-visible { --tw-ring-color: #5b32d6; }
+.workspace button, .workspace a, .workspace select, .workspace input { touch-action: manipulation; }
+.workspace .action-menu__popover { background: #fff; border-color: var(--workspace-line); border-radius: 8px; }
+@media (max-width: 767px) { .workspace-content { padding: 24px 16px; } }
+@media (prefers-reduced-motion: reduce) { .workspace *, .workspace *::before, .workspace *::after { animation: none !important; transition: none !important; } }
