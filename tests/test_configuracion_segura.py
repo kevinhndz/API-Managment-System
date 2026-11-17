@@ -8,7 +8,8 @@ CLAVE_PRODUCCION = "r4nd0m-ESTA-clave-segura-2026-sin-reutilizar"
 URL_POSTGRES = "postgresql+psycopg://usuario:contrasena@db.example.test:5432/campusflow"
 
 
-def test_produccion_exige_clave_segura_https_cookie_y_postgresql():
+def test_produccion_exige_clave_segura_https_cookie_y_postgresql(monkeypatch):
+    monkeypatch.delenv("COOKIE_SECURE", raising=False)
     settings = Settings(
         _env_file=None,
         APP_ENV="production",

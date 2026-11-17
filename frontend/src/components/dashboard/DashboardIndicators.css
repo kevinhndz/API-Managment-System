@@ -1,8 +1,12 @@
-.berry-primary-metric{background:linear-gradient(135deg,#5e35b1,#4527a0)}
-.berry-secondary-metric{background:#2196f3}
-.berry-mini-metric{transition:transform 180ms cubic-bezier(.23,1,.32,1),box-shadow 180ms ease}
-.metric-digit{display:inline-block;width:.62em;height:1.1em;overflow:hidden;vertical-align:bottom}
-.metric-digit-strip{display:flex;flex-direction:column;align-items:center;transition:transform 900ms cubic-bezier(.23,1,.32,1)}
-.metric-digit-strip>span{display:block;height:1.1em;line-height:1.1em}
-@media (hover:hover) and (pointer:fine){.berry-mini-metric:hover{transform:translateY(-2px);box-shadow:0 8px 22px -14px rgba(32,40,45,.22)}}
-@media (prefers-reduced-motion:reduce){.berry-mini-metric,.metric-digit-strip{transition:none}}
+.academic-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 24px 0; border-block: 1px solid #e2e8f0; }
+.academic-metrics article { min-width: 0; padding: 0 24px; border-left: 1px solid #e2e8f0; }
+.academic-metrics article:first-child { padding-left: 0; border-left: 0; }
+.academic-metrics h2 { font-size: 14px; font-weight: 500; color: #475569; letter-spacing: 0; }
+.academic-metric-value { margin: 10px 0 4px; font-size: clamp(28px, 2.6vw, 36px); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.academic-metric-value span { margin-left: 4px; color: #64748b; font-size: 16px; font-weight: 400; }
+.academic-metric-detail { font-size: 12px; color: #64748b; }
+@media (max-width: 767px) {
+  .academic-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 0; }
+  .academic-metrics article { padding: 0 16px; }
+  .academic-metrics article:nth-child(odd) { padding-left: 0; border-left: 0; }
+}

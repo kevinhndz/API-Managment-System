@@ -60,4 +60,15 @@ describe('DocentesPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /filtros/i }))
     expect(await screen.findByRole('combobox', { name: 'Filtrar por estado' })).toBeInTheDocument()
   })
+  it('permite limpiar filtros mientras la consulta anterior sigue pendiente', async () => {
+    render(<DocentesPage />)
+    await screen.findByText('DOC-012')
+    const loaded = await listarDocentes.mock.results[0].value
+    listarDocentes.mockImplementation((params) => params.limite === 100 ? new Promise(() => {}) : Promise.resolve(loaded))
+    fireEvent.click(screen.getByRole('button', { name: /filtros/i }))
+    fireEvent.change(screen.getByLabelText('Filtrar por estado'), { target: { value: 'inactivo' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar' }))
+    expect(await screen.findByText('DOC-012')).toBeInTheDocument()
+  })
+
 })

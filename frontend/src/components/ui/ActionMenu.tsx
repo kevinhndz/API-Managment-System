@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ChevronDown, Pencil, Trash2 } from 'lucide-react'
+import { ChevronDown, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 
 interface ActionMenuProps {
   singular: string
+  compact?: boolean
   onEdit: () => void
   onDelete: () => void
   canEdit?: boolean
@@ -14,7 +15,7 @@ interface ActionMenuProps {
   }
 }
 
-export function ActionMenu({ singular, onEdit, onDelete, canEdit = true, canDelete = true, extraAction }: ActionMenuProps) {
+export function ActionMenu({ singular, compact = false, onEdit, onDelete, canEdit = true, canDelete = true, extraAction }: ActionMenuProps) {
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -42,9 +43,9 @@ export function ActionMenu({ singular, onEdit, onDelete, canEdit = true, canDele
   }
 
   return <div className="relative inline-block text-left" ref={menuRef}>
-    <button ref={triggerRef} className="focus-ring inline-flex h-9 items-center gap-2 rounded-lg border bg-[#fffdf8] px-3 text-xs font-semibold text-[#574240] shadow-sm transition hover:bg-[#faf7f0] dark:border-[#39334b] dark:bg-[#242033] dark:text-stone-200 dark:hover:bg-[#302a43]" type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
-      Acciones
-      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+    <button ref={triggerRef} className={`${compact ? 'action-menu-compact ' : ''}focus-ring inline-flex h-9 items-center gap-2 rounded-lg border bg-[#fffdf8] px-3 text-xs font-semibold text-[#574240] shadow-sm transition hover:bg-[#faf7f0] dark:border-[#39334b] dark:bg-[#242033] dark:text-stone-200 dark:hover:bg-[#302a43]`} type="button" aria-label={compact ? `Acciones de ${singular.toLocaleLowerCase('es')}` : undefined} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
+      {compact ? <MoreVertical size={18} /> : <>Acciones
+      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} /></>}
     </button>
     {open && <div className="action-menu__popover" role="menu" aria-label={`Acciones de ${singular.toLocaleLowerCase('es')}`}>
       {extraAction && <button className="action-menu__item" type="button" role="menuitem" onClick={() => choose(extraAction.onSelect)}>{extraAction.icon}{extraAction.label}</button>}

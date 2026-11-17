@@ -1,212 +1,81 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-
-import { descargarDocumento, descargarReporte, previsualizarDocumento, previsualizarHistorial, previsualizarReporte } from '../services/api'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { descargarDocumento, descargarReporte, previsualizarReporte } from '../services/api'
 import { ReportesPage } from './ReportesPage'
 
-vi.mock('../contexts/AuthContext', () => ({
-  useAuth: () => ({ user: { role: 'Administrador' } }),
-}))
+vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ user: { role: 'Administrador' } }) }))
+vi.mock('../hooks/useAcademicLabels', () => ({ useAcademicLabels: () => ({ carreraOptions: [{ value: '8', label: 'ING · Ingeniería' }], periodoOptions: [], estudianteOptions: [{ value: '17', label: '20260017 · Ana López' }], docenteOptions: [{ value: '7', label: 'DOC-007 · Carlos Perez' }], asignaturaOptions: [] }) }))
+vi.mock('../services/api', () => ({ descargarReporte: vi.fn().mockResolvedValue(undefined), obtenerCargaDocente: vi.fn().mockResolvedValue([]), descargarDocumento: vi.fn().mockResolvedValue(undefined), previsualizarReporte: vi.fn(), previsualizarHistorial: vi.fn(), previsualizarDocumento: vi.fn(), subirLogoInstitucional: vi.fn(), urlLogoInstitucional: vi.fn(() => '/api/documentos/logo'), INSTITUTION_SLUG: 'uphn', obtenerSlugInstitucion: () => 'universidad-elegida' }))
 
-vi.mock('../hooks/useAcademicLabels', () => ({
-  useAcademicLabels: () => ({
-    carreraOptions: [{ value: '8', label: 'ING · Ingeniería' }, { value: '9', label: 'ADM · Administración' }],
-    periodoOptions: [{ value: '2', label: '2026 · período 2' }],
-    estudianteOptions: [{ value: '17', label: '20260017 · Ana López' }, { value: '18', label: '20260018 · Luis Díaz' }],
-    docenteOptions: [{ value: '7', label: 'DOC-007 · Carlos Perez' }],
-    asignaturaOptions: [{ value: '4', label: 'MAT-1 · Matematicas' }],
-  }),
-}))
-
-vi.mock('../services/api', () => ({
-  descargarReporte: vi.fn(),
-  obtenerCargaDocente: vi.fn(),
-  descargarDocumento: vi.fn(),
-  previsualizarReporte: vi.fn(),
-  previsualizarHistorial: vi.fn(),
-  previsualizarDocumento: vi.fn(),
-  subirLogoInstitucional: vi.fn(),
-  urlLogoInstitucional: vi.fn(() => '/api/documentos/logo'),
-  INSTITUTION_SLUG: 'uphn',
-}))
+class WorkerPrueba {
+  onmessage: ((event: MessageEvent) => void) | null = null
+  onerror: (() => void) | null = null
+  postMessage = vi.fn()
+  terminate = vi.fn()
+  constructor() { workers.push(this) }
+}
+let workers: WorkerPrueba[] = []
+beforeEach(() => { workers = []; vi.stubGlobal('Worker', WorkerPrueba) })
+afterEach(() => { cleanup(); vi.clearAllMocks(); vi.unstubAllGlobals() })
+function elegir(modulo: string) { fireEvent.change(screen.getByRole('combobox', { name: 'Tipo de reporte' }), { target: { value: modulo } }) }
+function responder(datos = { modulo: 'estudiantes', total_registros: 99, columnas: [{ titulo: 'Nombre', campo: 'nombre' }], registros: [{ nombre: 'Ana López' }] }) {
+  const worker = workers.at(-1)!
+  const { id } = worker.postMessage.mock.calls.at(-1)![0]
+  act(() => worker.onmessage?.({ data: { id, estado: 'completada', datos } } as MessageEvent))
+}
+function consultar() { fireEvent.click(screen.getByRole('button', { name: 'Consultar datos' })); responder() }
 
 describe('ReportesPage', () => {
-  afterEach(() => {
-    cleanup()
-    vi.clearAllMocks()
-    vi.unstubAllGlobals()
-  })
-
-  it('ofrece Excel, PDF, CSV y JSON y solicita la descarga seleccionada', async () => {
-    vi.mocked(descargarReporte).mockResolvedValue(undefined)
-    vi.mocked(previsualizarReporte).mockResolvedValue(new Blob(['Cuenta,Estudiante\n20260017,Ana López'], { type: 'text/csv' }))
+  it('abre con selector y no consulta hasta pulsar Consultar datos', () => {
     render(<ReportesPage />)
-
-    expect(screen.queryByRole('combobox', { name: 'Módulo' })).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Matriculas y secciones: abrir grupo de reportes' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
-    expect(screen.getByRole('button', { name: 'Descargar Excel' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Descargar PDF' })).toBeInTheDocument()
-    const csvButton = screen.getByRole('button', { name: 'Descargar CSV' })
-    expect(csvButton).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Descargar JSON' })).toBeInTheDocument()
-
+    expect(screen.getByRole('combobox', { name: 'Tipo de reporte' })).toHaveValue('estudiantes')
+    expect(workers).toHaveLength(0)
+    expect(screen.getByRole('button', { name: 'Exportar' })).toBeDisabled()
+    consultar()
+    expect(screen.getByText('Ana López')).toBeInTheDocument()
+    expect(workers[0].postMessage).toHaveBeenCalledWith(expect.objectContaining({ institucion: 'universidad-elegida' }))
+  })
+  it.each(['xlsx', 'pdf', 'csv', 'json'])('confirma exportacion %s con todos los registros y los filtros consultados', async (formato) => {
+    render(<ReportesPage />)
     fireEvent.change(screen.getByRole('combobox', { name: 'Carrera' }), { target: { value: 'Ingeniería' } })
-    expect(screen.getByRole('option', { name: 'ING · Ingeniería' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('option', { name: 'ING · Ingeniería' }))
-    fireEvent.change(screen.getByRole('combobox', { name: 'Estudiante' }), { target: { value: '20260017' } })
-    expect(screen.getByRole('option', { name: '20260017 · Ana López' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('option', { name: '20260017 · Ana López' }))
-
-    fireEvent.click(csvButton)
-
-    await waitFor(() => {
-      expect(previsualizarReporte).toHaveBeenCalledWith('matriculas', 'csv', { carrera_id: 8, estudiante_id: 17 })
-    })
+    consultar()
+    fireEvent.click(screen.getByRole('button', { name: 'Exportar' }))
+    expect(screen.getByRole('dialog', { name: 'Vista previa de exportación' })).toHaveTextContent('99 registros')
     expect(descargarReporte).not.toHaveBeenCalled()
-    expect(await screen.findByRole('dialog', { name: 'Vista previa de Matrículas' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Confirmar descarga' }))
-    await waitFor(() => expect(descargarReporte).toHaveBeenCalledWith('matriculas', 'csv', { carrera_id: 8, estudiante_id: 17 }))
+    fireEvent.change(screen.getByLabelText('Formato de exportación'), { target: { value: formato } })
+    fireEvent.click(screen.getByRole('button', { name: `Descargar reporte (.${formato})` }))
+    await waitFor(() => expect(descargarReporte).toHaveBeenCalledWith('estudiantes', formato, { carrera_id: 8 }))
   })
-
-  it('previsualiza el historial desde Reportes y solo lo emite al confirmar', async () => {
-    const URLOriginal = URL
-    vi.stubGlobal('URL', class extends URLOriginal {
-      static createObjectURL = vi.fn(() => 'blob:historial')
-      static revokeObjectURL = vi.fn()
-    })
-    vi.mocked(previsualizarHistorial).mockResolvedValue(new Blob(['%PDF'], { type: 'application/pdf' }))
-    vi.mocked(descargarDocumento).mockResolvedValue(undefined)
-    render(<ReportesPage />)
-
-    fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir grupo de reportes' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Historial academico: abrir reporte académico' }))
-    expect(screen.queryByRole('button', { name: 'Descargar Excel' })).not.toBeInTheDocument()
-    fireEvent.change(screen.getByRole('combobox', { name: 'Estudiante' }), { target: { value: '20260017' } })
-    fireEvent.click(screen.getByRole('option', { name: '20260017 · Ana López' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Descargar PDF' }))
-
-    expect(await screen.findByRole('dialog', { name: 'Vista previa de Historial academico' })).toBeInTheDocument()
-    expect(previsualizarHistorial).toHaveBeenCalledWith(17)
-    expect(descargarDocumento).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: 'Confirmar descarga' }))
-    await waitFor(() => expect(descargarDocumento).toHaveBeenCalledWith('historial-academico', 17))
+  it('conserva vista del contenido sin descargar al abrirla', async () => {
+    vi.mocked(previsualizarReporte).mockResolvedValue(new Blob(['Nombre\nAna López'], { type: 'text/csv' }))
+    render(<ReportesPage />); consultar()
+    fireEvent.click(screen.getByRole('button', { name: 'Exportar' }))
+    fireEvent.change(screen.getByLabelText('Formato de exportación'), { target: { value: 'csv' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Ver contenido' }))
+    expect(await screen.findByRole('dialog', { name: 'Vista previa de Estudiantes' })).toBeInTheDocument()
+    expect(previsualizarReporte).toHaveBeenCalledWith('estudiantes', 'csv', {})
+    expect(descargarReporte).not.toHaveBeenCalled()
   })
-
-  it('previsualiza la constancia laboral antes de emitirla', async () => {
-    const URLOriginal = URL
-    vi.stubGlobal('URL', class extends URLOriginal {
-      static createObjectURL = vi.fn(() => 'blob:constancia')
-      static revokeObjectURL = vi.fn()
-    })
-    vi.mocked(previsualizarDocumento).mockResolvedValue(new Blob(['%PDF'], { type: 'application/pdf' }))
-    vi.mocked(descargarDocumento).mockResolvedValue(undefined)
-    render(<ReportesPage />)
-    fireEvent.click(screen.getByRole('button', { name: 'Docentes: abrir grupo de reportes' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Constancia laboral: abrir reporte académico' }))
-    fireEvent.change(screen.getByRole('combobox', { name: 'Docente' }), { target: { value: 'DOC-007' } })
-    fireEvent.click(screen.getByRole('option', { name: 'DOC-007 · Carlos Perez' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Descargar PDF' }))
-    await waitFor(() => expect(previsualizarDocumento).toHaveBeenCalledWith('constancia-laboral', 7))
-    expect(descargarDocumento).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: 'Confirmar descarga' }))
-    await waitFor(() => expect(descargarDocumento).toHaveBeenCalledWith('constancia-laboral', 7))
+  it.each([['historial_academico', 'Estudiante', '20260017', '20260017 · Ana López', 'historial-academico', 17], ['constancia_laboral', 'Docente', 'DOC-007', 'DOC-007 · Carlos Perez', 'constancia-laboral', 7]])('conserva emision del documento %s', async (modulo, campo, busqueda, opcion, tipo, id) => {
+    render(<ReportesPage />); elegir(String(modulo))
+    fireEvent.change(screen.getByRole('combobox', { name: String(campo) }), { target: { value: busqueda } })
+    fireEvent.click(screen.getByRole('option', { name: String(opcion) }))
+    fireEvent.click(screen.getByRole('button', { name: 'Preparar documento PDF' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Descargar reporte (.pdf)' }))
+    await waitFor(() => expect(descargarDocumento).toHaveBeenCalledWith(tipo, id))
   })
-
-  it('abre el reporte elegido y permite regresar a la cuadrícula', () => {
+  it('descarta respuestas antiguas al cambiar filtros y comunica errores del hilo', async () => {
     render(<ReportesPage />)
-    fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir grupo de reportes' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir reporte académico' }))
-    expect(screen.getByRole('heading', { name: 'Estudiantes' })).toBeInTheDocument()
-    expect(screen.queryByRole('combobox', { name: 'Módulo' })).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Elegir otro reporte' }))
-    expect(screen.getByRole('button', { name: 'Historial academico: abrir reporte académico' })).toBeInTheDocument()
-  })
-
-  it('mantiene los filtros activos y descarta respuestas antiguas del hilo', async () => {
-    const trabajadores: Array<{
-      onmessage: ((event: MessageEvent) => void) | null
-      postMessage: ReturnType<typeof vi.fn>
-      terminate: ReturnType<typeof vi.fn>
-    }> = []
-
-    class TrabajadorDePrueba {
-      onmessage: ((event: MessageEvent) => void) | null = null
-      onerror: (() => void) | null = null
-      postMessage = vi.fn()
-      terminate = vi.fn()
-
-      constructor() {
-        trabajadores.push(this)
-      }
-    }
-
-    vi.stubGlobal('Worker', TrabajadorDePrueba)
-    render(<ReportesPage />)
-
-    fireEvent.click(screen.getByRole('button', { name: 'Matriculas y secciones: abrir grupo de reportes' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
     fireEvent.click(screen.getByRole('button', { name: 'Consultar datos' }))
-    expect(screen.getByRole('status')).toHaveTextContent('Consultando en segundo plano')
-    expect(trabajadores[0].postMessage).toHaveBeenCalledWith({ id: 2, modulo: 'matriculas', filtros: {}, institucion: 'uphn' })
-
-    fireEvent.click(screen.getByRole('button', { name: 'Actualizar consulta' }))
-    trabajadores[0].onmessage?.({ data: { id: 2, estado: 'completada', datos: { total_registros: 1, columnas: [], registros: [] } } } as MessageEvent)
-    expect(screen.getByRole('status')).toHaveTextContent('Consultando en segundo plano')
-
-    trabajadores[0].onmessage?.({ data: { id: 3, estado: 'completada', datos: {
-      modulo: 'matriculas', total_registros: 1, columnas: [{ titulo: 'Estudiante', campo: 'estudiante' }], registros: [{ estudiante: 'Ana López' }],
-    } } } as MessageEvent)
-    expect(await screen.findByText('Ana López')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Elegir otro reporte' }))
-    expect(trabajadores[0].terminate).toHaveBeenCalled()
-    expect(screen.queryByText('Ana López')).not.toBeInTheDocument()
-  })
-
-  it('muestra los campos booleanos de los reportes con el chip de activo e inactivo', async () => {
-    const trabajadores: Array<{ onmessage: ((event: MessageEvent) => void) | null; postMessage: ReturnType<typeof vi.fn>; terminate: ReturnType<typeof vi.fn> }> = []
-    class TrabajadorDePrueba {
-      onmessage: ((event: MessageEvent) => void) | null = null
-      onerror: (() => void) | null = null
-      postMessage = vi.fn()
-      terminate = vi.fn()
-      constructor() { trabajadores.push(this) }
-    }
-    vi.stubGlobal('Worker', TrabajadorDePrueba)
-
-    render(<ReportesPage />)
-    fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir grupo de reportes' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Estudiantes: abrir reporte académico' }))
+    const worker = workers[0]
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }))
+    act(() => worker.onmessage?.({ data: { id: 1, estado: 'completada', datos: { total_registros: 1, columnas: [], registros: [] } } } as MessageEvent))
+    expect(screen.getByText('Consulta los datos del reporte')).toBeInTheDocument()
+    expect(worker.terminate).toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'Consultar datos' }))
-    trabajadores[0].onmessage?.({ data: { id: 2, estado: 'completada', datos: {
-      modulo: 'estudiantes', total_registros: 1,
-      columnas: [{ titulo: 'Estado', campo: 'estado' }], registros: [{ estado: false }],
-    } } } as MessageEvent)
-
-    expect(await screen.findByRole('status', { name: 'Estado: Inactivo' })).toBeInTheDocument()
-  })
-
-  it('muestra estados de matrícula como chips en la vista previa', async () => {
-    const trabajadores: Array<{ onmessage: ((event: MessageEvent) => void) | null; postMessage: ReturnType<typeof vi.fn>; terminate: ReturnType<typeof vi.fn> }> = []
-    class TrabajadorDePrueba {
-      onmessage: ((event: MessageEvent) => void) | null = null
-      onerror: (() => void) | null = null
-      postMessage = vi.fn()
-      terminate = vi.fn()
-      constructor() { trabajadores.push(this) }
-    }
-    vi.stubGlobal('Worker', TrabajadorDePrueba)
-
-    render(<ReportesPage />)
-    fireEvent.click(screen.getByRole('button', { name: 'Matriculas y secciones: abrir grupo de reportes' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Matrículas: abrir reporte académico' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Consultar datos' }))
-    trabajadores[0].onmessage?.({ data: { id: 2, estado: 'completada', datos: {
-      modulo: 'matriculas', total_registros: 1,
-      columnas: [{ titulo: 'Estado', campo: 'estado' }], registros: [{ estado: 'REPROBADA' }],
-    } } } as MessageEvent)
-
-    expect(await screen.findByRole('status', { name: 'Estado: Reprobada' })).toBeInTheDocument()
+    const next = workers.at(-1)!; const { id } = next.postMessage.mock.calls[0][0]
+    act(() => next.onmessage?.({ data: { id, estado: 'error', codigo: 503, mensaje: 'Servicio no disponible' } } as MessageEvent))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Servicio no disponible')
   })
 })

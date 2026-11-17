@@ -1,58 +1,44 @@
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { useId } from 'react'
 
 interface EnrollmentTrendChartProps {
   trend: { mes: number; activas: number; canceladas: number; finalizadas: number }[]
   year: number
   periodLabel: string
 }
-
 const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
 export function EnrollmentTrendChart({ trend, year, periodLabel }: EnrollmentTrendChartProps) {
-  const data = months.map((month, index) => ({
-    month,
-    activas: trend[index]?.activas ?? 0,
-    canceladas: trend[index]?.canceladas ?? 0,
-    finalizadas: trend[index]?.finalizadas ?? 0,
-  }))
-  const total = data.reduce((sum, month) => sum + month.activas + month.canceladas + month.finalizadas, 0)
-
-  return (
-    <article className="berry-surface flex min-h-[350px] flex-col rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-[0_2px_14px_rgba(32,40,45,.06)] sm:p-6 dark:border-white/10 dark:bg-[#211e2b]">
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#edf0f4] pb-4 dark:border-white/10">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[.15em] text-[#697586] dark:text-stone-400">Crecimiento académico</p>
-          <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h2 className="text-2xl font-extrabold tracking-tight text-[#121926] dark:text-white">{total.toLocaleString('es')}</h2>
-            <span className="text-[10px] font-semibold text-[#697586] dark:text-stone-400">matrículas registradas en {year}</span>
-          </div>
-        </div>
-        <span className="rounded-lg border border-[#e3e8ef] bg-[#f8fafc] px-3 py-2 text-[10px] font-semibold text-[#394150] dark:border-white/10 dark:bg-white/5 dark:text-stone-200">{periodLabel}</span>
-      </div>
-
-      {total === 0 ? (
-        <div className="grid flex-1 place-items-center py-10 text-center text-xs text-[#697586] dark:text-stone-400">No hay matrículas de este año para mostrar.</div>
-      ) : (
-        <div className="mt-4 h-[230px] min-w-0">
-          <ResponsiveContainer width="100%" height={230}>
-            <BarChart data={data} margin={{ top: 8, right: 4, left: -22, bottom: 0 }} barCategoryGap="28%">
-              <CartesianGrid strokeDasharray="3 5" vertical={false} stroke="#d8dee8" opacity={0.65} />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#697586', fontSize: 9 }} dy={8} />
-              <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: '#98a2b3', fontSize: 9 }} />
-              <Tooltip cursor={{ fill: '#ede7f6', opacity: 0.5 }} contentStyle={{ borderRadius: 10, borderColor: '#e3e8ef', fontSize: 11 }} formatter={(value, name) => [String(value), String(name)]} />
-              <Bar dataKey="activas" name="Activas" stackId="matriculas" fill="#5e35b1" radius={[0, 0, 2, 2]} />
-              <Bar dataKey="canceladas" name="Canceladas" stackId="matriculas" fill="#2196f3" />
-              <Bar dataKey="finalizadas" name="Finalizadas" stackId="matriculas" fill="#d1c4e9" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 border-t border-[#edf0f4] pt-3 dark:border-white/10">
-        <span className="flex items-center gap-1.5 text-[9px] font-semibold text-[#697586] dark:text-stone-300"><i className="h-2.5 w-2.5 rounded-sm bg-[#5e35b1]" />Activas</span>
-        <span className="flex items-center gap-1.5 text-[9px] font-semibold text-[#697586] dark:text-stone-300"><i className="h-2.5 w-2.5 rounded-sm bg-[#2196f3]" />Canceladas</span>
-        <span className="flex items-center gap-1.5 text-[9px] font-semibold text-[#697586] dark:text-stone-300"><i className="h-2.5 w-2.5 rounded-sm bg-[#d1c4e9]" />Finalizadas</span>
-      </div>
-    </article>
-  )
+  const titleId = useId()
+  const data = months.map((month, index) => {
+    const entry = trend.find((item) => item.mes === index + 1)
+    return { month, total: (entry?.activas ?? 0) + (entry?.canceladas ?? 0) + (entry?.finalizadas ?? 0) }
+  })
+  const total = data.reduce((sum, month) => sum + month.total, 0)
+  const maximum = Math.max(1, ...data.map((item) => item.total))
+  const magnitude = 10 ** Math.floor(Math.log10(maximum))
+  const top = Math.max(4, Math.ceil(maximum / magnitude) * magnitude)
+  const baseline = 264
+  const plotHeight = 224
+  return <article className="academic-enrollment-chart">
+    <header><div><h2>Matrículas por mes</h2><p>{total.toLocaleString('es-HN')} registradas en {year}</p></div><span>Año lectivo actual</span></header>
+    {total === 0 ? <p className="academic-empty">No hay matrículas de este año para mostrar.</p> : <div className="academic-enrollment-plot">
+      <svg viewBox="0 0 720 300" role="img" aria-labelledby={titleId}>
+        <title id={titleId}>Matrículas mensuales de {year}: {data.map((item) => `${item.month} ${item.total}`).join(', ')}</title>
+        {[0, 1, 2, 3, 4].map((tick) => {
+          const y = baseline - tick / 4 * plotHeight
+          return <g key={tick}><line x1={44} x2={712} y1={y} y2={y} stroke="#e2e8f0" strokeDasharray={tick ? '3 3' : undefined} /><text x={34} y={y + 4} fill="#797486" fontSize={12} textAnchor="end">{Math.round(top * tick / 4)}</text></g>
+        })}
+        {data.map((item, index) => {
+          const x = 72 + index * 55
+          const height = item.total / top * plotHeight
+          return <g key={item.month}>
+            {item.total > 0 && <rect x={x - 17} y={baseline - height} width={34} height={height} rx={2} fill="#5b32d6"><title>{item.month}: {item.total} matrículas</title></rect>}
+            <text x={x} y={item.total ? baseline - height - 9 : baseline - 8} textAnchor="middle" fontSize={11} fill={item.total ? '#5b32d6' : '#94a3b8'}>{item.total || '—'}</text>
+            <text x={x} y={290} textAnchor="middle" fontSize={12} fill={item.total ? '#5b32d6' : '#797486'}>{item.month}</text>
+          </g>
+        })}
+      </svg>
+    </div>}
+    <footer><span>Datos correspondientes a registros del año lectivo</span><span>{periodLabel}</span></footer>
+  </article>
 }

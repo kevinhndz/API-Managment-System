@@ -12,13 +12,15 @@ describe('ThemeProvider', () => {
     document.documentElement.classList.remove('dark')
   })
 
-  it('persiste el tema seleccionado', () => {
-    localStorage.setItem('campusflow.theme', 'light')
+  it('migra preferencias anteriores al tema claro institucional', () => {
+    localStorage.setItem('campusflow.theme', 'dark')
+    document.documentElement.classList.add('dark')
     const { result } = renderHook(() => useTheme(), { wrapper })
 
     act(() => result.current.toggleTheme())
 
-    expect(result.current.theme).toBe('dark')
-    expect(localStorage.getItem('campusflow.theme')).toBe('dark')
+    expect(document.documentElement).not.toHaveClass('dark')
+    expect(result.current.theme).toBe('light')
+    expect(localStorage.getItem('campusflow.theme')).toBe('light')
   })
 })

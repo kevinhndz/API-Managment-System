@@ -15,7 +15,7 @@
    ```
 
 2. Abre un Pull Request de `refactor` hacia `main`.
-3. GitHub Actions compila el frontend y construye las imagenes Docker de API y frontend para validar el PR. Ese trabajo no accede al VPS ni despliega.
+3. GitHub Actions ejecuta las pruebas de la API y del frontend, compila TypeScript y construye las imagenes Docker de API y frontend para validar el PR. Ese trabajo no accede al VPS ni despliega.
 4. Revisa los cambios y combina el PR. El push resultante a `main` inicia el despliegue al VPS.
 5. El workflow envia las dos imagenes por SSH/SCP y recrea solo `campusflow-backend` y `campusflow-frontend`, conectados a la red externa `red-saas`. No recrea el contenedor compartido `nginx-recepcionista`. Luego verifica el sitio y `/api/health/ready`, que consulta la base de datos; si falla, vuelve a las imagenes anteriores.
 6. Despues de integrar, sincroniza `refactor` con `main` para iniciar el siguiente trabajo desde el estado presentado:
@@ -54,7 +54,7 @@ En GitHub abre **Actions**, selecciona **CI CD CampusFlow** y usa **Run workflow
 
 ## Proteccion recomendada de `main`
 
-En la configuracion de ramas de GitHub, exige Pull Request para integrar a `main` y exige que el workflow termine correctamente. La validacion actual comprueba la compilacion del frontend y construye las dos imagenes; no ejecuta pruebas automatizadas ni aplica migraciones de base de datos. El Nginx compartido debe estar conectado a `red-saas` y configurado para enviar `/` a `campusflow-frontend:80`, y `/api/` y `/uploads/` a `campusflow-backend:8000`.
+En la configuracion de ramas de GitHub, exige Pull Request para integrar a `main` y exige que el workflow termine correctamente. La validacion ejecuta pytest con SQLite aislado, Vitest, TypeScript y la construccion de las dos imagenes. No aplica migraciones de base de datos. El Nginx compartido debe estar conectado a `red-saas` y configurado para enviar `/` a `campusflow-frontend:80`, y `/api/` y `/uploads/` a `campusflow-backend:8000`.
 
 ## Si el sitio abre pero el acceso falla
 

@@ -1,35 +1,15 @@
-import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
+import { createContext, useContext, useEffect, type PropsWithChildren } from 'react'
 
-type Theme = 'light' | 'dark'
-
-interface ThemeContextValue {
-  theme: Theme
-  toggleTheme: () => void
-}
-
-const THEME_KEY = 'campusflow.theme'
-const ThemeContext = createContext<ThemeContextValue | null>(null)
-
-function getInitialTheme(): Theme {
-  const stored = localStorage.getItem(THEME_KEY)
-  if (stored === 'light' || stored === 'dark') return stored
-  return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-}
+// El espacio academico usa el tema claro del sistema de diseno institucional.
+const lightTheme: { theme: 'light' | 'dark'; toggleTheme: () => void } = { theme: 'light', toggleTheme: () => undefined }
+const ThemeContext = createContext<typeof lightTheme | null>(null)
 
 export function ThemeProvider({ children }: PropsWithChildren) {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme)
-
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-    localStorage.setItem(THEME_KEY, theme)
-  }, [theme])
-
-  const value = useMemo(
-    () => ({ theme, toggleTheme: () => setTheme((current) => (current === 'light' ? 'dark' : 'light')) }),
-    [theme],
-  )
-
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+    document.documentElement.classList.remove('dark')
+    localStorage.setItem('campusflow.theme', 'light')
+  }, [])
+  return <ThemeContext.Provider value={lightTheme}>{children}</ThemeContext.Provider>
 }
 
 export function useTheme() {
