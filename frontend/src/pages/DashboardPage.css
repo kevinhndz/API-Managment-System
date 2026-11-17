@@ -34,3 +34,13 @@
 .academic-enrollment-chart header > span { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: .04em; }
 .academic-enrollment-plot { height: 280px; margin-top: 28px; }
 .academic-enrollment-chart footer { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin-top: 20px; padding-top: 12px; border-top: 1px solid #f1f5f9; font-size: 11px; color: #64748b; }
+.academic-building-table > p, .academic-capacity-chart > p { margin-top: 4px; color: #475569; font-size: 13px; }
+.academic-building-table table { width: 100%; min-width: 360px; margin-top: 24px; text-align: left; font-size: 13px; border-collapse: collapse; }
+.academic-building-table thead { background: #f8fafc; }
+.academic-building-table th, .academic-building-table td { padding: 16px 12px; border-bottom: 1px solid #e2e8f0; }
+.academic-building-table th { font-weight: 500; }
+.academic-building-table td { color: #475569; }
+.academic-building-table td:last-child, .academic-building-table th:last-child { text-align: right; }
+.academic-building-table td:last-child { font-weight: 600; color: #0f172a; }
+.academic-building-table footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding-top: 16px; font-size: 12px; }
+.academic-building-table footer span { color: #64748b; font-size: 11px; }
