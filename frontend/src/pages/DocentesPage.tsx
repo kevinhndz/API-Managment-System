@@ -6,6 +6,7 @@ import { PersonCarnetDialog, type PersonCarnetData } from '../components/people/
 import { ActionMenu } from '../components/ui/ActionMenu'
 import { Modal } from '../components/ui/Modal'
 import { listarCargaDocente, docentesApi, type CargaDocente } from '../services/api'
+import './DocentesPage.css'
 import type { Docente, DocentePayload } from '../types/api'
 
 const emptyDocente: DocentePayload = {
@@ -48,6 +49,7 @@ export function DocentesPage() {
     <>
       {errorCarga && <p role="alert" className="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{errorCarga}</p>}
       <EntityPage<Docente, DocentePayload>
+        variant="directory"
         title="Docentes"
         singular="Docente"
         newLabel="Nuevo docente"
@@ -58,11 +60,10 @@ export function DocentesPage() {
         toPayload={({ numero_empleado, nombres, apellidos, correo, especialidad, cargo, departamento, tipo_contrato, fecha_ingreso, estado }) => ({ numero_empleado, nombres, apellidos, correo, especialidad, cargo, departamento, tipo_contrato, fecha_ingreso, estado })}
         searchableText={(docente) => `${docente.numero_empleado} ${docente.nombres} ${docente.apellidos} ${docente.correo}`}
         columns={[
-          { label: 'Empleado', render: (docente) => <strong className="font-semibold text-slate-800 dark:text-slate-100">{docente.numero_empleado}</strong> },
-          { label: 'Nombre', render: (docente) => <span className="flex items-center gap-2"><img className="h-8 w-8 rounded-full object-cover" src={docente.foto ?? `/avatars/persona-${String((docente.id - 1) % 12 + 1).padStart(2, '0')}.jpg`} alt="" />{docente.nombres} {docente.apellidos}</span> },
-          { label: 'Correo', render: (docente) => <a className="text-sage-600 hover:underline dark:text-sage-400" href={`mailto:${docente.correo}`}>{docente.correo}</a> },
+          { label: 'Código', render: (docente) => <strong className="font-semibold text-slate-800 dark:text-slate-100">{docente.numero_empleado}</strong> },
+          { label: 'Docente', render: (docente) => <span className="academic-person"><img src={docente.foto ?? `/avatars/persona-${String((docente.id - 1) % 12 + 1).padStart(2, '0')}.jpg`} alt="" /><span><strong>{docente.nombres} {docente.apellidos}</strong><a href={`mailto:${docente.correo}`}>{docente.correo}</a></span></span> },
           { label: 'Contrato', render: (docente) => docente.tipo_contrato || 'Sin registrar' },
-          { label: 'Secciones actuales', render: (docente) => carga.filter((item) => item.docente_id === docente.id && item.vigente).length },
+          { label: 'Secciones', render: (docente) => carga.filter((item) => item.docente_id === docente.id && item.vigente).length },
           { label: 'Estado', render: (docente) => <StatusBadge active={docente.estado} /> },
         ]}
         fields={[
@@ -94,7 +95,7 @@ export function DocentesPage() {
         })}
         renderActions={(docente, handlers) => (
           <div className="flex items-center justify-end gap-2">
-            <button type="button" className="focus-ring inline-flex h-9 items-center gap-1 rounded-lg border px-2 text-xs font-semibold" onClick={() => setDocenteCarga(docente)}><BookOpen className="h-4 w-4" /> Materias y secciones</button>
+            <button type="button" className="academic-load-button focus-ring" onClick={() => setDocenteCarga(docente)}><BookOpen className="h-4 w-4" /> Materias y secciones</button>
             <ActionMenu singular="Docente" onEdit={handlers.onEdit} onDelete={handlers.onDelete} extraAction={{ label: 'Ver carnet', icon: <IdCard className="h-4 w-4" />, onSelect: () => handlers.onExtraAction?.() }} />
           </div>
         )}
