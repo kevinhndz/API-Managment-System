@@ -1,0 +1,26 @@
+.academic-activity-filters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) auto; gap: 16px; align-items: end; padding: 8px 0 28px; border-bottom: 1px solid #e2e8f0; margin-bottom: 32px; }
+.academic-activity-filters label { display: block; min-width: 0; color: #475569; font-size: 13px; }
+.academic-activity-filters input, .academic-activity-filters select { display: block; width: 100%; min-width: 0; height: 40px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; color: #334155; padding: 0 10px; margin-top: 8px; font-size: 13px; }
+.academic-activity-filters input:focus-visible, .academic-activity-filters select:focus-visible { outline: 2px solid #5b32d6; outline-offset: 2px; }
+.academic-activity-search { position: relative; display: block; }
+.academic-activity-search input { padding-right: 32px; }
+.academic-activity-search svg { position: absolute; right: 10px; top: 12px; color: #94a3b8; }
+.academic-clear-filters { height: 40px; font-size: 12px; color: #64748b; text-decoration: underline; text-underline-offset: 4px; }
+.academic-activity-count { padding: 0 0 28px; font-size: 13px; color: #64748b; }
+.academic-activity-day { margin: 4px 0 36px; }
+.academic-activity-day h2 { margin-bottom: 18px; font-size: 14px; font-weight: 600; text-transform: capitalize; color: #475569; }
+.academic-activity-day li { display: flex; align-items: flex-start; gap: 16px; padding: 16px 8px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+.academic-activity-day li > svg { flex-shrink: 0; color: #64748b; margin-top: 2px; }
+.academic-activity-day li > div { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.academic-activity-day time { flex-shrink: 0; color: #64748b; font-size: 12px; }
+.academic-activity-day strong { font-weight: 600; }
+.academic-activity-day details { margin-top: 8px; font-size: 12px; color: #64748b; }
+.academic-activity-day summary { cursor: pointer; }
+.academic-activity-day details p, .academic-activity-day dl { margin-top: 8px; }
+.academic-activity-day dl > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.academic-activity-empty { padding: 80px 16px; text-align: center; color: #64748b; }
+.academic-activity-empty svg { margin: 0 auto 16px; color: #94a3b8; }
+.academic-activity-empty h2 { font-size: 16px; font-weight: 600; }
+.academic-activity-empty p { margin-top: 8px; font-size: 13px; }
+@media (max-width: 1279px) { .academic-activity-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 639px) { .academic-activity-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .academic-activity-day li { gap: 8px; flex-wrap: wrap; } .academic-activity-day time { padding-left: 26px; width: 100%; } }
