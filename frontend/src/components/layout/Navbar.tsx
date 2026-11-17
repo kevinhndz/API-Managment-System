@@ -109,7 +109,7 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
               onClick={() => setAccountMenuOpen((open) => !open)}
             >
               <span className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-slate-200 bg-[#eee3f7] text-xs font-bold text-[#5e35b1] shadow-sm dark:border-stone-700 dark:bg-[#302a43] dark:text-violet-200" aria-label={user?.photo ? 'Foto de perfil' : 'Iniciales del usuario'}>
-                {!user?.photo && <UserRound size={18} aria-hidden="true" />}
+                <UserRound size={18} aria-hidden="true" />
                 {resolverFotoUrl(user?.photo) && <img className="absolute inset-0 h-full w-full object-cover" src={resolverFotoUrl(user?.photo) ?? undefined} alt="" onError={(event) => { event.currentTarget.style.display = 'none' }} />}
               </span>
               <span className="hidden text-left sm:block">

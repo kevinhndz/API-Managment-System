@@ -67,7 +67,7 @@ describe('DocentesPage', () => {
     listarDocentes.mockImplementation((params) => params.limite === 100 ? new Promise(() => {}) : Promise.resolve(loaded))
     fireEvent.click(screen.getByRole('button', { name: /filtros/i }))
     fireEvent.change(screen.getByLabelText('Filtrar por estado'), { target: { value: 'inactivo' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Limpiar', exact: true }))
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar' }))
     expect(await screen.findByText('DOC-012')).toBeInTheDocument()
   })
 

@@ -31,3 +31,8 @@
 .academic-export-summary > p { margin-top: 20px; color: #64748b; font-size: 12px; line-height: 1.7; }
 .academic-export-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 16px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; }
 @media (max-width: 639px) { .academic-export-summary { padding: 16px; } .academic-export-summary dl > div { grid-template-columns: 1fr; gap: 4px; } .academic-export-summary dd { text-align: left; } }
+.academic-report-results [role="status"] { padding: 0; border: 0; background: transparent; color: #334155; font-size: 12px; font-weight: 400; }
+.academic-report-results [role="status"] svg { display: none; }
+.academic-report-results [role="status"]::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; }
+.academic-report-results [role="status"][aria-label="Estado: Activo"]::before { background: #16a34a; }
+.academic-reports > [role="dialog"] { backdrop-filter: none; background-color: #0f172a66; }
