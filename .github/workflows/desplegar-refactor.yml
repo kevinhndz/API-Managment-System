@@ -136,7 +136,7 @@ jobs:
             -f "$repo/deploy/compose.vps.yaml" up -d --no-deps --force-recreate api frontend
 
           if ! curl --retry 8 --retry-delay 2 --retry-all-errors -fsS -o /dev/null \
-            https://campusuphflow.duckdns.org/api/docs || ! curl --retry 8 --retry-delay 2 --retry-all-errors -fsS -o /dev/null \
+            https://campusuphflow.duckdns.org/api/health/ready || ! curl --retry 8 --retry-delay 2 --retry-all-errors -fsS -o /dev/null \
             https://campusuphflow.duckdns.org/; then
             restaurar 1
           fi

@@ -37,6 +37,7 @@ from modulos.estudiantes.tabla import Estudiantes
 from modulos.aulas.tabla import Aulas
 from modulos.docentes.tabla import Docentes
 from utils.auth import permiso_admin, permiso_usuario
+from core.salud import router as router_salud
 from core.config import settings
 
 app = FastAPI()
@@ -128,6 +129,7 @@ app.include_router(router_matriculas)
 app.include_router(router_calificaciones)
 app.include_router(router_reportes, dependencies=[Depends(exigir_suscripcion)])
 app.include_router(router_auditoria, dependencies=[Depends(permiso_admin), Depends(exigir_suscripcion)])
+app.include_router(router_salud)
 app.include_router(router_login)
 app.include_router(router_notificaciones)
 app.include_router(router_solicitudes_cuenta)

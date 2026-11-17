@@ -1,3 +1,4 @@
+from sqlalchemy.exc import OperationalError
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from core.excepciones import (
@@ -76,6 +77,7 @@ class ExcepcionesGlobales:
 
     @classmethod
     def directorio(cls, app: FastAPI) -> None:
+        app.add_exception_handler(OperationalError, cls.base_datos_no_disponible)
         app.add_exception_handler(ArchivoPerfilInvalidoError, cls.archivo_perfil_invalido)
         app.add_exception_handler(DatosInvalidosError, cls.datos_invalidos)
         app.add_exception_handler(RecursoNoEncontradoError, cls.recurso_no_encontrado)
@@ -86,6 +88,14 @@ class ExcepcionesGlobales:
         app.add_exception_handler(IntentosVerificacionLimitadosError, cls.intentos_verificacion_limitados)
         app.add_exception_handler(ServicioCorreoNoDisponibleError, cls.servicio_correo_no_disponible)
         app.add_exception_handler(VerificacionCorreoInvalidaError, cls.verificacion_correo_invalida)
+
+    @staticmethod
+    def base_datos_no_disponible(request: Request, exc: OperationalError):
+        return JSONResponse(
+            status_code=503,
+            content={"detail": "La base de datos no esta disponible. Intenta mas tarde."},
+            headers={"Retry-After": "30"},
+        )
 
     @staticmethod
     def archivo_perfil_invalido(request: Request, exc: ArchivoPerfilInvalidoError):
