@@ -96,7 +96,7 @@ export function DocentesPage() {
         renderActions={(docente, handlers) => (
           <div className="flex items-center justify-end gap-2">
             <button type="button" className="academic-load-button focus-ring" onClick={() => setDocenteCarga(docente)}><BookOpen className="h-4 w-4" /> Materias y secciones</button>
-            <ActionMenu singular="Docente" onEdit={handlers.onEdit} onDelete={handlers.onDelete} extraAction={{ label: 'Ver carnet', icon: <IdCard className="h-4 w-4" />, onSelect: () => handlers.onExtraAction?.() }} />
+            <ActionMenu compact singular="Docente" onEdit={handlers.onEdit} onDelete={handlers.onDelete} extraAction={{ label: 'Ver carnet', icon: <IdCard className="h-4 w-4" />, onSelect: () => handlers.onExtraAction?.() }} />
           </div>
         )}
       />

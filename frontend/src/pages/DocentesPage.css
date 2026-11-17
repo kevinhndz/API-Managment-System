@@ -31,3 +31,5 @@
 .academic-directory > section > div:last-child { border-top: 0; padding: 20px 0; }
 .academic-directory nav button { border: 1px solid #e2e8f0; border-radius: 4px; }
 .academic-directory nav button[aria-current="page"] { background: #0f172a; }
+.academic-directory .action-menu-compact { padding: 4px; background: transparent; border: 0; box-shadow: none; color: #64748b; }
+.academic-directory .action-menu-compact:hover { background: #f1f5f9; }

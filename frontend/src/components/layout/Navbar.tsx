@@ -1,4 +1,4 @@
-import { Bell, Check, ChevronDown, ChevronLeft, ChevronRight, LogOut, Menu, Settings } from 'lucide-react'
+import { Bell, Check, ChevronDown, ChevronLeft, ChevronRight, LogOut, Menu, Settings, UserRound } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 
@@ -21,7 +21,6 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
   const notificationsRef = useRef<HTMLDivElement>(null)
   const esAdministrador = ['admin', 'administrador'].includes(user?.role.toLocaleLowerCase('es') ?? '')
   const unreadCount = notifications.filter((notification) => !notification.leida).length + (user?.photo ? 0 : 1)
-  const initials = user?.name?.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'CF'
   useEffect(() => {
     const closeOnOutsideClick = (event: PointerEvent) => {
       if (!accountMenuRef.current?.contains(event.target as Node)) setAccountMenuOpen(false)
@@ -110,7 +109,7 @@ export function Navbar({ onMenuClick, onSidebarToggle, sidebarCollapsed }: Navba
               onClick={() => setAccountMenuOpen((open) => !open)}
             >
               <span className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-slate-200 bg-[#eee3f7] text-xs font-bold text-[#5e35b1] shadow-sm dark:border-stone-700 dark:bg-[#302a43] dark:text-violet-200" aria-label={user?.photo ? 'Foto de perfil' : 'Iniciales del usuario'}>
-                {!user?.photo && initials}
+                {!user?.photo && <UserRound size={18} aria-hidden="true" />}
                 {resolverFotoUrl(user?.photo) && <img className="absolute inset-0 h-full w-full object-cover" src={resolverFotoUrl(user?.photo) ?? undefined} alt="" onError={(event) => { event.currentTarget.style.display = 'none' }} />}
               </span>
               <span className="hidden text-left sm:block">
