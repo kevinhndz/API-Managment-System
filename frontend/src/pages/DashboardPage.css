@@ -44,3 +44,9 @@
 .academic-building-table td:last-child { font-weight: 600; color: #0f172a; }
 .academic-building-table footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding-top: 16px; font-size: 12px; }
 .academic-building-table footer span { color: #64748b; font-size: 11px; }
+.academic-capacity-chart ul { display: grid; gap: 12px; margin-top: 24px; padding: 0; list-style: none; }
+.academic-capacity-chart li { display: grid; grid-template-columns: 80px minmax(0, 1fr) 68px; gap: 12px; align-items: center; font-size: 12px; }
+.academic-capacity-chart li > span:last-child { text-align: right; color: #475569; white-space: nowrap; }
+.academic-capacity-track { display: block; height: 20px; border-radius: 2px; background: #eff4ff; overflow: hidden; }
+.academic-capacity-track > span { display: block; height: 100%; background: #5b32d6; border-radius: 2px; }
+.academic-capacity-axis { display: flex; justify-content: space-between; margin: 12px 80px 0 92px; padding-top: 8px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 10px; white-space: nowrap; }
