@@ -6,7 +6,7 @@ La universidad es `instituciones.id`. No existe una tabla de tenants adicional. 
 
 1. En `.env` configura `PADDLE_ENVIRONMENT=sandbox`, `PADDLE_CLIENT_TOKEN`, `PADDLE_API_KEY`, `PADDLE_PRICE_ID` y `PADDLE_WEBHOOK_SECRET` con valores propios de Paddle Sandbox. El secreto del webhook se obtiene al crear la notificacion; no es la API key. Si quieres mas de un plan, configura `PADDLE_PLANS` como un objeto JSON con nombres y price IDs, por ejemplo `{"Basico":"pri_...","Avanzado":"pri_..."}`. Deja `PADDLE_PRICE_ID` como respaldo de un plan unico.
 2. Configura `FRONTEND_ORIGINS` con el origen HTTPS exacto del frontend. Si frontend y API usan sitios distintos, configura `COOKIE_SAMESITE=none`; en produccion, `COOKIE_SECURE=true`.
-3. Ejecuta `docker compose build`, `docker compose run --rm api alembic upgrade head` y `docker compose up -d`.
+3. Ejecuta `docker compose -f deploy/compose.yaml build`, `docker compose -f deploy/compose.yaml run --rm api alembic upgrade head` y `docker compose -f deploy/compose.yaml up -d`.
 4. Configura Nginx segun `deploy/nginx-api.conf.example` y instala un certificado HTTPS. El contenedor escucha solo en `127.0.0.1` del VPS.
 5. Registra en Paddle Sandbox la URL `https://api.mi-dominio.com/api/payments/paddle/webhook` con `transaction.completed`, `subscription.created`, `subscription.updated`, `subscription.canceled` y `subscription.past_due`. Copia el secreto de esa notificacion a `PADDLE_WEBHOOK_SECRET` y reinicia el contenedor.
 

@@ -8,8 +8,8 @@ En **Reportes académicos**, una persona autorizada elige un módulo, aplica fil
 
 1. `frontend/src/pages/ReportesPage.tsx` envía el módulo, formato y filtros al servicio de descarga.
 2. `frontend/src/services/api.ts` hace el `GET` a `/reportes/{modulo}/descargar/{formato}` y recibe el contenido como `Blob`.
-3. `modulos/reportes/router.py` valida módulo y formato, exige una sesión, aplica las restricciones del rol y obtiene los registros mediante el repositorio.
-4. `modulos/reportes/exportadores.py` escribe las filas CSV o el documento JSON en un flujo temporal en memoria, obtiene sus bytes y cierra el flujo. No guarda archivos académicos en el disco del servidor.
+3. `backend/modulos/reportes/router.py` valida módulo y formato, exige una sesión, aplica las restricciones del rol y obtiene los registros mediante el repositorio.
+4. `backend/modulos/reportes/exportadores.py` escribe las filas CSV o el documento JSON en un flujo temporal en memoria, obtiene sus bytes y cierra el flujo. No guarda archivos académicos en el disco del servidor.
 5. FastAPI responde como archivo adjunto con su tipo y nombre (`reporte_estudiantes.csv`, por ejemplo). El navegador inicia la descarga.
 6. El navegador guarda el archivo en su carpeta de descargas o pregunta la ubicación, según la configuración del usuario. CampusFlow no fija ni necesita conocer esa ruta local.
 
@@ -36,5 +36,5 @@ La prueba automatizada genera los archivos, abre el CSV como filas y el JSON com
 5. Para mostrar la comprobación automática, ejecuta desde la raíz del proyecto:
 
    ```powershell
-   .\venv\Scripts\python.exe -m pytest tests/test_reportes_auditoria.py -q
+   .\venv\Scripts\python.exe -m pytest -c backend/pytest.ini backend/tests/test_reportes_auditoria.py -q
    ```

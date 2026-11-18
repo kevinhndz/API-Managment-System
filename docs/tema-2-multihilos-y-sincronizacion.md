@@ -8,7 +8,7 @@ En **Reportes académicos**, el botón **Consultar vista previa** obtiene una mu
 
 1. `frontend/src/pages/ReportesPage.tsx` crea el hilo con `new Worker(...)`, asigna un número a la consulta y envía módulo y filtros con `postMessage`.
 2. `frontend/src/workers/reportePreview.worker.ts` recibe el mensaje, consulta `GET /reportes/{modulo}/vista-previa` y procesa la respuesta JSON fuera del hilo visual.
-3. `modulos/reportes/router.py` valida los filtros y la sesión. `modulos/reportes/service.py` comprueba el rol y pide los datos al repositorio. Un docente solo obtiene calificaciones de sus secciones.
+3. `backend/modulos/reportes/router.py` valida los filtros y la sesión. `backend/modulos/reportes/service.py` comprueba el rol y pide los datos al repositorio. Un docente solo obtiene calificaciones de sus secciones.
 4. La API devuelve el total, los nombres de columnas y un máximo de 20 filas. El worker devuelve esos datos a la página con `postMessage`.
 5. La página comprueba que el número de la respuesta sea el de la consulta actual. Solo entonces muestra el resultado o el error.
 
@@ -35,7 +35,7 @@ Esta función sirve para practicar hilos y coordinación. Una petición `fetch` 
 6. Muestra la prueba de cancelación y la prueba del límite de 20 filas. Desde la raíz del proyecto se pueden ejecutar:
 
    ```powershell
-   .\venv\Scripts\python.exe -m pytest tests/test_reportes_auditoria.py -q
+   .\venv\Scripts\python.exe -m pytest -c backend/pytest.ini backend/tests/test_reportes_auditoria.py -q
    cd frontend
    npm test -- --run src/workers/reportePreview.worker.test.ts src/pages/ReportesPage.test.tsx
    ```

@@ -75,3 +75,7 @@ cargue los valores nuevos:
 docker compose --project-name campusflow --project-directory /srv/proyectos/CampusFlow \
   -f /srv/proyectos/CampusFlow/deploy/compose.vps.yaml up -d --no-deps --force-recreate api
 ```
+
+El backend se construye con `docker build -t campusflow-api:main ./backend`.
+Sus dependencias estan en `backend/requirements*.txt` y pytest usa
+`backend/pytest.ini`. El frontend y el Compose de produccion conservan sus rutas.
