@@ -29,6 +29,7 @@ jobs:
         with:
           python-version: '3.14'
           cache: pip
+          cache-dependency-path: backend/requirements*.txt
 
       - name: Comprobar API y seguridad con base de datos de pruebas
         env:
@@ -38,9 +39,9 @@ jobs:
           COOKIE_SECURE: "false"
           FRONTEND_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
         run: |
-          python -m pip install -r requirements-dev.txt
-          python -m compileall -q main.py core database modulos utils
-          python -m pytest -q
+          python -m pip install -r backend/requirements-dev.txt
+          python -m compileall -q backend
+          python -m pytest -c backend/pytest.ini -q
 
       - name: Preparar Node
         uses: actions/setup-node@v5
@@ -57,7 +58,7 @@ jobs:
 
       - name: Construir imagenes de API y frontend
         run: |
-          docker build --pull --tag campusflow-api:main .
+          docker build --pull --tag campusflow-api:main ./backend
           docker build --pull --tag campusflow-frontend:main ./frontend
 
       - name: Empaquetar imagenes

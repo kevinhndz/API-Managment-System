@@ -3,7 +3,11 @@
   "private": true,
   "scripts": {
     "dev": "bash scripts/desarrollo.sh",
-    "dev:backend": "venv/bin/uvicorn main:app --reload --host 127.0.0.1 --port 8000",
-    "dev:frontend": "npm --prefix frontend run dev -- --host 127.0.0.1 --strictPort"
+    "dev:backend": "venv/bin/python -m uvicorn main:app --app-dir backend --reload-dir backend --reload --host 127.0.0.1 --port 8000",
+    "dev:frontend": "npm --prefix frontend run dev -- --host 127.0.0.1 --strictPort",
+    "test:backend": "venv/bin/python -m pytest -c backend/pytest.ini -q",
+    "db:current": "venv/bin/python -m alembic -c backend/alembic.ini current",
+    "docker:up": "docker compose -f deploy/compose.yaml up --build -d",
+    "docker:down": "docker compose -f deploy/compose.yaml down"
   }
 }

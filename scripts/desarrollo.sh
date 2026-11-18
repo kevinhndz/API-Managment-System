@@ -2,8 +2,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-if [[ ! -x venv/bin/uvicorn ]]; then
-  echo "Falta venv. Ejecuta: python3 -m venv venv && venv/bin/python -m pip install -r requirements-dev.txt" >&2
+if [[ ! -x venv/bin/python ]]; then
+  echo "Falta venv. Ejecuta: python3 -m venv venv && venv/bin/python -m pip install -r backend/requirements-dev.txt" >&2
   exit 1
 fi
 if [[ ! -f .env ]]; then
@@ -15,7 +15,7 @@ if [[ ! -d frontend/node_modules ]]; then
   exit 1
 fi
 
-venv/bin/uvicorn main:app --reload --host 127.0.0.1 --port 8000 &
+venv/bin/python -m uvicorn main:app --app-dir backend --reload-dir backend --reload --host 127.0.0.1 --port 8000 &
 backend_pid=$!
 limpiar() {
   kill "$backend_pid" 2>/dev/null || true
