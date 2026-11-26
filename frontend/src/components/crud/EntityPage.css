@@ -28,6 +28,9 @@
 .academic-directory [role="status"] svg { display: none; }
 .academic-directory [role="status"]::before { content: ''; display: inline-block; width: 7px; height: 7px; background: #94a3b8; border-radius: 50%; }
 .academic-directory [role="status"][aria-label="Estado: Activo"]::before { background: #16a34a; }
+.academic-directory [role="status"][aria-label="Estado: Abierta"]::before,
+.academic-directory [role="status"][aria-label="Estado: Aprobada"]::before { background: #16a34a; }
+.academic-directory [role="status"][aria-label="Estado: Pendiente"]::before { background: #d97706; }
 .academic-directory #entity-filters { margin-bottom: 20px; background: #f8fafc; border: 1px solid #e2e8f0; }
 .academic-directory > section > div:last-child { border-top: 0; padding: 20px 0; }
 .academic-directory nav button { border: 1px solid #e2e8f0; border-radius: 4px; }
@@ -49,3 +52,16 @@
   .academic-directory .entity-toolbar { flex-wrap: wrap; }
   .academic-directory-search { width: 100%; }
 }
+
+.campus-clean-table-container { width: 100%; overflow-x: auto; }
+.campus-clean-table { width: 100%; min-width: 720px; border-collapse: collapse; text-align: left; font-size: 13px; }
+.campus-clean-table thead tr { background: #f8fafc; }
+.campus-clean-table thead th { padding: 16px; color: #334155; font-size: 12px; font-weight: 600; }
+.campus-clean-table tbody td { padding: 16px; color: #334155; border-bottom: 1px solid #e2e8f0; }
+.campus-clean-table tbody tr:nth-child(even) { background: #f8fafc; }
+.campus-clean-table tbody tr:hover { background: #f1f5f9; }
+.dark .campus-clean-table thead tr,
+.dark .campus-clean-table tbody tr:nth-child(even) { background: #201d2b; }
+.dark .campus-clean-table tbody tr:hover { background: #302a43; }
+.dark .campus-clean-table thead th,
+.dark .campus-clean-table tbody td { color: #e5e1ef; border-color: #39334b; }
