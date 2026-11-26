@@ -13,7 +13,7 @@ export function DashboardPage() {
   return <div className="academic-dashboard">
     <header className="academic-page-header">
       <div><h1>Resumen académico</h1><p>Métricas operativas del campus y del registro curricular</p></div>
-      <div className="academic-header-actions"><span className="academic-period"><i />{periodLabel}</span><button type="button" className="academic-button" onClick={() => void refresh()} disabled={refreshing}><RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />Actualizar</button></div>
+      <div className="academic-header-actions"><span className="academic-period"><i />{periodLabel}</span><button type="button" className="academic-button academic-button--primary" onClick={() => void refresh()} disabled={refreshing}><RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />Actualizar</button></div>
     </header>
     {error && <p role="alert" className="academic-error">{error}</p>}
     {loading ? <section aria-label="Cargando indicadores" className="py-8"><Skeleton className="h-24 w-full" /><Skeleton className="mt-8 h-72 w-full" /></section> : <>
@@ -23,7 +23,7 @@ export function DashboardPage() {
         <article className="academic-section-status">
           <h2>Estado de las secciones</h2><p>{data.secciones.total.toLocaleString('es-HN')} secciones registradas</p>
           <div className="academic-section-bars">{[
-            { label: 'Secciones abiertas', value: data.secciones.abiertas, color: '#5b32d6' },
+            { label: 'Secciones abiertas', value: data.secciones.abiertas, color: '#3730A3' },
             { label: 'Secciones cerradas', value: data.secciones.cerradas, color: '#797486' },
             ...(data.secciones.canceladas ? [{ label: 'Secciones canceladas', value: data.secciones.canceladas, color: '#d97706' }] : []),
             ...(data.secciones.otros_estados ? [{ label: 'Otros estados', value: data.secciones.otros_estados, color: '#94a3b8' }] : []),

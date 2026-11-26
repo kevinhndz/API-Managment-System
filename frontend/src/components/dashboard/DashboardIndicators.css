@@ -1,12 +1,10 @@
-.academic-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 24px 0; border-block: 1px solid #e2e8f0; }
-.academic-metrics article { min-width: 0; padding: 0 24px; border-left: 1px solid #e2e8f0; }
-.academic-metrics article:first-child { padding-left: 0; border-left: 0; }
-.academic-metrics h2 { font-size: 14px; font-weight: 500; color: #475569; letter-spacing: 0; }
-.academic-metric-value { margin: 10px 0 4px; font-size: clamp(28px, 2.6vw, 36px); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
-.academic-metric-value span { margin-left: 4px; color: #64748b; font-size: 16px; font-weight: 400; }
-.academic-metric-detail { font-size: 12px; color: #64748b; }
-@media (max-width: 767px) {
-  .academic-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 0; }
-  .academic-metrics article { padding: 0 16px; }
-  .academic-metrics article:nth-child(odd) { padding-left: 0; border-left: 0; }
-}
+.academic-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.academic-metrics article { position: relative; min-width: 0; min-height: 116px; padding: 18px 18px 16px; border: 1px solid #e4e0ef; border-radius: 10px; background: #fff; }
+.academic-metrics h2 { padding-right: 26px; font-size: 12px; font-weight: 500; color: #33313d; letter-spacing: 0; }
+.academic-metric-icon { position: absolute; top: 17px; right: 17px; color: #3730a3; }
+.academic-metric-value { margin: 12px 0 3px; color: #1b1b22; font-size: clamp(26px, 2.3vw, 32px); line-height: 1.15; font-weight: 700; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.academic-metric-value--accent { color: #3730a3; }
+.academic-metric-value span { margin-left: 4px; color: #64748b; font-size: 13px; font-weight: 400; letter-spacing: 0; }
+.academic-metric-detail { font-size: 11px; color: #696775; }
+@media (max-width: 900px) { .academic-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .academic-metrics { grid-template-columns: minmax(0, 1fr); } }

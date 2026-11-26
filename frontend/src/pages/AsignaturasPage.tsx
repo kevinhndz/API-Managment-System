@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, UsersRound } from 'lucide-react'
+import { UsersRound } from 'lucide-react'
 
 import { EntityPage, StatusBadge } from '../components/crud/EntityPage'
+import { LibroMiniatura } from '../components/LibroMiniatura'
 import { ActionMenu } from '../components/ui/ActionMenu'
 import { Modal } from '../components/ui/Modal'
 import { asignaturasApi, listarEstudiantesAsignatura, type EstudianteAsignatura } from '../services/api'
@@ -9,7 +10,6 @@ import type { Asignatura, AsignaturaPayload } from '../types/api'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
 
 const empty: AsignaturaPayload = { codigo: '', nombre: '', unidades_valorativas: 3, carrera_id: 1, requisito_id: null, activo: true }
-
 export function AsignaturasPage() {
   const labels = useAcademicLabels()
   const [seleccionada, setSeleccionada] = useState<Asignatura | null>(null)
@@ -43,7 +43,7 @@ export function AsignaturasPage() {
       ]}
       columns={[
         { label: 'Codigo', render: (item) => <strong>{item.codigo}</strong> },
-        { label: 'Nombre', render: (item) => <span className="inline-flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"><BookOpen className="h-4 w-4" /></span>{item.nombre}</span> },
+        { label: 'Nombre', render: (item) => <span className="inline-flex items-center gap-3"><LibroMiniatura id={item.id} />{item.nombre}</span> },
         { label: 'Unidades', render: (item) => item.unidades_valorativas },
         { label: 'Carrera', render: (item) => labels.carreras[item.carrera_id] ?? `Carrera #${item.carrera_id}` },
         { label: 'Estado', render: (item) => <StatusBadge active={item.activo} /> },

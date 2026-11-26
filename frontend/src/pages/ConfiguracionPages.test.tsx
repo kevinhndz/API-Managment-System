@@ -9,6 +9,10 @@ import { PerfilPage } from './PerfilPage'
 import { RecuperacionPage } from './RecuperacionPage'
 
 vi.mock('../contexts/AuthContext', () => ({ useAuth: vi.fn() }))
+vi.mock('../services/api', async (importOriginal) => ({
+  ...await importOriginal<typeof import('../services/api')>(),
+  listarSolicitudesCuenta: vi.fn().mockResolvedValue([]),
+}))
 
 describe('secciones de Settings', () => {
   afterEach(() => {
@@ -16,7 +20,7 @@ describe('secciones de Settings', () => {
     vi.clearAllMocks()
   })
 
-  it('muestra perfil y bandeja para administración y regreso al dashboard', () => {
+  it('muestra perfil, recuperación y solicitudes para administración', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { name: 'admin', email: 'admin@campus.edu', role: 'Administrador', photo: null },
       isAuthenticated: true,
@@ -28,10 +32,10 @@ describe('secciones de Settings', () => {
     })
     render(<MemoryRouter><ConfiguracionPage /></MemoryRouter>)
 
-    expect(screen.getByRole('link', { name: /volver al dashboard/i })).toHaveAttribute('href', '/')
-    expect(screen.getByRole('link', { name: /editar perfil/i })).toHaveAttribute('href', '/configuracion/perfil')
-    expect(screen.getByRole('link', { name: /bandeja de solicitudes/i })).toHaveAttribute('href', '/configuracion/solicitudes')
-    expect(screen.queryByText('Recuperacion de contrasena')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('heading', { name: 'Información personal' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /administrar solicitudes/i })).toHaveAttribute('href', '/configuracion/solicitudes')
+    expect(screen.getByRole('button', { name: 'Enviar enlace' })).toBeInTheDocument()
   })
 
   it('guarda nombre y correo y ofrece recuperación dentro del perfil', async () => {

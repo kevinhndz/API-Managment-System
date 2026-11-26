@@ -32,6 +32,33 @@ El servicio API publica `127.0.0.1:8000` para que el navegador pueda consultarla
 
 El arranque academico usa PostgreSQL. El registro de universidades con pago requiere ademas las variables de Paddle Sandbox y un webhook publico firmado. Consulta `deploy/PADDLE_SANDBOX.md` antes del despliegue.
 
+## Enviar enlaces de recuperacion
+
+El boton de Configuracion necesita un correo guardado en el perfil y un proveedor
+SMTP configurado en el `.env` de la raiz. Completa estos valores con los datos
+del proveedor; no subas las credenciales a Git:
+
+```dotenv
+SMTP_HOST=smtp.tu-proveedor.com
+SMTP_PORT=587
+SMTP_USER=tu-usuario-smtp
+SMTP_PASSWORD=tu-clave-smtp
+SMTP_FROM=cuenta-autorizada@tu-dominio.com
+SMTP_STARTTLS=true
+```
+
+El transporte actual usa STARTTLS (normalmente puerto 587); no usa TLS implicito
+del puerto 465. Configura `FRONTEND_ORIGINS` con la URL local del frontend como
+primer origen, por ejemplo `http://localhost:5173,http://127.0.0.1:5173`, para que
+el correo enlace a esta copia. Reinicia `npm run dev` despues de editar `.env`.
+
+Guarda primero los cambios del correo en Configuracion y luego pulsa **Enviar
+enlace**. El resultado aparece junto al boton. Sin SMTP la API responde 503;
+con SMTP disponible conserva una respuesta generica para evitar revelar si una
+cuenta existe. La confirmacion HTTP no demuestra entrega en la bandeja: comprueba
+el correo real y abre `/restablecer-contrasena?token=...`. El enlace vence en
+30 minutos y solo puede usarse una vez.
+
 ## Organizacion y comandos desde la raiz
 
 El codigo Python, sus pruebas y migraciones estan en `backend/`. React permanece en
