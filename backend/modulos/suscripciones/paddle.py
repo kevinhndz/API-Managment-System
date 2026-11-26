@@ -220,7 +220,7 @@ def procesar_evento(db: Session, evento: dict) -> bool:
         if not suscripcion.paddle_transaction_id and not suscripcion.paddle_subscription_id:
             raise HTTPException(409, "No existe un checkout institucional pendiente")
         if suscripcion.paddle_transaction_id and datos.get("id") != suscripcion.paddle_transaction_id:
-            if datos.get("subscription_id") != suscripcion.paddle_subscription_id:
+            if suscripcion.estado == "CANCELADA" or datos.get("subscription_id") != suscripcion.paddle_subscription_id:
                 raise HTTPException(409, "Transaccion ajena a la institucion")
         suscripcion.paddle_transaction_id = datos.get("id")
         suscripcion.paddle_customer_id = datos.get("customer_id") or suscripcion.paddle_customer_id
