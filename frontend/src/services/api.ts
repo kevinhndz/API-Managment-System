@@ -43,6 +43,12 @@ export function abrirPortalInstitucional() {
   return request<{ overview: string; payment_method: string | null; cancel: string | null; subscription: string | null }>('/payments/portal', { method: 'POST' })
 }
 
+export function iniciarCheckoutInstitucional(plan: string) {
+  return request<{ transaction_id: string; client_token: string; environment: 'sandbox' | 'production' }>('/payments/checkout', {
+    method: 'POST', body: JSON.stringify({ plan }),
+  })
+}
+
 export interface AltaUniversidad { slug: string; token: string; transaction_id: string; client_token: string; environment: 'sandbox' | 'production'; status: string }
 async function solicitudPublica<T>(ruta: string, datos?: object): Promise<T> {
   const respuesta = await fetch(`${API_URL}${ruta}`, { method: datos ? 'POST' : 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: datos ? JSON.stringify(datos) : undefined })

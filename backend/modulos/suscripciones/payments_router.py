@@ -1,11 +1,12 @@
 """Checkout y webhooks de la suscripcion institucional."""
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from database.almacen import abrir_puerta_bd, llaves
 from modulos.suscripciones.catalogo import planes_disponibles
+from modulos.suscripciones.checkout import iniciar_checkout
 from modulos.suscripciones.paddle import cancelar_al_fin, cambiar_plan, enlace_factura, enlaces_portal, historial_transacciones, metodo_pago, procesar_evento, reactivar_programada, verificar_firma
 from modulos.suscripciones.service import esta_vigente, obtener_suscripcion
 from utils.auth import permiso_admin, permiso_usuario
@@ -19,7 +20,8 @@ def suscripcion_institucional(usuario: dict = Depends(permiso_usuario), db: Sess
     if suscripcion is None:
         return {"institucion_id": usuario["institucion_id"], "plan_name": None, "status": "SIN_PLAN", "active": False,
                 "current_period_start": None, "current_period_end": None, "cancel_at_period_end": False,
-                "has_paddle_subscription": False, "checkout_pending": False, "can_manage": False}
+                "has_paddle_subscription": False, "checkout_pending": False,
+                "can_manage": usuario["rol"].casefold() in {"admin", "administrador"}}
     return {"institucion_id": suscripcion.institucion_id, "plan_name": suscripcion.plan, "status": suscripcion.estado,
             "active": esta_vigente(suscripcion),
             "current_period_start": suscripcion.periodo_actual_inicio or suscripcion.inicia_en,
@@ -36,6 +38,16 @@ def portal(administrador: dict = Depends(permiso_admin), db: Session = Depends(a
     if suscripcion is None:
         raise HTTPException(404, "No existe suscripcion institucional")
     return enlaces_portal(suscripcion)
+
+
+class CheckoutInstitucional(BaseModel):
+    plan: str = Field(min_length=1, max_length=40)
+
+
+@router.post('/checkout')
+def checkout_institucional(datos: CheckoutInstitucional, administrador: dict = Depends(permiso_admin),
+                          db: Session = Depends(abrir_puerta_bd)):
+    return iniciar_checkout(db, datos.plan)
 
 
 @router.get("/history")
