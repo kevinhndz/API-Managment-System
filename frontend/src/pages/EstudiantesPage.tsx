@@ -3,19 +3,16 @@ import { IdCard } from 'lucide-react'
 
 import { EntityPage, StatusBadge } from '../components/crud/EntityPage'
 import { PersonCarnetDialog, type PersonCarnetData } from '../components/people/PersonCarnetDialog'
-import { FolderFloat } from '../components/ui/FolderFloat'
 import { estudiantesApi } from '../services/api'
 import type { Estudiante, EstudiantePayload } from '../types/api'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
 import { useAuth } from '../contexts/AuthContext'
-import { useTheme } from '../contexts/ThemeContext'
 
 const empty: EstudiantePayload = { cuenta: '', nombre: '', correo: '', telefono: '', fechaNacimiento: '2000-01-01', carrera_id: 1, estado: true }
 
 export function EstudiantesPage() {
   const labels = useAcademicLabels()
   const { user } = useAuth()
-  const { theme } = useTheme()
   const esAdministrador = ['admin', 'administrador'].includes(user?.role.toLocaleLowerCase('es') ?? '')
   const [carnet, setCarnet] = useState<PersonCarnetData | null>(null)
   const closeCarnet = useCallback(() => setCarnet(null), [])
@@ -67,41 +64,6 @@ export function EstudiantesPage() {
             area: labels.carreras[item.carrera_id] ?? `Carrera #${item.carrera_id}`,
           }),
         })}
-        renderActions={(_estudiante, handlers) => (
-          <FolderFloat
-            items={[
-              { label: 'Ver carnet', value: 'carnet' },
-              ...(esAdministrador ? [
-                { label: 'Editar', value: 'editar' },
-                { label: 'Eliminar', value: 'eliminar' },
-              ] : [
-                { label: 'Editar', value: 'editar' },
-              ]),
-            ]}
-            label="Acciones"
-            sublabel="Opciones"
-            trigger="hover"
-            closeOnSelect
-            physics
-            folderColor={theme === 'dark' ? '#4c2b8f' : '#5b0309'}
-            frontColor={theme === 'dark' ? '#7048c6' : '#8f1721'}
-            paperColor={theme === 'dark' ? '#e9ddff' : '#fff8f4'}
-            itemColor={theme === 'dark' ? '#302a43' : '#fff4f2'}
-            itemTextColor={theme === 'dark' ? '#f5f3ff' : '#351215'}
-            labelColor="#fff8f4"
-            width={92}
-            height={28}
-            spread={104}
-            lift={12}
-            radius={9}
-            className="folder-float--compact"
-            onSelect={(value) => {
-              if (value === 'carnet') handlers.onExtraAction?.()
-              if (value === 'editar') handlers.onEdit()
-              if (value === 'eliminar') handlers.onDelete()
-            }}
-          />
-        )}
       />
       {carnet && <PersonCarnetDialog person={carnet} onClose={closeCarnet} />}
     </>

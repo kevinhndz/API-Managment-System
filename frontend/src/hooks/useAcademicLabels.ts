@@ -13,6 +13,10 @@ type AcademicLabels = {
   periodos: Record<number, string>
   secciones: Record<number, string>
   matriculas: Record<number, string>
+  estudianteFotos: Record<number, string | null>
+  estudianteFotosPorCuenta: Record<string, string | null>
+  docenteFotos: Record<number, string | null>
+  estudianteIdPorMatricula: Record<number, number>
   carreraOptions: CatalogOption[]
   estudianteOptions: CatalogOption[]
   asignaturaOptions: CatalogOption[]
@@ -24,7 +28,7 @@ type AcademicLabels = {
 }
 
 const emptyLabels: AcademicLabels = {
-  carreras: {}, estudiantes: {}, asignaturas: {}, docentes: {}, aulas: {}, periodos: {}, secciones: {}, matriculas: {},
+  carreras: {}, estudiantes: {}, asignaturas: {}, docentes: {}, aulas: {}, periodos: {}, secciones: {}, matriculas: {}, estudianteFotos: {}, estudianteFotosPorCuenta: {}, docenteFotos: {}, estudianteIdPorMatricula: {},
   carreraOptions: [], estudianteOptions: [], asignaturaOptions: [], docenteOptions: [], aulaOptions: [], periodoOptions: [], seccionOptions: [], matriculaOptions: [],
 }
 
@@ -46,11 +50,17 @@ function crearCatalogo(esDocente: boolean): Promise<AcademicLabels> {
       const carrerasLabels = Object.fromEntries(carreras.map((item) => [item.id, item.nombre]))
       const estudiantesLabels = Object.fromEntries(estudiantes.map((item) => [item.id, item.nombre]))
       const matriculasLabels = Object.fromEntries(matriculas.map((item) => [item.id, `${item.id} · ${estudiantesLabels[item.estudiante_id] ?? 'Estudiante'}`]))
+      const estudianteFotos = Object.fromEntries(estudiantes.map((item) => [item.id, item.foto]))
+      const estudianteFotosPorCuenta = Object.fromEntries(estudiantes.map((item) => [item.cuenta, item.foto]))
+      const estudianteIdPorMatricula = Object.fromEntries(matriculas.map((item) => [item.id, item.estudiante_id]))
       return {
         ...emptyLabels,
         carreras: carrerasLabels,
         estudiantes: estudiantesLabels,
         matriculas: matriculasLabels,
+        estudianteFotos,
+        estudianteFotosPorCuenta,
+        estudianteIdPorMatricula,
         carreraOptions: crearOpciones(carreras, (item) => `${item.codigo} · ${item.nombre}`),
         estudianteOptions: crearOpciones(estudiantes, (item) => `${item.cuenta} · ${item.nombre}`),
         matriculaOptions: crearOpciones(matriculas, (item) => `${item.id} · ${estudiantesLabels[item.estudiante_id] ?? 'Estudiante'}`),
@@ -67,9 +77,13 @@ function crearCatalogo(esDocente: boolean): Promise<AcademicLabels> {
     const periodosLabels = Object.fromEntries(periodos.map((item) => [item.id, `${item.anio} · período ${item.numero}`]))
     const seccionesLabels = Object.fromEntries(secciones.map((item) => [item.id, `${item.codigo} · ${asignaturasLabels[item.asignatura_id] ?? 'Asignatura'}`]))
     const matriculasLabels = Object.fromEntries(matriculas.map((item) => [item.id, `${item.id} · ${estudiantesLabels[item.estudiante_id] ?? 'Estudiante'}`]))
+    const estudianteFotos = Object.fromEntries(estudiantes.map((item) => [item.id, item.foto]))
+    const estudianteFotosPorCuenta = Object.fromEntries(estudiantes.map((item) => [item.cuenta, item.foto]))
+    const docenteFotos = Object.fromEntries(docentes.map((item) => [item.id, item.foto]))
+    const estudianteIdPorMatricula = Object.fromEntries(matriculas.map((item) => [item.id, item.estudiante_id]))
 
     return {
-      carreras: carrerasLabels, estudiantes: estudiantesLabels, asignaturas: asignaturasLabels, docentes: docentesLabels, aulas: aulasLabels, periodos: periodosLabels, secciones: seccionesLabels, matriculas: matriculasLabels,
+      carreras: carrerasLabels, estudiantes: estudiantesLabels, asignaturas: asignaturasLabels, docentes: docentesLabels, aulas: aulasLabels, periodos: periodosLabels, secciones: seccionesLabels, matriculas: matriculasLabels, estudianteFotos, estudianteFotosPorCuenta, docenteFotos, estudianteIdPorMatricula,
       carreraOptions: crearOpciones(carreras, (item) => `${item.codigo} · ${item.nombre}`), estudianteOptions: crearOpciones(estudiantes, (item) => `${item.cuenta} · ${item.nombre}`), asignaturaOptions: crearOpciones(asignaturas, (item) => `${item.codigo} · ${item.nombre}`), docenteOptions: crearOpciones(docentes, (item) => `${item.numero_empleado} · ${item.nombres} ${item.apellidos}`), aulaOptions: crearOpciones(aulas, (item) => item.codigo), periodoOptions: crearOpciones(periodos, (item) => `${item.anio} · período ${item.numero}`), seccionOptions: crearOpciones(secciones, (item) => `${item.codigo} · ${asignaturasLabels[item.asignatura_id] ?? 'Asignatura'}`), matriculaOptions: crearOpciones(matriculas, (item) => `${item.id} · ${estudiantesLabels[item.estudiante_id] ?? 'Estudiante'}`),
     }
   })

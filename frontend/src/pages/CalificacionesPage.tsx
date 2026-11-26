@@ -1,4 +1,3 @@
-import { UserRound } from 'lucide-react'
 import { EntityPage } from '../components/crud/EntityPage'
 import { GradeGauge } from '../components/ui/GradeGauge'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
@@ -69,12 +68,11 @@ export function CalificacionesPage() {
         columns={[
           {
             label: 'Estudiante',
-            render: (item) => (
-              <span className="inline-flex items-center gap-2">
-                <UserRound className="h-4 w-4 text-sage-600" />
-                <strong>{labels.matriculas[item.matricula_id] ?? `Matrícula #${item.matricula_id}`}</strong>
-              </span>
-            ),
+            render: (item) => {
+              const estudianteId = labels.estudianteIdPorMatricula[item.matricula_id]
+              const foto = labels.estudianteFotos[estudianteId] ?? `/avatars/persona-${String(((estudianteId ?? 1) - 1) % 12 + 1).padStart(2, '0')}.jpg`
+              return <span className="inline-flex items-center gap-2"><img className="h-8 w-8 rounded-full object-cover" src={foto} alt="" /><strong>{labels.matriculas[item.matricula_id] ?? `Matrícula #${item.matricula_id}`}</strong></span>
+            },
           },
           { label: 'Primer parcial', render: (item) => <GradeGauge label="Primer parcial" value={item.primer_parcial} /> },
           { label: 'Segundo parcial', render: (item) => <GradeGauge label="Segundo parcial" value={item.segundo_parcial} /> },
