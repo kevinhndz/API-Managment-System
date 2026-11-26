@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import re
+from smtplib import SMTPAuthenticationError
+from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 import pytest
 from pydantic import ValidationError
@@ -149,10 +151,12 @@ def test_recuperacion_cambia_clave_usa_token_una_vez_e_invalida_sesion(monkeypat
     monkeypatch.setattr(settings, "SMTP_PASSWORD", "clave")
     monkeypatch.setattr(settings, "SMTP_FROM", "campusflow@prueba.test")
 
-    def guardar_correo(destinatario, asunto, contenido):
-        correo_enviado.update(destinatario=destinatario, asunto=asunto, contenido=contenido)
+    def guardar_correo(mensaje):
+        correo_enviado.update(destinatario=mensaje['To'], contenido=mensaje.get_content())
 
-    monkeypatch.setattr("modulos.login.recuperacion.enviar_correo", guardar_correo)
+    smtp = MagicMock()
+    smtp.return_value.__enter__.return_value.send_message.side_effect = guardar_correo
+    monkeypatch.setattr("utils.correo.smtplib.SMTP", smtp)
     with Session(motor) as db:
         db.add(Usuarios(
             id=21,
@@ -172,6 +176,8 @@ def test_recuperacion_cambia_clave_usa_token_una_vez_e_invalida_sesion(monkeypat
         respuesta = cliente.post("/login/recuperacion", json={"correo": "admin.recuperacion@uphn.edu"})
         assert respuesta.status_code == 202
         assert respuesta.json()["detail"] == "Si existe una cuenta con ese correo, recibira instrucciones."
+        assert correo_enviado['destinatario'] == 'admin.recuperacion@uphn.edu'
+        assert urlparse(correo_enviado["contenido"].splitlines()[2]).path == '/restablecer-contrasena'
         token = parse_qs(urlparse(correo_enviado["contenido"].splitlines()[2]).query)["token"][0]
 
         cambio = cliente.post("/login/recuperacion/confirmar", json={
@@ -192,6 +198,47 @@ def test_recuperacion_cambia_clave_usa_token_una_vez_e_invalida_sesion(monkeypat
             "contrasena": "clave-nueva-segura-2026",
         })
         assert login_nuevo.status_code == 200
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+@pytest.mark.parametrize('fallo', [
+    SMTPAuthenticationError(535, b'credenciales-privadas-del-proveedor'),
+    OSError('servidor-privado-no-disponible'),
+])
+def test_recuperacion_fallo_smtp_devuelve_503_e_invalida_el_enlace(monkeypatch, fallo):
+    cliente, motor = _cliente_con_bd_en_memoria()
+    monkeypatch.setattr(settings, 'SMTP_HOST', 'smtp.prueba')
+    monkeypatch.setattr(settings, 'SMTP_USER', 'usuario')
+    monkeypatch.setattr(settings, 'SMTP_PASSWORD', 'clave')
+    monkeypatch.setattr(settings, 'SMTP_FROM', 'campusflow@prueba.test')
+    monkeypatch.setattr('utils.correo.smtplib.SMTP', MagicMock(side_effect=fallo))
+    with Session(motor) as db:
+        db.add(Usuarios(usuario='correo-fallido', correo='ana@uphn.edu', contrasena='hash', rol='Docente', activo=True))
+        db.commit()
+    try:
+        respuesta = cliente.post('/login/recuperacion', json={'correo': 'ana@uphn.edu'})
+        assert respuesta.status_code == 503
+        assert respuesta.json()['detail'] == 'No se pudo enviar el enlace. Revisa la configuracion SMTP o intenta de nuevo mas tarde.'
+        with Session(motor) as db:
+            assert db.query(SolicitudesRecuperacion).one().usado_en is not None
+    finally:
+        app.dependency_overrides.clear()
+        cliente.close()
+        motor.dispose()
+
+
+def test_recuperacion_sin_smtp_informa_configuracion_faltante(monkeypatch):
+    cliente, motor = _cliente_con_bd_en_memoria()
+    monkeypatch.setattr(settings, 'SMTP_HOST', '')
+    try:
+        respuesta = cliente.post('/login/recuperacion', json={'correo': 'ana@uphn.edu'})
+        assert respuesta.status_code == 503
+        assert respuesta.json()['detail'] == 'El envio de correo no esta configurado.'
+        with Session(motor) as db:
+            assert db.query(SolicitudesRecuperacion).count() == 0
     finally:
         app.dependency_overrides.clear()
         cliente.close()

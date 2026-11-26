@@ -8,7 +8,7 @@ vi.mock('../services/api', () => ({
 }))
 
 vi.mock('../hooks/useAcademicLabels', () => ({
-  useAcademicLabels: () => ({ estudiantes: { 1: 'Ana Hernández', 2: 'Luis Díaz' }, secciones: { 1: 'A-101', 2: 'B-204' }, estudianteOptions: [], seccionOptions: [] }),
+  useAcademicLabels: () => ({ estudiantes: { 1: 'Ana Hernández', 2: 'Luis Díaz' }, estudianteFotos: {}, secciones: { 1: 'A-101', 2: 'B-204' }, estudianteOptions: [], seccionOptions: [] }),
 }))
 
 import { MatriculasPage } from './MatriculasPage'

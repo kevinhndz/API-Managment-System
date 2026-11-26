@@ -6,7 +6,6 @@ import { PersonCarnetDialog, type PersonCarnetData } from '../components/people/
 import { ActionMenu } from '../components/ui/ActionMenu'
 import { Modal } from '../components/ui/Modal'
 import { listarCargaDocente, docentesApi, type CargaDocente } from '../services/api'
-import './DocentesPage.css'
 import type { Docente, DocentePayload } from '../types/api'
 
 const emptyDocente: DocentePayload = {

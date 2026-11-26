@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const { listar, crear, registrarPago } = vi.hoisted(() => ({ listar: vi.fn(), crear: vi.fn(), registrarPago: vi.fn() }))
 vi.mock('../services/api', () => ({ finanzasApi: { listar, crear, registrarPago } }))
-vi.mock('../hooks/useAcademicLabels', () => ({ useAcademicLabels: () => ({ estudianteOptions: [{ value: '4', label: '2026004 · Ana Lopez' }], docenteOptions: [{ value: '8', label: 'DOC-8 · Luis Perez' }] }) }))
+vi.mock('../hooks/useAcademicLabels', () => ({ useAcademicLabels: () => ({ estudianteFotos: {}, docenteFotos: {}, estudianteOptions: [{ value: '4', label: '2026004 · Ana Lopez' }], docenteOptions: [{ value: '8', label: 'DOC-8 · Luis Perez' }] }) }))
 
 import { FinanzasPage } from './FinanzasPage'
 

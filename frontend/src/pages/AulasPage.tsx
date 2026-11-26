@@ -1,3 +1,4 @@
+import { Building2 } from 'lucide-react'
 import { EntityPage, StatusBadge } from '../components/crud/EntityPage'
 import { aulasApi } from '../services/api'
 import type { Aula, AulaPayload } from '../types/api'
@@ -26,7 +27,7 @@ export function AulasPage() {
       ]}
       columns={[
         { label: 'Código', render: (aula) => <strong className="font-semibold text-slate-800 dark:text-slate-100">{aula.codigo}</strong> },
-        { label: 'Edificio', render: (aula) => aula.edificio },
+        { label: 'Edificio', render: (aula) => <span className="inline-flex items-center gap-2"><Building2 className="h-4 w-4 text-sage-600" />{aula.edificio}</span> },
         { label: 'Capacidad', render: (aula) => `${aula.capacidad} personas` },
         { label: 'Estado', render: (aula) => <StatusBadge active={aula.activo} /> },
       ]}

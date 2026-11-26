@@ -1,5 +1,6 @@
 import hashlib
 import secrets
+from smtplib import SMTPException
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
 
@@ -45,6 +46,11 @@ def solicitar_recuperacion(db: Session, correo: str) -> None:
             "Recuperacion de acceso a CampusFlow",
             f"Abre este enlace dentro de los proximos 30 minutos para cambiar tu contrasena:\n\n{enlace}\n\nSi no solicitaste el cambio, ignora este mensaje.",
         )
+    except (SMTPException, OSError) as error:
+        repo.invalidar_solicitud(db, _hash_token(token), _ahora_sin_zona())
+        raise RuntimeError(
+            "No se pudo enviar el enlace. Revisa la configuracion SMTP o intenta de nuevo mas tarde."
+        ) from error
     except Exception:
         repo.invalidar_solicitud(db, _hash_token(token), _ahora_sin_zona())
         raise

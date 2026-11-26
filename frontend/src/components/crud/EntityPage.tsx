@@ -8,6 +8,7 @@ import { Modal } from '../ui/Modal'
 import { TableSkeleton } from '../ui/Skeleton'
 import { ActionMenu } from '../ui/ActionMenu'
 import { ExpandableSearchBar } from '../ui/ExpandableSearchBar'
+import './EntityPage.css'
 export { StatusBadge } from '../ui/StatusBadge'
 
 interface EntityWithId {
@@ -67,7 +68,7 @@ interface EntityPageProps<T extends EntityWithId, TPayload extends object> {
 }
 
 export function EntityPage<T extends EntityWithId, TPayload extends object>({
-  variant = 'default',
+  variant = 'directory',
   title,
   description,
   singular,

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { UsersRound } from 'lucide-react'
 
 import { EntityPage, StatusBadge } from '../components/crud/EntityPage'
+import { LibroMiniatura } from '../components/LibroMiniatura'
 import { ActionMenu } from '../components/ui/ActionMenu'
 import { Modal } from '../components/ui/Modal'
 import { asignaturasApi, listarEstudiantesAsignatura, type EstudianteAsignatura } from '../services/api'
@@ -9,7 +10,6 @@ import type { Asignatura, AsignaturaPayload } from '../types/api'
 import { useAcademicLabels } from '../hooks/useAcademicLabels'
 
 const empty: AsignaturaPayload = { codigo: '', nombre: '', unidades_valorativas: 3, carrera_id: 1, requisito_id: null, activo: true }
-
 export function AsignaturasPage() {
   const labels = useAcademicLabels()
   const [seleccionada, setSeleccionada] = useState<Asignatura | null>(null)
@@ -43,7 +43,7 @@ export function AsignaturasPage() {
       ]}
       columns={[
         { label: 'Codigo', render: (item) => <strong>{item.codigo}</strong> },
-        { label: 'Nombre', render: (item) => item.nombre },
+        { label: 'Nombre', render: (item) => <span className="inline-flex items-center gap-3"><LibroMiniatura id={item.id} />{item.nombre}</span> },
         { label: 'Unidades', render: (item) => item.unidades_valorativas },
         { label: 'Carrera', render: (item) => labels.carreras[item.carrera_id] ?? `Carrera #${item.carrera_id}` },
         { label: 'Estado', render: (item) => <StatusBadge active={item.activo} /> },
@@ -73,7 +73,7 @@ export function AsignaturasPage() {
         {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         {cargando ? <p role="status" className="text-sm text-slate-500">Consultando estudiantes...</p> : <>
           <p className="text-sm text-slate-500">{estudiantes.length} matriculas encontradas</p>
-          {estudiantes.length === 0 ? <p className="text-sm text-slate-500">No hay estudiantes matriculados en esta asignatura para el periodo elegido.</p> : <div className="max-h-[55vh] overflow-auto rounded-xl border dark:border-white/10"><table className="w-full min-w-[540px] text-left text-sm"><thead className="sticky top-0 bg-[#faf7f0] dark:bg-[#302a43]"><tr><th className="px-3 py-2">Cuenta</th><th className="px-3 py-2">Estudiante</th><th className="px-3 py-2">Seccion</th><th className="px-3 py-2">Periodo</th><th className="px-3 py-2">Estado</th></tr></thead><tbody>{estudiantes.map((item, index) => <tr key={`${item.cuenta}-${item.seccion}-${item.anio}-${item.periodo}-${index}`} className="border-t dark:border-white/10"><td className="px-3 py-2">{item.cuenta}</td><td className="px-3 py-2">{item.estudiante}</td><td className="px-3 py-2">{item.seccion}</td><td className="px-3 py-2">{item.anio}-{item.periodo}</td><td className="px-3 py-2">{item.estado}</td></tr>)}</tbody></table></div>}
+          {estudiantes.length === 0 ? <p className="text-sm text-slate-500">No hay estudiantes matriculados en esta asignatura para el periodo elegido.</p> : <div className="campus-clean-table-container max-h-[55vh] rounded-xl border dark:border-white/10"><table className="campus-clean-table min-w-[540px]"><thead className="sticky top-0"><tr><th className="px-3 py-2">Cuenta</th><th className="px-3 py-2">Estudiante</th><th className="px-3 py-2">Seccion</th><th className="px-3 py-2">Periodo</th><th className="px-3 py-2">Estado</th></tr></thead><tbody>{estudiantes.map((item, index) => <tr key={`${item.cuenta}-${item.seccion}-${item.anio}-${item.periodo}-${index}`} className="border-t dark:border-white/10"><td className="px-3 py-2">{item.cuenta}</td><td className="px-3 py-2"><span className="inline-flex items-center gap-2"><img className="h-8 w-8 rounded-full object-cover" src={labels.estudianteFotosPorCuenta[item.cuenta] ?? '/avatars/persona-01.jpg'} alt="" />{item.estudiante}</span></td><td className="px-3 py-2">{item.seccion}</td><td className="px-3 py-2">{item.anio}-{item.periodo}</td><td className="px-3 py-2">{item.estado}</td></tr>)}</tbody></table></div>}
         </>}
       </div>
     </Modal>

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const { listarSecciones } = vi.hoisted(() => ({ listarSecciones: vi.fn() }))
 vi.mock('../services/api', () => ({ seccionesApi: { list: listarSecciones, get: vi.fn(), create: vi.fn(), update: vi.fn(), patch: vi.fn(), remove: vi.fn() } }))
 vi.mock('../hooks/useAcademicLabels', () => ({ useAcademicLabels: () => ({
-  asignaturas: { 1: 'Programación' }, docentes: { 2: 'Ana López' }, periodos: { 3: '2026 · periodo 1' },
+  asignaturas: { 1: 'Programación' }, docentes: { 2: 'Ana López' }, docenteFotos: {}, periodos: { 3: '2026 · periodo 1' },
   asignaturaOptions: [{ value: '1', label: 'Programación' }], docenteOptions: [{ value: '2', label: 'DOC-02 · Ana López' }],
   periodoOptions: [{ value: '3', label: '2026 · periodo 1' }], aulaOptions: [{ value: '4', label: 'A-104' }],
 }) }))

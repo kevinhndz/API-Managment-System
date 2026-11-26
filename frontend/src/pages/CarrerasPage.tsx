@@ -1,4 +1,5 @@
 import { EntityPage, StatusBadge } from '../components/crud/EntityPage'
+import { LibroMiniatura } from '../components/LibroMiniatura'
 import { carrerasApi } from '../services/api'
 import type { Carrera, CarreraPayload } from '../types/api'
 
@@ -23,7 +24,7 @@ export function CarrerasPage() {
       filters={[{ key: 'duracion', label: 'Duración', options: [{ value: 'short', label: '1–2 años' }, { value: 'medium', label: '3–4 años' }, { value: 'long', label: '5 años o más' }], getValue: (carrera) => carrera.duracion_anios <= 2 ? 'short' : carrera.duracion_anios <= 4 ? 'medium' : 'long' }]}
       columns={[
         { label: 'Código', render: (carrera) => <strong className="font-semibold text-slate-800 dark:text-slate-100">{carrera.codigo}</strong> },
-        { label: 'Nombre', render: (carrera) => carrera.nombre },
+        { label: 'Nombre', render: (carrera) => <span className="inline-flex items-center gap-3"><LibroMiniatura id={carrera.id} />{carrera.nombre}</span> },
         { label: 'Duración', render: (carrera) => `${carrera.duracion_anios} ${carrera.duracion_anios === 1 ? 'año' : 'años'}` },
         { label: 'Estado', render: (carrera) => <StatusBadge active={carrera.activo} /> },
       ]}
