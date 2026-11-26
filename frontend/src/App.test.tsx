@@ -88,7 +88,7 @@ describe('flujo principal', () => {
     const enlaceAulas = await screen.findByRole('link', { name: 'Aulas' }, { timeout: 15_000 })
     await user.click(enlaceAulas)
     expect(
-      await screen.findByRole('heading', { name: 'Aulas', exact: true }, { timeout: 15_000 }),
+      await screen.findByRole('heading', { name: /^Aulas/, level: 2 }, { timeout: 15_000 }),
     ).toBeInTheDocument()
   })
 

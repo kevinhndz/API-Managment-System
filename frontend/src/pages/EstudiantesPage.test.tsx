@@ -59,7 +59,7 @@ describe('EstudiantesPage', () => {
     ['Ver carnet', 'Carnet de Ana Hernández'],
     ['Editar', 'Editar estudiante'],
     ['Eliminar', 'Eliminar estudiante'],
-  ])('conserva la accion de %s desde el folder', async (action, dialogTitle) => {
+  ])('conserva la accion de %s desde el menú de acciones', async (action, dialogTitle) => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null)
     vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }))
 
@@ -68,7 +68,7 @@ describe('EstudiantesPage', () => {
     expect(screen.getByRole('status', { name: 'Estado: Activo' })).toBeInTheDocument()
 
     const trigger = screen.getByRole('button', { name: 'Acciones' })
-    fireEvent.pointerEnter(trigger.closest('.folder-float')!)
+    fireEvent.click(trigger)
     fireEvent.click(screen.getByRole('menuitem', { name: action }))
 
     expect(await screen.findByRole('dialog', { name: dialogTitle })).toBeInTheDocument()
